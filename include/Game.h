@@ -8,8 +8,8 @@
 #include "ScrollingBackground.h"
 #include "Entity.h";
 
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 720;
+const int SCREEN_WIDTH = 1920;
+const int SCREEN_HEIGHT = 1080;
 
 struct Game {
 public:
@@ -29,6 +29,8 @@ public:
   void render(SDL_Texture* p_tex, int x, int y, int w = 0, int h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
   void render(ScrollingBackground &bgr);
   void render(Entity &p_entity, int w = 0, int h = 0);
+  void renderRec(int x, int y, int w, int h);
+  void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius);
 
   void handleEvents();
   void update();

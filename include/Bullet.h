@@ -13,6 +13,10 @@ class Bullet : public Entity {
 public:
   Bullet();
   void move();
+  void setVelocityX(int x);
+  void setVelocityY(int y);
+  int getVelocityX();
+  int getVelocityY();
 private:
   int velocityX;
   int velocityY;
