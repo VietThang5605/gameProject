@@ -8,13 +8,11 @@
 
 #include "Game.h"
 #include "Functions.h"
+#include "Constants.h"
 
 int main(int argc, char* argv[]) {
   Game *game = new Game();
   game->init();
-
-  int FPS = 30;
-  int frameDelay = 1000 / FPS;
 
   while (game->running()) {
     int startTicks = SDL_GetTicks64();

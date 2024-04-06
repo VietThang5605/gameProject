@@ -2,12 +2,6 @@
 #include <vector>
 
 #include "Game.h"
-#include "Functions.h"
-#include "ScrollingBackground.h"
-#include "Entity.h"
-#include "Player.h"
-#include "PlayerArrow.h"
-#include "Bullet.h"
 
 using std::vector;
 
@@ -50,6 +44,10 @@ Bullet Qbullet;
 PlayerArrow player1_Arrow, player2_Arrow;
 Player player1, player2;
 
+TTF_Font* font32;
+
+SDL_Color white = {255, 255, 255};
+
 Game::Game() {
   gWindow = NULL;
   gRenderer = NULL;
@@ -89,7 +87,6 @@ void Game::initSDL() {
 }
 
 void Game::loadMedia() {
-  ///loading texture
   waterTexture = loadTexture("res/images/water.png");
   grassTexture = loadTexture("res/images/grass.png");
   ezrealTexture = loadTexture("res/images/ezreal-Sheet.png");
@@ -101,9 +98,10 @@ void Game::loadMedia() {
   skillE_Hud = loadTexture("res/images/ezreal_e.png");
   skillR_Hud = loadTexture("res/images/ezreal_r.png");
 
-  skillArrow = loadTexture("res/images/skillArrow6.png");
+  skillArrow = loadTexture("res/images/skillArrow.png");
   skillQ = loadTexture("res/images/skillQ.png");
 
+  font32 = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 
   ///entity's initialization
   Qbullet.init(skillQ, 64, 128, 1, 1);
@@ -181,6 +179,8 @@ void Game::closeMedia() {
 
   SDL_DestroyTexture(skillArrow); skillArrow = NULL;
   SDL_DestroyTexture(skillQ); skillQ = NULL;
+
+  TTF_CloseFont(font32);
 }
 
 void Game::display() {
@@ -251,49 +251,25 @@ void Game::render(Entity &p_entity, int w, int h) {
   SDL_RenderCopyEx(gRenderer, p_entity.getTexture(), p_entity.getCurrentClip(), &dst, p_entity.getAngle(), p_entity.getCenter(), p_entity.getFlip());
 }
 
-void Game::renderRec(int x, int y, int w, int h) {
-  SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
-  SDL_Rect rect = {x, y, w, h};
-  SDL_RenderFillRect(gRenderer, &rect);
-  SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
-}
+void Game::renderTextCenter(int p_x, int p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
+  char* text = &p_text[0];
+  SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, text, textColor);
+  SDL_Texture* message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
 
-void Game::DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius)
-{
-   const int32_t diameter = (radius * 2);
+  SDL_Rect src;
+  src.x = 0;
+  src.y = 0;
+  src.w = surfaceMessage->w;
+  src.h = surfaceMessage->h;
 
-   int32_t x = (radius - 1);
-   int32_t y = 0;
-   int32_t tx = 1;
-   int32_t ty = 1;
-   int32_t error = (tx - diameter);
+  SDL_Rect dst;
+  dst.x = p_x - src.w / 2;
+  dst.y = p_y - src.h / 2;
+  dst.w = src.w;
+  dst.h = src.h;
 
-   while (x >= y)
-   {
-      //  Each of the following renders an octant of the circle
-      SDL_RenderDrawPoint(renderer, centreX + x, centreY - y);
-      SDL_RenderDrawPoint(renderer, centreX + x, centreY + y);
-      SDL_RenderDrawPoint(renderer, centreX - x, centreY - y);
-      SDL_RenderDrawPoint(renderer, centreX - x, centreY + y);
-      SDL_RenderDrawPoint(renderer, centreX + y, centreY - x);
-      SDL_RenderDrawPoint(renderer, centreX + y, centreY + x);
-      SDL_RenderDrawPoint(renderer, centreX - y, centreY - x);
-      SDL_RenderDrawPoint(renderer, centreX - y, centreY + x);
-
-      if (error <= 0)
-      {
-         ++y;
-         error += ty;
-         ty += 2;
-      }
-
-      if (error > 0)
-      {
-         --x;
-         tx += 2;
-         error += (tx - diameter);
-      }
-   }
+  SDL_RenderCopy(gRenderer, message, &src, &dst);
+  SDL_FreeSurface(surfaceMessage);
 }
 
 void Game::handleEvents() {  
@@ -316,13 +292,6 @@ void Game::handleEvents() {
   if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
   if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
 
-  while (SDL_PollEvent(&gEvent)) {
-    if (gEvent.type == SDL_QUIT || gEvent.key.keysym.sym == SDLK_RETURN) {
-      gameRunning = false;
-      break;
-    }
-  }
-
   if (new_key[KEY_PRESS_LEFT] && new_key[KEY_PRESS_RIGHT]) {
     new_key[KEY_PRESS_LEFT] = new_key[KEY_PRESS_RIGHT] = 0;
   }
@@ -330,6 +299,16 @@ void Game::handleEvents() {
     new_key[KEY_PRESS_A] = new_key[KEY_PRESS_D] = 0;
   }
 
+  while (SDL_PollEvent(&gEvent)) {
+    if (gEvent.type == SDL_QUIT || gEvent.key.keysym.sym == SDLK_RETURN) {
+      gameRunning = false;
+      break;
+    }
+  }
+}
+
+void Game::update() {
+  ///Function keys
   if (new_key[KEY_PRESS_F11] && old_key[KEY_PRESS_F11] == 0) {
     if (fullscreen == false) {
       SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -340,28 +319,29 @@ void Game::handleEvents() {
       fullscreen = false;
     }
   }
-}
+  
+  if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0) {
+    
+  }
 
-void Game::update() {
-  if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0) {
+  ///player1
+  player1.updateSkill_Cooldown();
+  if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0 && player1.getSkill_Cooldown(skillQ_ID) == 0) {
     Bullet tmp = Qbullet;
     tmp.setX(player1.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
     tmp.setY(player1.getY() + player1.getHeight());
     tmp.setAngle(player1_Arrow.getAngle());
     tmp.setCenter(tmp.getWidth() / 2, 0);
     Bullets.push_back(tmp);
+    player1.setSkill_Cooldown(FPS * 3, skillQ_ID);
   }
-
-  if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0) {
-    Bullet tmp = Qbullet;
-    tmp.setX(player2.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
-    tmp.setY(player2.getY() - tmp.getHeight());
-    tmp.setAngle(player2_Arrow.getAngle());
-    tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
-    tmp.setFlip(SDL_FLIP_VERTICAL);
-    tmp.setVelocityX(-tmp.getVelocityX());
-    tmp.setVelocityY(-tmp.getVelocityY());
-    Bullets.push_back(tmp);
+  else if (player1.getSkill_Cooldown(skillQ_ID) > 0) {
+    std::string text = TimeToString(player1.getSkill_Cooldown(skillQ_ID) / (FPS * 1.0));
+    renderTextCenter(player1_skillQ_Hud.getX() + player1_skillQ_Hud.getWidth() / 2,
+                    player1_skillQ_Hud.getY() + player1_skillQ_Hud.getHeight() / 2,
+                    text,
+                    font32,
+                    white);
   }
 
   if (new_key[KEY_PRESS_LEFT]) {
@@ -375,6 +355,7 @@ void Game::update() {
   else if (old_key[KEY_PRESS_LEFT]) {
     player1.setCurrentFrame(0);
   }
+
   if (new_key[KEY_PRESS_RIGHT]) {
     if (old_key[KEY_PRESS_RIGHT] == 0) {
       player1.setCurrentFrame(0);
@@ -385,6 +366,29 @@ void Game::update() {
   }
   else if (old_key[KEY_PRESS_RIGHT]) {
     player1.setCurrentFrame(0);
+  }
+
+  ///player2
+  player2.updateSkill_Cooldown();
+  if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0 && player2.getSkill_Cooldown(skillQ_ID) == 0) {
+    Bullet tmp = Qbullet;
+    tmp.setX(player2.getX() + player2.getWidth() / 2 - tmp.getWidth() / 2);
+    tmp.setY(player2.getY() - tmp.getHeight());
+    tmp.setAngle(player2_Arrow.getAngle());
+    tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
+    tmp.setFlip(SDL_FLIP_VERTICAL);
+    tmp.setVelocityX(-tmp.getVelocityX());
+    tmp.setVelocityY(-tmp.getVelocityY());
+    Bullets.push_back(tmp);
+    player2.setSkill_Cooldown(FPS * 3, skillQ_ID);
+  }
+  else if (player2.getSkill_Cooldown(skillQ_ID) > 0) {
+    std::string text = TimeToString(player2.getSkill_Cooldown(skillQ_ID) / (FPS * 1.0));
+    renderTextCenter(player2_skillQ_Hud.getX() + player2_skillQ_Hud.getWidth() / 2,
+                    player2_skillQ_Hud.getY() + player2_skillQ_Hud.getHeight() / 2,
+                    text,
+                    font32,
+                    white);
   }
 
   if (new_key[KEY_PRESS_A]) {
@@ -398,6 +402,7 @@ void Game::update() {
   else if (old_key[KEY_PRESS_A]) {
     player2.setCurrentFrame(0);
   }
+
   if (new_key[KEY_PRESS_D]) {
     if (old_key[KEY_PRESS_D] == 0) {
       player2.setCurrentFrame(0);
@@ -410,6 +415,7 @@ void Game::update() {
     player2.setCurrentFrame(0);
   }
 
+  ///reset
   for (int i = 0; i < KEY_PRESS_TOTAL; i++) {
     old_key[i] = new_key[i];
     new_key[i] = 0;
@@ -433,12 +439,7 @@ void Game::renderGameBackground() {
       render(grassTexture, i * 96, SCREEN_HEIGHT - 32 - j * 32);
 }
 
-void Game::gameLoop() {
-  clear();
-  handleEvents();
-  update();
-  renderGameBackground();
-
+void Game::renderPlayer() {
   render(player1);
   player1_Arrow.setX(player1.getX() + player1.getWidth() / 2 - player1_Arrow.getWidth() / 2);
   player1_Arrow.setY(player1.getY() + player1.getHeight() + 10);
@@ -450,12 +451,12 @@ void Game::gameLoop() {
   player2_Arrow.setY(player2.getY() - player2_Arrow.getHeight() - 10);
   render(player2_Arrow);
   player2_Arrow.moveAngle();
+}
 
-  for (Bullet &bullet : Bullets) {
-    render(bullet);
-    bullet.move();
-    if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
-  }
+void Game::gameLoop() {
+  clear();
+  handleEvents();
+  renderGameBackground();
 
   render(player1_skillQ_Hud);
   render(player1_skillW_Hud);
@@ -466,6 +467,15 @@ void Game::gameLoop() {
   render(player2_skillW_Hud);
   render(player2_skillE_Hud);
   render(player2_skillR_Hud);
+
+  update();
+  renderPlayer();
+
+  for (Bullet &bullet : Bullets) {
+    render(bullet);
+    bullet.move();
+    if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
+  }
   
   display();
 }

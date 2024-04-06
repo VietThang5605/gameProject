@@ -7,9 +7,15 @@
 
 #include "ScrollingBackground.h"
 #include "Entity.h";
+#include "Constants.h"
+#include "Functions.h"
+#include "Player.h"
+#include "PlayerArrow.h"
+#include "Bullet.h"
 
-const int SCREEN_WIDTH = 1920;
-const int SCREEN_HEIGHT = 1080;
+#include <string.h>
+
+using std::string;
 
 struct Game {
 public:
@@ -29,12 +35,12 @@ public:
   void render(SDL_Texture* p_tex, int x, int y, int w = 0, int h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
   void render(ScrollingBackground &bgr);
   void render(Entity &p_entity, int w = 0, int h = 0);
-  void renderRec(int x, int y, int w, int h);
-  void DrawCircle(SDL_Renderer * renderer, int32_t centreX, int32_t centreY, int32_t radius);
+  void renderTextCenter(int p_x, int p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
 
   void handleEvents();
   void update();
   void renderGameBackground();
+  void renderPlayer();
   void gameLoop();
 private:
   SDL_Window* gWindow;

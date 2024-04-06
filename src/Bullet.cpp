@@ -6,7 +6,7 @@ Bullet::Bullet() {
 }
 
 void Bullet::move() {
-  double Degrees = getAngle() * 3.14159 / 180;
+  double Degrees = getAngle() * PI / 180;
   setX(getX() + velocityX * -sin(Degrees));
   setY(getY() + velocityY * abs(cos(Degrees)));
 }
