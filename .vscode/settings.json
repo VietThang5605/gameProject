@@ -3,6 +3,8 @@
     "*.cpp": "cpp",
     "ostream": "cpp",
     "iostream": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "cmath": "cpp",
+    "vector": "cpp"
   }
 }

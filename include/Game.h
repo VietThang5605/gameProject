@@ -5,6 +5,8 @@
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
 
+#include <string.h>
+
 #include "ScrollingBackground.h"
 #include "Entity.h";
 #include "Constants.h"
@@ -12,10 +14,10 @@
 #include "Player.h"
 #include "PlayerArrow.h"
 #include "Bullet.h"
-
-#include <string.h>
+#include "Polygon.h"
 
 using std::string;
+using std::vector;
 
 struct Game {
 public:

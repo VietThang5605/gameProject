@@ -3,8 +3,6 @@
 
 #include "Game.h"
 
-using std::vector;
-
 const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
 enum KeyPressSurfaces {
@@ -329,6 +327,7 @@ void Game::update() {
     tmp.setY(player1.getY() + player1.getHeight());
     tmp.setAngle(player1_Arrow.getAngle());
     tmp.setCenter(tmp.getWidth() / 2, 0);
+    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY());
     Bullets.push_back(tmp);
     player1.setSkill_Cooldown(FPS * 3, skillQ_ID);
   }
@@ -373,6 +372,7 @@ void Game::update() {
     tmp.setY(player2.getY() - tmp.getHeight());
     tmp.setAngle(player2_Arrow.getAngle());
     tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
+    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY() + tmp.getHeight());
     tmp.setFlip(SDL_FLIP_VERTICAL);
     tmp.setVelocityX(-tmp.getVelocityX());
     tmp.setVelocityY(-tmp.getVelocityY());
@@ -440,12 +440,14 @@ void Game::renderPlayer() {
   render(player1);
   player1_Arrow.setX(player1.getX() + player1.getWidth() / 2 - player1_Arrow.getWidth() / 2);
   player1_Arrow.setY(player1.getY() + player1.getHeight() + 10);
+  player1_Arrow.setRotPoint(player1_Arrow.getX() + player1_Arrow.getWidth() / 2, player1_Arrow.getY());
   render(player1_Arrow);
   player1_Arrow.moveAngle();
 
   render(player2);
   player2_Arrow.setX(player2.getX() + player2.getWidth() / 2 - player2_Arrow.getWidth() / 2);
   player2_Arrow.setY(player2.getY() - player2_Arrow.getHeight() - 10);
+  player2_Arrow.setRotPoint(player2_Arrow.getX() + player2_Arrow.getWidth() / 2, player2_Arrow.getY() + player2_Arrow.getHeight());
   render(player2_Arrow);
   player2_Arrow.moveAngle();
 }
@@ -473,6 +475,8 @@ void Game::gameLoop() {
     bullet.move();
     if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
   }
-  
+
+  Rectangle rec(player1_Arrow.getX(), player1_Arrow.getY(), player1_Arrow.getWidth(), player1_Arrow.getHeight(), player1_Arrow.getAngle(), player1_Arrow.getRotPoint());
+
   display();
 }

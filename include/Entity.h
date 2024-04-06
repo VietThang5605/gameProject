@@ -1,11 +1,13 @@
-#pragma once;
-
-#include <vector>
+#pragma once
 
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
+
+#include <vector>
+
+#include "Maths.h"
 
 using std::vector;
 
@@ -22,6 +24,7 @@ public:
   void setFlip(SDL_RendererFlip p_flip);
   void setAngle(double angle);
   void setCenter(int x, int y);
+  void setRotPoint(double x, double y);
   
   int getX();
   int getY();
@@ -29,6 +32,7 @@ public:
   int getHeight();
   int getCurrentFrame();
   double getAngle();
+  Point* getRotPoint();
   SDL_Texture* getTexture();
   SDL_Rect* getCurrentClip();
   SDL_RendererFlip getFlip();
@@ -43,4 +47,5 @@ private:
   SDL_RendererFlip flip;
   SDL_Point* center;
   vector<SDL_Rect> clips;
+  Point* rotPoint;
 };
