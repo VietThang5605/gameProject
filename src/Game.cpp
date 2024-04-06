@@ -36,7 +36,6 @@ SDL_Texture* skillQ = NULL;
 vector<Entity> waterBackground;
 vector<Bullet> Bullets;
 
-Entity player1_healthBar, player2_healthBar;
 Entity player1_skillQ_Hud, player1_skillW_Hud, player1_skillE_Hud, player1_skillR_Hud;
 Entity player2_skillQ_Hud, player2_skillW_Hud, player2_skillE_Hud, player2_skillR_Hud;
 
@@ -90,8 +89,6 @@ void Game::loadMedia() {
   waterTexture = loadTexture("res/images/water.png");
   grassTexture = loadTexture("res/images/grass.png");
   ezrealTexture = loadTexture("res/images/ezreal-Sheet.png");
-
-  healthBarTexture = loadTexture("res/images/health_skills_bar.png");
 
   skillQ_Hud = loadTexture("res/images/ezreal_q.png");
   skillW_Hud = loadTexture("res/images/ezreal_w.png");
