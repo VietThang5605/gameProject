@@ -4,7 +4,7 @@ PlayerArrow::PlayerArrow() {
   angleDelta = 3;
 }
 
-void PlayerArrow::setAngleDelta(int delta) {
+void PlayerArrow::setAngleDelta(double delta) {
   angleDelta = delta;
 }
 

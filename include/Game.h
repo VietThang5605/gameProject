@@ -34,10 +34,10 @@ public:
   bool running();
 
   SDL_Texture* loadTexture(const char* p_filePath);
-  void render(SDL_Texture* p_tex, int x, int y, int w = 0, int h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
+  void render(SDL_Texture* p_tex, double x, double y, double w = 0, double h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
   void render(ScrollingBackground &bgr);
-  void render(Entity &p_entity, int w = 0, int h = 0);
-  void renderTextCenter(int p_x, int p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
+  void render(Entity &p_entity, double w = 0, double h = 0);
+  void renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
 
   void handleEvents();
   void update();

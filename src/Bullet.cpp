@@ -11,18 +11,18 @@ void Bullet::move() {
   setY(getY() + velocityY * abs(cos(radAngle)));
 }
 
-void Bullet::setVelocityX(int x) {
+void Bullet::setVelocityX(double x) {
   velocityX = x;
 }
 
-void Bullet::setVelocityY(int y) {
+void Bullet::setVelocityY(double y) {
   velocityY = y;
 }
 
-int Bullet::getVelocityX() {
+double Bullet::getVelocityX() {
   return velocityX;
 }
 
-int Bullet::getVelocityY() {
+double Bullet::getVelocityY() {
   return velocityY;
 }

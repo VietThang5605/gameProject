@@ -16,23 +16,19 @@
 using std::cout;
 using std::vector;
 
-class Shape {
-public:
-  // virtual bool isColliding(const Shape* poly) const = 0;
-protected:
-  Point coords;
-};
-
-class Rectangle : public Shape {
+class Rectangle {
 public:
   Rectangle(double x, double y, double w, double h, double angle = 0, Point* rotPoint = NULL);
   Rectangle(Entity &p_entity);
-  // virtual bool isColliding(const Shape* poly) const;
-private:
+  // bool Rectangle::isColliding(Rectangle &r1, Rectangle &r2) const;
+
   vector<Point> vertices;
   vector<Vector> axis;
   double angle;
-  Point center;
+  Point rotPoint;
+  Point coords;
 };
+
+bool isColliding(Rectangle &poly1, Rectangle &poly2);
 
 void removeRepeat(vector<Vector> &v);

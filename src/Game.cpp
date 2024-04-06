@@ -8,7 +8,7 @@ const Uint8* keystate = SDL_GetKeyboardState(NULL);
 enum KeyPressSurfaces {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT,
   KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_U, KEY_PRESS_I,
-  KEY_PRESS_A, KEY_PRESS_D,
+  KEY_PRESS_A, KEY_PRESS_D, KEY_PRESS_W, KEY_PRESS_S,
   KEY_PRESS_C, KEY_PRESS_V, KEY_PRESS_B, KEY_PRESS_F, KEY_PRESS_G,
   KEY_PRESS_P, KEY_PRESS_F11,
   KEY_PRESS_TOTAL
@@ -99,7 +99,7 @@ void Game::loadMedia() {
   font32 = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 
   ///entity's initialization
-  Qbullet.init(skillQ, 64, 128, 1, 1);
+  Qbullet.init(skillQ, 4 * 9, 16 * 9, 1, 1);
 
   for (int j = 20; j < 45; j++)
     for (int i = 0; i < 32; i++) {
@@ -208,7 +208,7 @@ SDL_Texture* Game::loadTexture(const char* p_filePath) {
   return texture;
 }
 
-void Game::render(SDL_Texture* p_tex, int x, int y, int w, int h, double angle, SDL_Point* center, SDL_RendererFlip flip) {
+void Game::render(SDL_Texture* p_tex, double x, double y, double w, double h, double angle, SDL_Point* center, SDL_RendererFlip flip) {
   SDL_Rect src;
   src.x = src.y = 0;
   SDL_QueryTexture(p_tex, NULL, NULL, &src.w, &src.h);
@@ -231,7 +231,7 @@ void Game::render(ScrollingBackground &bgr) {
   render(bgr.getTexture(), bgr.getScrollingOffset() - bgr.getWidth(), 0);
 }
 
-void Game::render(Entity &p_entity, int w, int h) {
+void Game::render(Entity &p_entity, double w, double h) {
   SDL_Rect dst;
   dst.x = p_entity.getX();
   dst.y = p_entity.getY();
@@ -246,7 +246,7 @@ void Game::render(Entity &p_entity, int w, int h) {
   SDL_RenderCopyEx(gRenderer, p_entity.getTexture(), p_entity.getCurrentClip(), &dst, p_entity.getAngle(), p_entity.getCenter(), p_entity.getFlip());
 }
 
-void Game::renderTextCenter(int p_x, int p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
+void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
   char* text = &p_text[0];
   SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, text, textColor);
   SDL_Texture* message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
@@ -278,6 +278,8 @@ void Game::handleEvents() {
 
   if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
   if (keystate[SDL_SCANCODE_D]) new_key[KEY_PRESS_D] = 1;
+  if (keystate[SDL_SCANCODE_W]) new_key[KEY_PRESS_W] = 1;
+  if (keystate[SDL_SCANCODE_S]) new_key[KEY_PRESS_S] = 1;
   if (keystate[SDL_SCANCODE_C]) new_key[KEY_PRESS_C] = 1;
   if (keystate[SDL_SCANCODE_V]) new_key[KEY_PRESS_V] = 1;
   if (keystate[SDL_SCANCODE_B]) new_key[KEY_PRESS_B] = 1;
@@ -327,7 +329,7 @@ void Game::update() {
     tmp.setY(player1.getY() + player1.getHeight());
     tmp.setAngle(player1_Arrow.getAngle());
     tmp.setCenter(tmp.getWidth() / 2, 0);
-    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY());
+    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///not reset after each frame when in vector Bullets
     Bullets.push_back(tmp);
     player1.setSkill_Cooldown(FPS * 3, skillQ_ID);
   }
@@ -470,13 +472,22 @@ void Game::gameLoop() {
   update();
   renderPlayer();
 
+  // static int count = 0;
   for (Bullet &bullet : Bullets) {
+    // Rectangle rec1(player2);
+    // Rectangle rec2(bullet);
+    // if (isColliding(rec1, rec2)) {
+    //   count++;
+    //   std::cout << count << "\n\n";
+    // }
     render(bullet);
     bullet.move();
+    // bullet.setRotPoint(bullet.getX() + bullet.getWidth() / 2, bullet.getY());
     if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
   }
 
-  Rectangle rec(player1_Arrow.getX(), player1_Arrow.getY(), player1_Arrow.getWidth(), player1_Arrow.getHeight(), player1_Arrow.getAngle(), player1_Arrow.getRotPoint());
+  // Rectangle rec(player1_Arrow.getX(), player1_Arrow.getY(), player1_Arrow.getWidth(), player1_Arrow.getHeight(), player1_Arrow.getAngle(), player1_Arrow.getRotPoint());
+  Rectangle rec(player1_Arrow);
 
   display();
 }

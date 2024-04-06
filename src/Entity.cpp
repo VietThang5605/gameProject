@@ -12,7 +12,7 @@ Entity::Entity() {
 
 Entity::~Entity() {}
 
-void Entity::init(SDL_Texture* p_tex, int width, int height, int frames, int lines) {
+void Entity::init(SDL_Texture* p_tex, double width, double height, int frames, int lines) {
   texture = p_tex;
   this->width = width;
   this->height = height;
@@ -27,11 +27,11 @@ void Entity::init(SDL_Texture* p_tex, int width, int height, int frames, int lin
   }
 }
 
-void Entity::setX(int p_x) {
+void Entity::setX(double p_x) {
   x = p_x;
 }
 
-void Entity::setY(int p_y) {
+void Entity::setY(double p_y) {
   y = p_y;
 }
 
@@ -47,7 +47,7 @@ void Entity::setAngle(double p_angle) {
   angle = p_angle;
 }
 
-void Entity::setCenter(int x, int y) {
+void Entity::setCenter(double x, double y) {
   center = new SDL_Point();
   center->x = x;
   center->y = y;
@@ -58,19 +58,19 @@ void Entity::setRotPoint(double x, double y) {
   rotPoint = new Point(x, y);
 }
 
-int Entity::getX() {
+double Entity::getX() {
   return x;
 }
 
-int Entity::getY() {
+double Entity::getY() {
   return y;
 }
 
-int Entity::getWidth() {
+double Entity::getWidth() {
   return width;
 }
 
-int Entity::getHeight() {
+double Entity::getHeight() {
   return height;
 }
 
