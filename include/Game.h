@@ -39,6 +39,8 @@ public:
   void render(Entity &p_entity, double w = 0, double h = 0);
   void renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
 
+  void renderSkillCooldown(Player &player, int skill_ID);
+
   void handleEvents();
   void update();
   void renderGameBackground();

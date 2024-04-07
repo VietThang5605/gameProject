@@ -6,7 +6,7 @@
 const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
 enum KeyPressSurfaces {
-  KEY_PRESS_LEFT, KEY_PRESS_RIGHT,
+  KEY_PRESS_LEFT, KEY_PRESS_RIGHT, KEY_PRESS_UP, KEY_PRESS_DOWN,
   KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_U, KEY_PRESS_I,
   KEY_PRESS_A, KEY_PRESS_D, KEY_PRESS_W, KEY_PRESS_S,
   KEY_PRESS_C, KEY_PRESS_V, KEY_PRESS_B, KEY_PRESS_F, KEY_PRESS_G,
@@ -30,6 +30,8 @@ SDL_Texture* skillR_Hud = NULL;
 
 SDL_Texture* skillArrow = NULL;
 SDL_Texture* skillQ = NULL;
+SDL_Texture* skillW = NULL;
+SDL_Texture* skillW_ground = NULL;
 
 vector<Entity> waterBackground;
 vector<Bullet> Bullets;
@@ -37,7 +39,7 @@ vector<Bullet> Bullets;
 Entity player1_skillQ_Hud, player1_skillW_Hud, player1_skillE_Hud, player1_skillR_Hud;
 Entity player2_skillQ_Hud, player2_skillW_Hud, player2_skillE_Hud, player2_skillR_Hud;
 
-Bullet Qbullet;
+Bullet bullet_Q, bullet_W;
 PlayerArrow player1_Arrow, player2_Arrow;
 Player player1, player2;
 
@@ -95,11 +97,14 @@ void Game::loadMedia() {
 
   skillArrow = loadTexture("res/images/skillArrow.png");
   skillQ = loadTexture("res/images/skillQ.png");
+  skillW = loadTexture("res/images/skillW.png");
+  skillW_ground = loadTexture("res/images/skillW_ground.png");
 
   font32 = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 
   ///entity's initialization
-  Qbullet.init(skillQ, 4 * 9, 16 * 9, 1, 1);
+  bullet_Q.init(skillQ, 4 * 9, 16 * 9, 1, 1);
+  bullet_W.init(skillW, 8 * 14, 8 * 14, 1, 1);
 
   for (int j = 20; j < 45; j++)
     for (int i = 0; i < 32; i++) {
@@ -174,6 +179,8 @@ void Game::closeMedia() {
 
   SDL_DestroyTexture(skillArrow); skillArrow = NULL;
   SDL_DestroyTexture(skillQ); skillQ = NULL;
+  SDL_DestroyTexture(skillW); skillW = NULL;
+  SDL_DestroyTexture(skillW_ground); skillW_ground = NULL;
 
   TTF_CloseFont(font32);
 }
@@ -267,15 +274,23 @@ void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* fo
   SDL_FreeSurface(surfaceMessage);
 }
 
-void Game::handleEvents() {  
+void Game::renderSkillCooldown(Player &player, int skill_ID) {
+  
+}
+
+void Game::handleEvents() { 
+  ///player1
   if (keystate[SDL_SCANCODE_LEFT]) new_key[KEY_PRESS_LEFT] = 1;
   if (keystate[SDL_SCANCODE_RIGHT]) new_key[KEY_PRESS_RIGHT] = 1;
+  if (keystate[SDL_SCANCODE_UP]) new_key[KEY_PRESS_UP] = 1;
+  if (keystate[SDL_SCANCODE_DOWN]) new_key[KEY_PRESS_DOWN] = 1;
   if (keystate[SDL_SCANCODE_J]) new_key[KEY_PRESS_J] = 1;
   if (keystate[SDL_SCANCODE_K]) new_key[KEY_PRESS_K] = 1;
   if (keystate[SDL_SCANCODE_L]) new_key[KEY_PRESS_L] = 1;
   if (keystate[SDL_SCANCODE_U]) new_key[KEY_PRESS_U] = 1;
   if (keystate[SDL_SCANCODE_I]) new_key[KEY_PRESS_I] = 1;
 
+  ///player2
   if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
   if (keystate[SDL_SCANCODE_D]) new_key[KEY_PRESS_D] = 1;
   if (keystate[SDL_SCANCODE_W]) new_key[KEY_PRESS_W] = 1;
@@ -286,6 +301,7 @@ void Game::handleEvents() {
   if (keystate[SDL_SCANCODE_F]) new_key[KEY_PRESS_F] = 1;
   if (keystate[SDL_SCANCODE_G]) new_key[KEY_PRESS_G] = 1;
 
+  ///utility
   if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
   if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
 
@@ -324,7 +340,7 @@ void Game::update() {
   ///player1
   player1.updateSkill_Cooldown();
   if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0 && player1.getSkill_Cooldown(skillQ_ID) == 0) {
-    Bullet tmp = Qbullet;
+    Bullet tmp = bullet_Q;
     tmp.setX(player1.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
     tmp.setY(player1.getY() + player1.getHeight());
     tmp.setAngle(player1_Arrow.getAngle());
@@ -337,6 +353,25 @@ void Game::update() {
     std::string text = TimeToString(player1.getSkill_Cooldown(skillQ_ID) / (FPS * 1.0));
     renderTextCenter(player1_skillQ_Hud.getX() + player1_skillQ_Hud.getWidth() / 2,
                     player1_skillQ_Hud.getY() + player1_skillQ_Hud.getHeight() / 2,
+                    text,
+                    font32,
+                    white);
+  }
+
+  if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0 && player1.getSkill_Cooldown(skillW_ID) == 0) {
+    Bullet tmp = bullet_W;
+    tmp.setX(player1.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
+    tmp.setY(player1.getY() + player1.getHeight());
+    tmp.setAngle(player1_Arrow.getAngle());
+    tmp.setCenter(tmp.getWidth() / 2, 0);
+    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///not reset after each frame when in vector Bullets
+    Bullets.push_back(tmp);
+    // player1.setSkill_Cooldown(FPS * 3, skillW_ID);
+  }
+  else if (player1.getSkill_Cooldown(skillW_ID) > 0) {
+    std::string text = TimeToString(player1.getSkill_Cooldown(skillW_ID) / (FPS * 1.0));
+    renderTextCenter(player1_skillW_Hud.getX() + player1_skillW_Hud.getWidth() / 2,
+                    player1_skillW_Hud.getY() + player1_skillW_Hud.getHeight() / 2,
                     text,
                     font32,
                     white);
@@ -369,7 +404,7 @@ void Game::update() {
   ///player2
   player2.updateSkill_Cooldown();
   if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0 && player2.getSkill_Cooldown(skillQ_ID) == 0) {
-    Bullet tmp = Qbullet;
+    Bullet tmp = bullet_Q;
     tmp.setX(player2.getX() + player2.getWidth() / 2 - tmp.getWidth() / 2);
     tmp.setY(player2.getY() - tmp.getHeight());
     tmp.setAngle(player2_Arrow.getAngle());
@@ -429,11 +464,11 @@ void Game::renderGameBackground() {
     e.setX(x);
   }
 
-  for (int j = 0; j < 12; j++)
+  for (int j = 0; j < 13; j++)
     for (int i = 0; i * 96 < SCREEN_WIDTH; i++)
       render(grassTexture, i * 96, j * 32);
   
-  for (int j = 0; j < 12; j++)
+  for (int j = 0; j < 13; j++)
     for (int i = 0; i * 96 < SCREEN_WIDTH; i++)
       render(grassTexture, i * 96, SCREEN_HEIGHT - 32 - j * 32);
 }
@@ -469,6 +504,8 @@ void Game::gameLoop() {
   render(player2_skillE_Hud);
   render(player2_skillR_Hud);
 
+  // render(skillW_ground, player1.getX() + player1.getWidth() / 2 - 128 / 2, player1.getY() + player1.getHeight() - 64 / 2, 128, 64, 0, NULL);
+
   update();
   renderPlayer();
 
@@ -485,9 +522,6 @@ void Game::gameLoop() {
     // bullet.setRotPoint(bullet.getX() + bullet.getWidth() / 2, bullet.getY());
     if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
   }
-
-  // Rectangle rec(player1_Arrow.getX(), player1_Arrow.getY(), player1_Arrow.getWidth(), player1_Arrow.getHeight(), player1_Arrow.getAngle(), player1_Arrow.getRotPoint());
-  Rectangle rec(player1_Arrow);
 
   display();
 }

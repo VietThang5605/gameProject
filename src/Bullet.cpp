@@ -1,8 +1,8 @@
 #include "Bullet.h"
 
 Bullet::Bullet() {
-  velocityX = 40;
-  velocityY = 40;
+  velocityX = 50;
+  velocityY = 50;
 }
 
 void Bullet::move() {
