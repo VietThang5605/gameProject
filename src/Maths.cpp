@@ -15,3 +15,11 @@ Point::Point(double x, double y) {
   this->x = x;
   this->y = y;
 }
+
+void Point::setX(int x) {
+  this->x = x;
+}
+
+void Point::setY(int y) {
+  this->y = y;
+}

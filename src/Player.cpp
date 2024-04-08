@@ -2,39 +2,87 @@
 
 Player::Player() {
   type = false;
+  vulnerable = 0;
   health = 10;
   cntShot = 0;
-  for (int i = 0; i < 4; i++) skill_Cooldown[i] = 0;
+  velocity = 20;
+  velocityTeleport = 300;
+  castTimeCooldown = 0;
+  player_skill_Cooldown[skillQ_ID] = 1 * FPS;
+  player_skill_Cooldown[skillW_ID] = 3 * FPS;
+  player_skill_Cooldown[skillE_ID] = 3 * FPS;
+  player_skill_Cooldown[skillR_ID] = 15 * FPS;
 }
 
 void Player::setType(bool value) {
   type = value;
 }
 
-bool Player::getType() {
-  return type;
+void Player::setHealth(int delta) {
+  health += delta;
 }
 
-void Player::setHealth(int health) {
-  this->health = health;
+void Player::setSkillCooldown(int time, int skill_ID) {
+  player_skill_Cooldown[skill_ID] = time;
+}
+
+void Player::setVulnerable(int value) {
+  vulnerable = value;
+}
+
+void Player::setCastTimeCooldown(int value) {
+  castTimeCooldown = value;
+}
+
+bool Player::getType() {
+  return type;
 }
 
 int Player::getHealth() {
   return health;
 }
 
-void Player::updateSkill_Cooldown() {
-  for (int i = 0; i < skill_ID_Total; i++) {
-    if (skill_Cooldown[i] > 0)
-      skill_Cooldown[i]--;
+int Player::getSkillCooldown(int skill_ID) {
+  return player_skill_Cooldown[skill_ID];
+}
+
+int Player::getVulnerable() {
+  return vulnerable;
+}
+
+int Player::getCastTimeCooldown() {
+  return castTimeCooldown;
+}
+
+bool Player::isDead() {
+  return getHealth() <= 0;
+}
+
+void Player::updateCooldown() {
+  if (castTimeCooldown > 0) castTimeCooldown--;
+  
+  for (int id = 0; id < skill_ID_Total; id++) {
+    if (player_skill_Cooldown[id] > 0)
+      player_skill_Cooldown[id]--;
   }
 }
 
-void Player::setSkill_Cooldown(int time, int skill_ID) {
-  skill_Cooldown[skill_ID] = time;
+void Player::updatePlayerEffects() {
+  if (vulnerable > 0) vulnerable--;
 }
 
-int Player::getSkill_Cooldown(int skill_ID) {
-  return skill_Cooldown[skill_ID];
+void Player::moveLeft() {
+  if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
+    setX(getX() - velocityTeleport);
+  else
+    setX(getX() - velocity);
+  if (getX() < 50) setX(50);
 }
 
+void Player::moveRight() {
+  if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
+    setX(getX() + velocityTeleport);
+  else
+    setX(getX() + velocity);
+  if (getX() > SCREEN_WIDTH - 200) setX(SCREEN_WIDTH - 200);
+}

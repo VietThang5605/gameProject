@@ -13,12 +13,18 @@
 class Bullet : public Entity {
 public:
   Bullet();
-  void move();
+  void init(SDL_Texture* p_tex, double width, double height, int frames, int lines, int skill_ID);
+
   void setVelocityX(double x);
   void setVelocityY(double y);
+
   double getVelocityX();
   double getVelocityY();
+
+  void move();
+  int getSkillId();
 private:
   double velocityX;
   double velocityY;
+  int skill_ID;
 };

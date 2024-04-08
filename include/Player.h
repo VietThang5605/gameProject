@@ -12,15 +12,29 @@ class Player : public Entity {
 public:
   Player();
   void setType(bool value);
-  bool getType();
   void setHealth(int health);
+  void setSkillCooldown(int time, int skill_ID);
+  void setVulnerable(int value);
+  void setCastTimeCooldown(int value);
+
+  bool getType();
   int getHealth();
-  void updateSkill_Cooldown();
-  void setSkill_Cooldown(int time, int skill_ID);
-  int getSkill_Cooldown(int skill_ID);
+  int getSkillCooldown(int skill_ID);
+  int getVulnerable();
+  int getCastTimeCooldown();
+
+  bool isDead();
+  void updateCooldown();
+  void updatePlayerEffects();
+  void moveLeft();
+  void moveRight();
 private:
   bool type;
+  int vulnerable;
   int health;
   int cntShot;
-  int skill_Cooldown[4];
+  int velocity;
+  int velocityTeleport;
+  int castTimeCooldown;
+  int player_skill_Cooldown[4];
 };

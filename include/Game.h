@@ -39,12 +39,14 @@ public:
   void render(Entity &p_entity, double w = 0, double h = 0);
   void renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
 
-  void renderSkillCooldown(Player &player, int skill_ID);
+  void render_Skill_Hud_And_Cooldown();
+
+  void ProcessingSkill(int player_id, int skill_ID);
 
   void handleEvents();
   void update();
-  void renderGameBackground();
-  void renderPlayer();
+  void render_GameBackground();
+  void render_Player();
   void gameLoop();
 private:
   SDL_Window* gWindow;

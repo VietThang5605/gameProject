@@ -17,16 +17,17 @@ enum KeyPressSurfaces {
 int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
 
+TTF_Font* font32;
+
+SDL_Color white = {255, 255, 255};
+
 SDL_Texture* waterTexture = NULL;
 SDL_Texture* grassTexture = NULL;
 SDL_Texture* ezrealTexture = NULL;
 
 SDL_Texture* healthBarTexture = NULL;
 
-SDL_Texture* skillQ_Hud = NULL;
-SDL_Texture* skillW_Hud = NULL;
-SDL_Texture* skillE_Hud = NULL;
-SDL_Texture* skillR_Hud = NULL;
+SDL_Texture* skill_Hud[skill_ID_Total] = {NULL};
 
 SDL_Texture* skillArrow = NULL;
 SDL_Texture* skillQ = NULL;
@@ -34,18 +35,15 @@ SDL_Texture* skillW = NULL;
 SDL_Texture* skillW_ground = NULL;
 
 vector<Entity> waterBackground;
-vector<Bullet> Bullets;
 
-Entity player1_skillQ_Hud, player1_skillW_Hud, player1_skillE_Hud, player1_skillR_Hud;
-Entity player2_skillQ_Hud, player2_skillW_Hud, player2_skillE_Hud, player2_skillR_Hud;
+Entity player_skill_Hud[3][skill_ID_Total];
+Entity skillW_effect;
 
-Bullet bullet_Q, bullet_W;
-PlayerArrow player1_Arrow, player2_Arrow;
-Player player1, player2;
+PlayerArrow player_Arrow[3];
+Player player[3];
 
-TTF_Font* font32;
-
-SDL_Color white = {255, 255, 255};
+Bullet bullet[skill_ID_Total];
+vector<Bullet> player_bullets[3];
 
 Game::Game() {
   gWindow = NULL;
@@ -64,7 +62,7 @@ void Game::initSDL() {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     logError("Failed to initialize SDL.", SDL_GetError());
 
-  gWindow = SDL_CreateWindow("Game v1.0", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+  gWindow = SDL_CreateWindow("Game v1.0", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if (gWindow == NULL)
     logError("Failed to create window.", SDL_GetError());
   
@@ -90,21 +88,22 @@ void Game::loadMedia() {
   grassTexture = loadTexture("res/images/grass.png");
   ezrealTexture = loadTexture("res/images/ezreal-Sheet.png");
 
-  skillQ_Hud = loadTexture("res/images/ezreal_q.png");
-  skillW_Hud = loadTexture("res/images/ezreal_w.png");
-  skillE_Hud = loadTexture("res/images/ezreal_e.png");
-  skillR_Hud = loadTexture("res/images/ezreal_r.png");
+  skill_Hud[skillQ_ID] = loadTexture("res/images/ezreal_q.png");
+  skill_Hud[skillW_ID] = loadTexture("res/images/ezreal_w.png");
+  skill_Hud[skillE_ID] = loadTexture("res/images/ezreal_e.png");
+  skill_Hud[skillR_ID] = loadTexture("res/images/ezreal_r.png");
 
   skillArrow = loadTexture("res/images/skillArrow.png");
   skillQ = loadTexture("res/images/skillQ.png");
   skillW = loadTexture("res/images/skillW.png");
   skillW_ground = loadTexture("res/images/skillW_ground.png");
+  skillW_effect.init(skillW_ground, 128, 64, 1, 1);
 
   font32 = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
 
   ///entity's initialization
-  bullet_Q.init(skillQ, 4 * 9, 16 * 9, 1, 1);
-  bullet_W.init(skillW, 8 * 14, 8 * 14, 1, 1);
+  bullet[skillQ_ID].init(skillQ, 4 * 9, 16 * 9, 1, 1, skillQ_ID);
+  bullet[skillW_ID].init(skillW, 8 * 14, 8 * 14, 1, 1, skillW_ID);
 
   for (int j = 20; j < 45; j++)
     for (int i = 0; i < 32; i++) {
@@ -116,53 +115,53 @@ void Game::loadMedia() {
     }
   
   ///player1's initialization
-  player1.init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
-  player1.setX(SCREEN_WIDTH / 2 - player1.getWidth() / 2);
-  player1.setY(150);
+  player[1].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
+  player[1].setX(SCREEN_WIDTH / 2 - player[1].getWidth() / 2);
+  player[1].setY(150);
 
-  player1_Arrow.init(skillArrow, 8 * 10, 16 * 10, 1, 1);
-  player1_Arrow.setCenter(player1_Arrow.getWidth() / 2, 0);
+  player_Arrow[1].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
+  player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
 
-  player1_skillR_Hud.init(skillR_Hud, 96, 96, 1, 1);
-  player1_skillR_Hud.setX(SCREEN_WIDTH - 30 - player1_skillR_Hud.getWidth());
-  player1_skillR_Hud.setY(120 - player1_skillR_Hud.getHeight());
+  player_skill_Hud[1][skillR_ID].init(skill_Hud[skillR_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillR_ID].setX(SCREEN_WIDTH - 30 - player_skill_Hud[1][skillR_ID].getWidth());
+  player_skill_Hud[1][skillR_ID].setY(120 - player_skill_Hud[1][skillR_ID].getHeight());
 
-  player1_skillE_Hud.init(skillE_Hud, 96, 96, 1, 1);
-  player1_skillE_Hud.setX(player1_skillR_Hud.getX() - player1_skillE_Hud.getWidth() - 30);
-  player1_skillE_Hud.setY(120 - player1_skillE_Hud.getHeight());
+  player_skill_Hud[1][skillE_ID].init(skill_Hud[skillE_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillE_ID].setX(player_skill_Hud[1][skillR_ID].getX() - player_skill_Hud[1][skillE_ID].getWidth() - 30);
+  player_skill_Hud[1][skillE_ID].setY(120 - player_skill_Hud[1][skillE_ID].getHeight());
 
-  player1_skillW_Hud.init(skillW_Hud, 96, 96, 1, 1);
-  player1_skillW_Hud.setX(player1_skillE_Hud.getX() - player1_skillW_Hud.getWidth() - 30);
-  player1_skillW_Hud.setY(120 - player1_skillW_Hud.getHeight());
+  player_skill_Hud[1][skillW_ID].init(skill_Hud[skillW_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillW_ID].setX(player_skill_Hud[1][skillE_ID].getX() - player_skill_Hud[1][skillW_ID].getWidth() - 30);
+  player_skill_Hud[1][skillW_ID].setY(120 - player_skill_Hud[1][skillW_ID].getHeight());
 
-  player1_skillQ_Hud.init(skillQ_Hud, 96, 96, 1, 1);
-  player1_skillQ_Hud.setX(player1_skillW_Hud.getX() - player1_skillQ_Hud.getWidth() - 30);
-  player1_skillQ_Hud.setY(120 - player1_skillQ_Hud.getHeight());
+  player_skill_Hud[1][skillQ_ID].init(skill_Hud[skillQ_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillQ_ID].setX(player_skill_Hud[1][skillW_ID].getX() - player_skill_Hud[1][skillQ_ID].getWidth() - 30);
+  player_skill_Hud[1][skillQ_ID].setY(120 - player_skill_Hud[1][skillQ_ID].getHeight());
   
   ///player2's initialization
-  player2.init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
-  player2.setX(SCREEN_WIDTH / 2 - player1.getWidth() / 2);
-  player2.setY(720);
+  player[2].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
+  player[2].setX(SCREEN_WIDTH / 2 - player[2].getWidth() / 2);
+  player[2].setY(720);
 
-  player2_Arrow.init(skillArrow, 8 * 10, 16 * 10, 1, 1);
-  player2_Arrow.setCenter(player2_Arrow.getWidth() / 2, player2_Arrow.getHeight());
-  player2_Arrow.setFlip(SDL_FLIP_VERTICAL);
+  player_Arrow[2].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
+  player_Arrow[2].setCenter(player_Arrow[2].getWidth() / 2, player_Arrow[2].getHeight());
+  player_Arrow[2].setFlip(SDL_FLIP_VERTICAL);
 
-  player2_skillQ_Hud.init(skillQ_Hud, 96, 96, 1, 1);
-  player2_skillQ_Hud.setX(30);
-  player2_skillQ_Hud.setY(SCREEN_HEIGHT - 120);
+  player_skill_Hud[2][skillQ_ID].init(skill_Hud[skillQ_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillQ_ID].setX(30);
+  player_skill_Hud[2][skillQ_ID].setY(SCREEN_HEIGHT - 120);
 
-  player2_skillW_Hud.init(skillW_Hud, 96, 96, 1, 1);
-  player2_skillW_Hud.setX(player2_skillQ_Hud.getX() + player2_skillQ_Hud.getWidth() + 30);
-  player2_skillW_Hud.setY(SCREEN_HEIGHT - 120);
+  player_skill_Hud[2][skillW_ID].init(skill_Hud[skillW_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillW_ID].setX(player_skill_Hud[2][skillQ_ID].getX() + player_skill_Hud[2][skillQ_ID].getWidth() + 30);
+  player_skill_Hud[2][skillW_ID].setY(SCREEN_HEIGHT - 120);
 
-  player2_skillE_Hud.init(skillE_Hud, 96, 96, 1, 1);
-  player2_skillE_Hud.setX(player2_skillW_Hud.getX() + player2_skillW_Hud.getWidth() + 30);
-  player2_skillE_Hud.setY(SCREEN_HEIGHT - 120);
+  player_skill_Hud[2][skillE_ID].init(skill_Hud[skillE_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillE_ID].setX(player_skill_Hud[2][skillW_ID].getX() + player_skill_Hud[2][skillW_ID].getWidth() + 30);
+  player_skill_Hud[2][skillE_ID].setY(SCREEN_HEIGHT - 120);
 
-  player2_skillR_Hud.init(skillR_Hud, 96, 96, 1, 1);
-  player2_skillR_Hud.setX(player2_skillE_Hud.getX() + player2_skillE_Hud.getWidth() + 30);
-  player2_skillR_Hud.setY(SCREEN_HEIGHT - 120);
+  player_skill_Hud[2][skillR_ID].init(skill_Hud[skillR_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillR_ID].setX(player_skill_Hud[2][skillE_ID].getX() + player_skill_Hud[2][skillE_ID].getWidth() + 30);
+  player_skill_Hud[2][skillR_ID].setY(SCREEN_HEIGHT - 120);
 }
 
 void Game::closeMedia() {
@@ -172,10 +171,10 @@ void Game::closeMedia() {
   
   SDL_DestroyTexture(healthBarTexture); healthBarTexture = NULL;
 
-  SDL_DestroyTexture(skillQ_Hud); skillQ_Hud = NULL;
-  SDL_DestroyTexture(skillW_Hud); skillW_Hud = NULL;
-  SDL_DestroyTexture(skillE_Hud); skillE_Hud = NULL;
-  SDL_DestroyTexture(skillR_Hud); skillR_Hud = NULL;
+  SDL_DestroyTexture(skill_Hud[skillQ_ID]); skill_Hud[skillQ_ID] = NULL;
+  SDL_DestroyTexture(skill_Hud[skillW_ID]); skill_Hud[skillW_ID] = NULL;
+  SDL_DestroyTexture(skill_Hud[skillE_ID]); skill_Hud[skillE_ID] = NULL;
+  SDL_DestroyTexture(skill_Hud[skillR_ID]); skill_Hud[skillR_ID] = NULL;
 
   SDL_DestroyTexture(skillArrow); skillArrow = NULL;
   SDL_DestroyTexture(skillQ); skillQ = NULL;
@@ -272,10 +271,59 @@ void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* fo
 
   SDL_RenderCopy(gRenderer, message, &src, &dst);
   SDL_FreeSurface(surfaceMessage);
+  SDL_DestroyTexture(message);
 }
 
-void Game::renderSkillCooldown(Player &player, int skill_ID) {
-  
+void Game::render_Skill_Hud_And_Cooldown() {
+  for (int id = 1; id <= 2; id++)
+    for (int skill_id = 0; skill_id < skill_ID_Total; skill_id++) {
+      render(player_skill_Hud[id][skill_id]);
+
+      if (player[id].getSkillCooldown(skill_id) > 0) {
+        std::string text = TimeToString(player[id].getSkillCooldown(skill_id) / (FPS * 1.0));
+        renderTextCenter(player_skill_Hud[id][skill_id].getX() + player_skill_Hud[id][skill_id].getWidth() / 2,
+                        player_skill_Hud[id][skill_id].getY() + player_skill_Hud[id][skill_id].getHeight() / 2,
+                        text,
+                        font32,
+                        white);
+      }
+    }
+}
+
+void Game::ProcessingSkill(int player_id, int skill_ID) {
+  if (player[player_id].getSkillCooldown(skill_ID) > 0)
+    return;
+
+  player[player_id].setCastTimeCooldown(skill_castTime[skill_ID]);
+  player[player_id].setSkillCooldown(skill_Cooldown[skill_ID], skill_ID);
+
+  switch (skill_ID) {
+    case (skillE_ID): {
+
+      break;
+    }
+    default: {
+      Bullet tmp = bullet[skill_ID];
+      if (player_id == 1) {
+        tmp.setX(player[1].getX() + player[1].getWidth() / 2 - tmp.getWidth() / 2);
+        tmp.setY(player[1].getY() + player[1].getHeight());
+        tmp.setAngle(player_Arrow[1].getAngle());
+        tmp.setCenter(tmp.getWidth() / 2, 0);
+        tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///reset after each frame in void move();
+      }
+      else if (player_id == 2) {
+        tmp.setX(player[player_id].getX() + player[player_id].getWidth() / 2 - tmp.getWidth() / 2);
+        tmp.setY(player[player_id].getY() - tmp.getHeight());
+        tmp.setAngle(player_Arrow[player_id].getAngle());
+        tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
+        tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY() + tmp.getHeight()); ///reset after each frame in void move();
+        tmp.setFlip(SDL_FLIP_VERTICAL);
+        tmp.setVelocityX(-tmp.getVelocityX());
+        tmp.setVelocityY(-tmp.getVelocityY());
+      }
+      player_bullets[player_id].push_back(tmp);
+    }
+  }
 }
 
 void Game::handleEvents() { 
@@ -338,116 +386,98 @@ void Game::update() {
   }
 
   ///player1
-  player1.updateSkill_Cooldown();
-  if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0 && player1.getSkill_Cooldown(skillQ_ID) == 0) {
-    Bullet tmp = bullet_Q;
-    tmp.setX(player1.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
-    tmp.setY(player1.getY() + player1.getHeight());
-    tmp.setAngle(player1_Arrow.getAngle());
-    tmp.setCenter(tmp.getWidth() / 2, 0);
-    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///not reset after each frame when in vector Bullets
-    Bullets.push_back(tmp);
-    player1.setSkill_Cooldown(FPS * 3, skillQ_ID);
-  }
-  else if (player1.getSkill_Cooldown(skillQ_ID) > 0) {
-    std::string text = TimeToString(player1.getSkill_Cooldown(skillQ_ID) / (FPS * 1.0));
-    renderTextCenter(player1_skillQ_Hud.getX() + player1_skillQ_Hud.getWidth() / 2,
-                    player1_skillQ_Hud.getY() + player1_skillQ_Hud.getHeight() / 2,
-                    text,
-                    font32,
-                    white);
-  }
+  if (player[1].isDead() == 0) {
+    player[1].updatePlayerEffects();
+    player[1].updateCooldown();
 
-  if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0 && player1.getSkill_Cooldown(skillW_ID) == 0) {
-    Bullet tmp = bullet_W;
-    tmp.setX(player1.getX() + player1.getWidth() / 2 - tmp.getWidth() / 2);
-    tmp.setY(player1.getY() + player1.getHeight());
-    tmp.setAngle(player1_Arrow.getAngle());
-    tmp.setCenter(tmp.getWidth() / 2, 0);
-    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///not reset after each frame when in vector Bullets
-    Bullets.push_back(tmp);
-    // player1.setSkill_Cooldown(FPS * 3, skillW_ID);
-  }
-  else if (player1.getSkill_Cooldown(skillW_ID) > 0) {
-    std::string text = TimeToString(player1.getSkill_Cooldown(skillW_ID) / (FPS * 1.0));
-    renderTextCenter(player1_skillW_Hud.getX() + player1_skillW_Hud.getWidth() / 2,
-                    player1_skillW_Hud.getY() + player1_skillW_Hud.getHeight() / 2,
-                    text,
-                    font32,
-                    white);
-  }
+    if (player[1].getCastTimeCooldown() == 0) {
+      if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
+        ProcessingSkill(1, skillQ_ID);
 
-  if (new_key[KEY_PRESS_LEFT]) {
-    if (old_key[KEY_PRESS_LEFT] == 0) {
-      player1.setCurrentFrame(0);
-      player1.setFlip(SDL_FLIP_HORIZONTAL);
+      if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
+        ProcessingSkill(1, skillW_ID);
+      
+      if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
+          && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
+      {
+        ProcessingSkill(1, skillE_ID);
+      }
+
+      if (new_key[KEY_PRESS_LEFT]) {
+        if (old_key[KEY_PRESS_LEFT] == 0) {
+          player[1].setCurrentFrame(0);
+          player[1].setFlip(SDL_FLIP_HORIZONTAL);
+        }
+        player[1].moveLeft();
+        player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
+      }
+      else if (old_key[KEY_PRESS_LEFT]) {
+        player[1].setCurrentFrame(0);
+      }
+
+      if (new_key[KEY_PRESS_RIGHT]) {
+        if (old_key[KEY_PRESS_RIGHT] == 0) {
+          player[1].setCurrentFrame(0);
+          player[1].setFlip(SDL_FLIP_NONE);
+        }
+        player[1].moveRight();
+        player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
+      }
+      else if (old_key[KEY_PRESS_RIGHT]) {
+        player[1].setCurrentFrame(0);
+      }
     }
-    player1.setX(player1.getX() - 20);
-    player1.setCurrentFrame(player1.getCurrentFrame() + 1);
-  }
-  else if (old_key[KEY_PRESS_LEFT]) {
-    player1.setCurrentFrame(0);
   }
 
-  if (new_key[KEY_PRESS_RIGHT]) {
-    if (old_key[KEY_PRESS_RIGHT] == 0) {
-      player1.setCurrentFrame(0);
-      player1.setFlip(SDL_FLIP_NONE);
-    }
-    player1.setX(player1.getX() + 20);
-    player1.setCurrentFrame(player1.getCurrentFrame() + 1);
-  }
-  else if (old_key[KEY_PRESS_RIGHT]) {
-    player1.setCurrentFrame(0);
-  }
+  if (player[1].getCastTimeCooldown() > 0)
+    player[1].setCurrentFrame(0);
 
   ///player2
-  player2.updateSkill_Cooldown();
-  if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0 && player2.getSkill_Cooldown(skillQ_ID) == 0) {
-    Bullet tmp = bullet_Q;
-    tmp.setX(player2.getX() + player2.getWidth() / 2 - tmp.getWidth() / 2);
-    tmp.setY(player2.getY() - tmp.getHeight());
-    tmp.setAngle(player2_Arrow.getAngle());
-    tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
-    tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY() + tmp.getHeight());
-    tmp.setFlip(SDL_FLIP_VERTICAL);
-    tmp.setVelocityX(-tmp.getVelocityX());
-    tmp.setVelocityY(-tmp.getVelocityY());
-    Bullets.push_back(tmp);
-    player2.setSkill_Cooldown(FPS * 3, skillQ_ID);
-  }
-  else if (player2.getSkill_Cooldown(skillQ_ID) > 0) {
-    std::string text = TimeToString(player2.getSkill_Cooldown(skillQ_ID) / (FPS * 1.0));
-    renderTextCenter(player2_skillQ_Hud.getX() + player2_skillQ_Hud.getWidth() / 2,
-                    player2_skillQ_Hud.getY() + player2_skillQ_Hud.getHeight() / 2,
-                    text,
-                    font32,
-                    white);
+  if (player[2].isDead() == 0) {
+    player[2].updatePlayerEffects();
+    player[2].updateCooldown();
+
+    if (player[2].getCastTimeCooldown() == 0) {
+      if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0)
+        ProcessingSkill(2, skillQ_ID);
+      
+      if (new_key[KEY_PRESS_V] && old_key[KEY_PRESS_V] == 0)
+        ProcessingSkill(2, skillW_ID);
+
+      if ((new_key[KEY_PRESS_A] || new_key[KEY_PRESS_D])
+          && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0 && player[2].getSkillCooldown(skillE_ID) == 0) 
+      {
+        ProcessingSkill(2, skillE_ID);
+      }
+
+      if (new_key[KEY_PRESS_A]) {
+        if (old_key[KEY_PRESS_A] == 0) {
+          player[2].setCurrentFrame(0);
+          player[2].setFlip(SDL_FLIP_HORIZONTAL);
+        }
+        player[2].moveLeft();
+        player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
+      }
+      else if (old_key[KEY_PRESS_A]) {
+        player[2].setCurrentFrame(0);
+      }
+
+      if (new_key[KEY_PRESS_D]) {
+        if (old_key[KEY_PRESS_D] == 0) {
+          player[2].setCurrentFrame(0);
+          player[2].setFlip(SDL_FLIP_NONE);
+        }
+        player[2].moveRight();
+        player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
+      }
+      else if (old_key[KEY_PRESS_D]) {
+        player[2].setCurrentFrame(0);
+      }
+    }
   }
 
-  if (new_key[KEY_PRESS_A]) {
-    if (old_key[KEY_PRESS_A] == 0) {
-      player2.setCurrentFrame(0);
-      player2.setFlip(SDL_FLIP_HORIZONTAL);
-    }
-    player2.setX(player2.getX() - 20);
-    player2.setCurrentFrame(player2.getCurrentFrame() + 1);
-  }
-  else if (old_key[KEY_PRESS_A]) {
-    player2.setCurrentFrame(0);
-  }
-
-  if (new_key[KEY_PRESS_D]) {
-    if (old_key[KEY_PRESS_D] == 0) {
-      player2.setCurrentFrame(0);
-      player2.setFlip(SDL_FLIP_NONE);
-    }
-    player2.setX(player2.getX() + 20);
-    player2.setCurrentFrame(player2.getCurrentFrame() + 1);
-  }
-  else if (old_key[KEY_PRESS_D]) {
-    player2.setCurrentFrame(0);
-  }
+  if (player[2].getCastTimeCooldown() > 0)
+    player[2].setCurrentFrame(0);
 
   ///reset
   for (int i = 0; i < KEY_PRESS_TOTAL; i++) {
@@ -456,7 +486,7 @@ void Game::update() {
   }
 }
 
-void Game::renderGameBackground() {
+void Game::render_GameBackground() {
   for (Entity& e : waterBackground) {
     render(e);
     int x = e.getX() - 1;
@@ -473,54 +503,85 @@ void Game::renderGameBackground() {
       render(grassTexture, i * 96, SCREEN_HEIGHT - 32 - j * 32);
 }
 
-void Game::renderPlayer() {
-  render(player1);
-  player1_Arrow.setX(player1.getX() + player1.getWidth() / 2 - player1_Arrow.getWidth() / 2);
-  player1_Arrow.setY(player1.getY() + player1.getHeight() + 10);
-  player1_Arrow.setRotPoint(player1_Arrow.getX() + player1_Arrow.getWidth() / 2, player1_Arrow.getY());
-  render(player1_Arrow);
-  player1_Arrow.moveAngle();
+void Game::render_Player() {
+  render_Skill_Hud_And_Cooldown();
 
-  render(player2);
-  player2_Arrow.setX(player2.getX() + player2.getWidth() / 2 - player2_Arrow.getWidth() / 2);
-  player2_Arrow.setY(player2.getY() - player2_Arrow.getHeight() - 10);
-  player2_Arrow.setRotPoint(player2_Arrow.getX() + player2_Arrow.getWidth() / 2, player2_Arrow.getY() + player2_Arrow.getHeight());
-  render(player2_Arrow);
-  player2_Arrow.moveAngle();
+  if (player[1].getHealth() > 0) {
+    if (player[1].getVulnerable() > 0) {
+      Entity effect = skillW_effect;
+      effect.setX(player[1].getX() + player[1].getWidth() / 2 - effect.getWidth() / 2);
+      effect.setY(player[1].getY() + player[1].getHeight() - effect.getHeight() / 2);
+      render(effect);
+    }
+
+    render(player[1]);
+
+    player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
+    player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
+    player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
+    render(player_Arrow[1]);
+    player_Arrow[1].moveAngle();
+  }
+
+  if (player[2].getHealth() > 0) {
+    if (player[2].getVulnerable() > 0) {
+      Entity effect = skillW_effect;
+      effect.setX(player[2].getX() + player[2].getWidth() / 2 - effect.getWidth() / 2);
+      effect.setY(player[2].getY() + player[2].getHeight() - effect.getHeight() / 2);
+      render(effect);
+    }
+    
+    render(player[2]);
+
+    player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
+    player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
+    player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
+    render(player_Arrow[2]);
+    player_Arrow[2].moveAngle();
+  }
 }
 
 void Game::gameLoop() {
   clear();
   handleEvents();
-  renderGameBackground();
-
-  render(player1_skillQ_Hud);
-  render(player1_skillW_Hud);
-  render(player1_skillE_Hud);
-  render(player1_skillR_Hud);
-
-  render(player2_skillQ_Hud);
-  render(player2_skillW_Hud);
-  render(player2_skillE_Hud);
-  render(player2_skillR_Hud);
-
-  // render(skillW_ground, player1.getX() + player1.getWidth() / 2 - 128 / 2, player1.getY() + player1.getHeight() - 64 / 2, 128, 64, 0, NULL);
+  render_GameBackground();
 
   update();
-  renderPlayer();
+  render_Player();
 
-  // static int count = 0;
-  for (Bullet &bullet : Bullets) {
-    // Rectangle rec1(player2);
-    // Rectangle rec2(bullet);
-    // if (isColliding(rec1, rec2)) {
-    //   count++;
-    //   std::cout << count << "\n\n";
-    // }
-    render(bullet);
-    bullet.move();
-    // bullet.setRotPoint(bullet.getX() + bullet.getWidth() / 2, bullet.getY());
-    if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) Bullets.erase(Bullets.begin() + (&bullet - &Bullets[0]));
+  for (int id = 1; id <= 2; id++) {
+    for (Bullet &bullet : player_bullets[id]) {
+      Player &Enemy = player[3 - id];
+      Rectangle Agent(Enemy);
+      Rectangle Shot(bullet);
+      render(bullet);
+      bullet.move();
+      if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
+        cout << "player " << 3 - id << " is being shoted\n";
+        switch (bullet.getSkillId()) {
+          case (skillQ_ID): {
+            Enemy.setHealth(-2);
+            if (Enemy.getVulnerable() > 0) {
+              Enemy.setHealth(-2);
+              Enemy.setVulnerable(0);
+            }
+            break;
+          }
+          case (skillW_ID): {
+            Enemy.setVulnerable(vulnerableTime);
+            break;
+          }
+          case (skillR_ID): { ///***
+
+            break;
+          }
+        }
+        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+      }
+      else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
+        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+      }
+    }
   }
 
   display();

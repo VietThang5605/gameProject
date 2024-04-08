@@ -17,13 +17,15 @@ class Vector {
 public:
   Vector(double x = 0, double y = 0);
   bool isCollinear(const Vector &v) const;
-
+  
   double x, y;
 };
 
 class Point {
 public:
   Point(double x = 0, double y = 0);
+  void setX(int x);
+  void setY(int y);
 
   double x, y;
 };

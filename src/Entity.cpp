@@ -54,8 +54,11 @@ void Entity::setCenter(double x, double y) {
 }
 
 void Entity::setRotPoint(double x, double y) {
-  if (rotPoint != NULL) delete rotPoint;
-  rotPoint = new Point(x, y);
+  if (rotPoint == NULL) rotPoint = new Point(x, y);
+  else {
+    rotPoint->setX(x);
+    rotPoint->setY(y);
+  }
 }
 
 double Entity::getX() {
