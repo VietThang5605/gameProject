@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "ScrollingBackground.h"
-#include "Entity.h";
+#include "Entity.h"
 #include "Constants.h"
 #include "Functions.h"
 #include "Player.h"

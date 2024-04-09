@@ -5,7 +5,7 @@ Player::Player() {
   vulnerable = 0;
   health = 10;
   cntShot = 0;
-  velocity = 20;
+  velocity = 17;
   velocityTeleport = 300;
   castTimeCooldown = 0;
   player_skill_Cooldown[skillQ_ID] = 1 * FPS;

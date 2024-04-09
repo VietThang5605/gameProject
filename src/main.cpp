@@ -1,3 +1,8 @@
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 #include <iostream>
 #include <math.h>
 
@@ -14,6 +19,7 @@ int main(int argc, char* argv[]) {
   Game *game = new Game();
   game->init();
 
+  std::cout << "Hello world\n";
   while (game->running()) {
     int startTicks = SDL_GetTicks64();
 
@@ -23,6 +29,13 @@ int main(int argc, char* argv[]) {
     if (frameTicks < frameDelay)
       SDL_Delay(frameDelay - frameTicks);
   }
+
+  // while (game->running()) {
+  //   game->handleEvents();
+  //   game->clear();
+  //   game->render_GameBackground();
+  //   game->display();
+  // }
 
   game->closeMedia();
   game->cleanUp();

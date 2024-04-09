@@ -29,7 +29,7 @@ const int skill_Cooldown[skill_ID_Total] = {
 const int skill_castTime[skill_ID_Total] = {
   FPS / 4,
   FPS / 4,
-  FPS / 4,
+  FPS / 2,
   FPS
 };
 

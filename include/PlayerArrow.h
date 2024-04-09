@@ -5,7 +5,7 @@
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
 
-#include "Entity.h";
+#include "Entity.h"
 
 class PlayerArrow : public Entity {
 public:

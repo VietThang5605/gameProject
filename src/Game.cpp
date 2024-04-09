@@ -59,7 +59,7 @@ void Game::init() {
 }
 
 void Game::initSDL() {
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+  if (SDL_Init(SDL_INIT_EVERYTHING & ~(SDL_INIT_TIMER | SDL_INIT_HAPTIC))!= 0)
     logError("Failed to initialize SDL.", SDL_GetError());
 
   gWindow = SDL_CreateWindow("Game v1.0", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -84,8 +84,8 @@ void Game::initSDL() {
 }
 
 void Game::loadMedia() {
-  waterTexture = loadTexture("res/images/water.png");
-  grassTexture = loadTexture("res/images/grass.png");
+  waterTexture = loadTexture("res/images/Water.png");
+  grassTexture = loadTexture("res/images/Grass.png");
   ezrealTexture = loadTexture("res/images/ezreal-Sheet.png");
 
   skill_Hud[skillQ_ID] = loadTexture("res/images/ezreal_q.png");
@@ -543,46 +543,46 @@ void Game::render_Player() {
 
 void Game::gameLoop() {
   clear();
-  handleEvents();
+  // handleEvents();
   render_GameBackground();
 
-  update();
+  // update();
   render_Player();
 
-  for (int id = 1; id <= 2; id++) {
-    for (Bullet &bullet : player_bullets[id]) {
-      Player &Enemy = player[3 - id];
-      Rectangle Agent(Enemy);
-      Rectangle Shot(bullet);
-      render(bullet);
-      bullet.move();
-      if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
-        cout << "player " << 3 - id << " is being shoted\n";
-        switch (bullet.getSkillId()) {
-          case (skillQ_ID): {
-            Enemy.setHealth(-2);
-            if (Enemy.getVulnerable() > 0) {
-              Enemy.setHealth(-2);
-              Enemy.setVulnerable(0);
-            }
-            break;
-          }
-          case (skillW_ID): {
-            Enemy.setVulnerable(vulnerableTime);
-            break;
-          }
-          case (skillR_ID): { ///***
+  // for (int id = 1; id <= 2; id++) {
+  //   for (Bullet &bullet : player_bullets[id]) {
+  //     Player &Enemy = player[3 - id];
+  //     Rectangle Agent(Enemy);
+  //     Rectangle Shot(bullet);
+  //     render(bullet);
+  //     bullet.move();
+  //     if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
+  //       cout << "player " << 3 - id << " is being shoted\n";
+  //       switch (bullet.getSkillId()) {
+  //         case (skillQ_ID): {
+  //           Enemy.setHealth(-2);
+  //           if (Enemy.getVulnerable() > 0) {
+  //             Enemy.setHealth(-2);
+  //             Enemy.setVulnerable(0);
+  //           }
+  //           break;
+  //         }
+  //         case (skillW_ID): {
+  //           Enemy.setVulnerable(vulnerableTime);
+  //           break;
+  //         }
+  //         case (skillR_ID): { ///***
 
-            break;
-          }
-        }
-        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
-      }
-      else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
-        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
-      }
-    }
-  }
+  //           break;
+  //         }
+  //       }
+  //       player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+  //     }
+  //     else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
+  //       player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+  //     }
+  //   }
+  // }
 
   display();
 }
