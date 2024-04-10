@@ -15,11 +15,24 @@
 #include "Functions.h"
 #include "Constants.h"
 
-int main(int argc, char* argv[]) {
-  Game *game = new Game();
-  game->init();
+Game *game = new Game();
 
+void gameLoop() {
+  int startTicks = SDL_GetTicks64();
+
+  game->gameLoop();
+
+  int frameTicks = SDL_GetTicks64() - startTicks;
+  if (frameTicks < frameDelay)
+    SDL_Delay(frameDelay - frameTicks);
+}
+
+int main(int argc, char* argv[]) {
+  game->init();
   std::cout << "Hello world\n";
+#ifdef __EMSCRIPTEN__
+  emscripten_set_main_loop(gameLoop, 0, 1);
+#else  
   while (game->running()) {
     int startTicks = SDL_GetTicks64();
 
@@ -29,16 +42,8 @@ int main(int argc, char* argv[]) {
     if (frameTicks < frameDelay)
       SDL_Delay(frameDelay - frameTicks);
   }
-
-  // while (game->running()) {
-  //   game->handleEvents();
-  //   game->clear();
-  //   game->render_GameBackground();
-  //   game->display();
-  // }
-
+#endif
   game->closeMedia();
   game->cleanUp();
-
   return 0;
 }

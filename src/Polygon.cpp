@@ -15,13 +15,10 @@ Rectangle::Rectangle(double x, double y, double w, double h, double angle, Point
     double radAngle = angle * PI / 180;
     double cosAngle = cos(radAngle);
     double sinAngle = sin(radAngle);
-    // cout << angle << ' ' << '(' << center.x << ", " << center.y << ')' << '\n';
     for (Point &vertex: vertices) {
       vertex.x = rotPoint.x + (vertex.x - rotPoint.x) * cosAngle - (vertex.y - rotPoint.y) * sinAngle;
       vertex.y = rotPoint.y + (vertex.y - rotPoint.y) * cosAngle + (vertex.x - rotPoint.x) * sinAngle;
-      // cout << '(' << vertex.x << ", " << vertex.y << ") ";
     }
-    // cout << '\n';
   }
   for (int i = 0; i < (int)vertices.size(); i++) {
     double xAxis = -(vertices[(i + 1) % (int)vertices.size()].y - vertices[i].y);
@@ -33,7 +30,6 @@ Rectangle::Rectangle(double x, double y, double w, double h, double angle, Point
 
 Rectangle::Rectangle(Entity &p_entity) {
   *this = Rectangle(p_entity.getX(), p_entity.getY(), p_entity.getWidth(), p_entity.getHeight(), p_entity.getAngle(), p_entity.getRotPoint());
-  // cout << this->rotPoint.x << ' ' << this->rotPoint.y << '\n';
 }
 
 ///Circle
@@ -79,7 +75,4 @@ void removeRepeat(vector<Vector> &v) {
       if (v[i].isCollinear(v[j]))
         v.erase(v.begin() + j);
   }
-  // for (int i = 0; i < (int)v.size(); i++)
-  //   std::cout << '<' << v[i].x << ", " << v[i].y << "> ";
-  // cout << '\n';
 }

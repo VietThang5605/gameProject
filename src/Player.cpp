@@ -3,10 +3,10 @@
 Player::Player() {
   type = false;
   vulnerable = 0;
-  health = 10;
+  health = 20;
   cntShot = 0;
-  velocity = 17;
-  velocityTeleport = 300;
+  velocity = 18;
+  velocityTeleport = 500;
   castTimeCooldown = 0;
   player_skill_Cooldown[skillQ_ID] = 1 * FPS;
   player_skill_Cooldown[skillW_ID] = 3 * FPS;

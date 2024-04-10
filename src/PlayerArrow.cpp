@@ -2,14 +2,20 @@
 
 PlayerArrow::PlayerArrow() {
   angleDelta = 3;
+  dir = 1;
 }
 
-void PlayerArrow::setAngleDelta(double delta) {
-  angleDelta = delta;
+void PlayerArrow::increaseAngleDelta() {
+  if (increaseCooldown > 0) return;
+  increaseCooldown = increaseAngleDeltaCooldown;
+  angleDelta += 3;
+  if (angleDelta > 6)
+    angleDelta = 3;
 }
 
 void PlayerArrow::moveAngle() {
-  if (getAngle() + angleDelta > 70) angleDelta = -angleDelta;
-  if (getAngle() + angleDelta < -70) angleDelta = -angleDelta;
-  setAngle(getAngle() + angleDelta);
+  if (increaseCooldown > 0) increaseCooldown--;
+  if (getAngle() + angleDelta * dir > maxAngle) dir = -dir;
+  if (getAngle() + angleDelta * dir < -maxAngle) dir = -dir;
+  setAngle(getAngle() + angleDelta * dir);
 }

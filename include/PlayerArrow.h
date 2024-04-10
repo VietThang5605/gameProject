@@ -6,12 +6,15 @@
 #include <SDL_mixer.h>
 
 #include "Entity.h"
+#include "Constants.h"
 
 class PlayerArrow : public Entity {
 public:
   PlayerArrow();
-  void setAngleDelta(double delta);
+  void increaseAngleDelta();
   void moveAngle();
 private:
   double angleDelta;
+  int dir;
+  int increaseCooldown;
 };

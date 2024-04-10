@@ -9,6 +9,9 @@ const int SCREEN_HEIGHT = 1080;
 const double PI = 3.14159265358979323846;
 const double INF = 1e9;
 
+const double maxAngle = 70;
+const int increaseAngleDeltaCooldown = 5 * FPS;
+
 const int vulnerableTime = 2 * FPS;
 
 enum skill_ID {
@@ -31,6 +34,17 @@ const int skill_castTime[skill_ID_Total] = {
   FPS / 4,
   FPS / 2,
   FPS
+};
+
+enum sfx_ID {
+  Q1_sfx_ID,
+  Q2_sfx_ID,
+  Q_hit_sfx_ID,
+  W_sfx_ID,
+  W_hit_sfx_ID,
+  W_hit_crashed_sfx_ID,
+  E_sfx_ID,
+  sfx_ID_Total
 };
 
 enum Player_Type {

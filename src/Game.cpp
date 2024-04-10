@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <time.h>
 
 #include "Game.h"
 
@@ -18,8 +19,12 @@ int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
 
 TTF_Font* font32;
+TTF_Font* font32_outline;
 
 SDL_Color white = {255, 255, 255};
+SDL_Color black = {0, 0, 0};
+
+Mix_Chunk* SFX[sfx_ID_Total] = { NULL };
 
 SDL_Texture* waterTexture = NULL;
 SDL_Texture* grassTexture = NULL;
@@ -27,7 +32,7 @@ SDL_Texture* ezrealTexture = NULL;
 
 SDL_Texture* healthBarTexture = NULL;
 
-SDL_Texture* skill_Hud[skill_ID_Total] = {NULL};
+SDL_Texture* skill_Hud[skill_ID_Total] = { NULL };
 
 SDL_Texture* skillArrow = NULL;
 SDL_Texture* skillQ = NULL;
@@ -54,6 +59,7 @@ Game::Game() {
 };
 
 void Game::init() {
+  srand(time(NULL));
   initSDL();
   loadMedia();
 }
@@ -81,9 +87,12 @@ void Game::initSDL() {
   
   if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
     logError("Failed to initialize SDL_mixer.", Mix_GetError());
+  
+  Mix_Volume(-1, 50);
 }
 
 void Game::loadMedia() {
+  ///Textures
   waterTexture = loadTexture("res/images/Water.png");
   grassTexture = loadTexture("res/images/Grass.png");
   ezrealTexture = loadTexture("res/images/ezreal-Sheet.png");
@@ -97,11 +106,23 @@ void Game::loadMedia() {
   skillQ = loadTexture("res/images/skillQ.png");
   skillW = loadTexture("res/images/skillW.png");
   skillW_ground = loadTexture("res/images/skillW_ground.png");
-  skillW_effect.init(skillW_ground, 128, 64, 1, 1);
 
-  font32 = TTF_OpenFont("res/fonts/cocogoose.ttf", 32);
+  ///Fonts
+  font32 = loadFont("res/fonts/cocogoose.ttf", 32);
+  font32_outline = loadFont("res/fonts/cocogoose.ttf", 32);
+  TTF_SetFontOutline(font32_outline, 1);
+
+  //Sounds
+  SFX[Q1_sfx_ID] = loadSFX("res/audio/sfx/Q1.wav");
+  SFX[Q2_sfx_ID] = loadSFX("res/audio/sfx/Q2.wav");
+  SFX[Q_hit_sfx_ID] = loadSFX("res/audio/sfx/Q_hit.wav");
+  SFX[W_sfx_ID] = loadSFX("res/audio/sfx/W.wav");
+  SFX[W_hit_sfx_ID] = loadSFX("res/audio/sfx/W_hit.wav");
+  SFX[W_hit_crashed_sfx_ID] = loadSFX("res/audio/sfx/W_hit_crashed.wav");
+  SFX[E_sfx_ID] = loadSFX("res/audio/sfx/E.wav");
 
   ///entity's initialization
+  skillW_effect.init(skillW_ground, 128, 64, 1, 1);
   bullet[skillQ_ID].init(skillQ, 4 * 9, 16 * 9, 1, 1, skillQ_ID);
   bullet[skillW_ID].init(skillW, 8 * 14, 8 * 14, 1, 1, skillW_ID);
 
@@ -121,6 +142,7 @@ void Game::loadMedia() {
 
   player_Arrow[1].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
   player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
+  player_Arrow[1].setAngle(0);
 
   player_skill_Hud[1][skillR_ID].init(skill_Hud[skillR_ID], 96, 96, 1, 1);
   player_skill_Hud[1][skillR_ID].setX(SCREEN_WIDTH - 30 - player_skill_Hud[1][skillR_ID].getWidth());
@@ -146,6 +168,7 @@ void Game::loadMedia() {
   player_Arrow[2].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
   player_Arrow[2].setCenter(player_Arrow[2].getWidth() / 2, player_Arrow[2].getHeight());
   player_Arrow[2].setFlip(SDL_FLIP_VERTICAL);
+  player_Arrow[2].setAngle(0);
 
   player_skill_Hud[2][skillQ_ID].init(skill_Hud[skillQ_ID], 96, 96, 1, 1);
   player_skill_Hud[2][skillQ_ID].setX(30);
@@ -171,17 +194,23 @@ void Game::closeMedia() {
   
   SDL_DestroyTexture(healthBarTexture); healthBarTexture = NULL;
 
-  SDL_DestroyTexture(skill_Hud[skillQ_ID]); skill_Hud[skillQ_ID] = NULL;
-  SDL_DestroyTexture(skill_Hud[skillW_ID]); skill_Hud[skillW_ID] = NULL;
-  SDL_DestroyTexture(skill_Hud[skillE_ID]); skill_Hud[skillE_ID] = NULL;
-  SDL_DestroyTexture(skill_Hud[skillR_ID]); skill_Hud[skillR_ID] = NULL;
-
   SDL_DestroyTexture(skillArrow); skillArrow = NULL;
   SDL_DestroyTexture(skillQ); skillQ = NULL;
   SDL_DestroyTexture(skillW); skillW = NULL;
   SDL_DestroyTexture(skillW_ground); skillW_ground = NULL;
 
   TTF_CloseFont(font32);
+  TTF_CloseFont(font32_outline);
+
+  for (int id = 0; id < skill_ID_Total; id++) {
+    SDL_DestroyTexture(skill_Hud[id]);
+    skill_Hud[id] = NULL;
+  }
+
+  for (int id = 0; id < sfx_ID_Total; id++) {
+    Mix_FreeChunk(SFX[id]);
+    SFX[id] = NULL;
+  }
 }
 
 void Game::display() {
@@ -212,6 +241,30 @@ SDL_Texture* Game::loadTexture(const char* p_filePath) {
   if (texture == NULL)
     logError("Failed to load texture.", IMG_GetError());
   return texture;
+}
+
+Mix_Chunk* Game::loadSFX(const char* p_filePath) {
+  Mix_Chunk* sound = NULL;
+  sound = Mix_LoadWAV(p_filePath);
+  if (sound == NULL)
+    logError("Failed to load sound effct with path:", p_filePath);
+  return sound;
+}
+
+Mix_Music* Game::loadMusic(const char* p_filePath) {
+  Mix_Music* music = NULL;
+  music = Mix_LoadMUS(p_filePath);
+  if (music == NULL)
+    logError("Failed to load music.", Mix_GetError());
+  return music;
+}
+
+TTF_Font* Game::loadFont(const char* p_filePath, int sz) {
+  TTF_Font* font = NULL;
+  font = TTF_OpenFont(p_filePath, sz);
+  if (font == NULL)
+    logError("Failed to load font.", TTF_GetError());
+  return font;
 }
 
 void Game::render(SDL_Texture* p_tex, double x, double y, double w, double h, double angle, SDL_Point* center, SDL_RendererFlip flip) {
@@ -252,6 +305,28 @@ void Game::render(Entity &p_entity, double w, double h) {
   SDL_RenderCopyEx(gRenderer, p_entity.getTexture(), p_entity.getCurrentClip(), &dst, p_entity.getAngle(), p_entity.getCenter(), p_entity.getFlip());
 }
 
+void Game::renderText(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
+  char* text = &p_text[0];
+  SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, text, textColor);
+  SDL_Texture* message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
+
+  SDL_Rect src;
+  src.x = 0;
+  src.y = 0;
+  src.w = surfaceMessage->w;
+  src.h = surfaceMessage->h;
+
+  SDL_Rect dst;
+  dst.x = p_x;
+  dst.y = p_y;
+  dst.w = src.w;
+  dst.h = src.h;
+
+  SDL_RenderCopy(gRenderer, message, &src, &dst);
+  SDL_FreeSurface(surfaceMessage);
+  SDL_DestroyTexture(message);
+}
+
 void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
   char* text = &p_text[0];
   SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, text, textColor);
@@ -275,6 +350,21 @@ void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* fo
 }
 
 void Game::render_Skill_Hud_And_Cooldown() {
+  {
+    string health;
+    if (player[1].getHealth() > 0)
+      health = "Health: " + IntToString(player[1].getHealth());
+    else
+      health = "Health: !!";
+    renderText(0, 0, health, font32, white);
+    renderText(0, 0, health, font32_outline, black);
+    if (player[2].getHealth() > 0)
+      health = "Health: " + IntToString(player[2].getHealth());
+    else
+      health = "Health: !!";
+    renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32, white);
+    renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32_outline, black);
+  }
   for (int id = 1; id <= 2; id++)
     for (int skill_id = 0; skill_id < skill_ID_Total; skill_id++) {
       render(player_skill_Hud[id][skill_id]);
@@ -286,8 +376,35 @@ void Game::render_Skill_Hud_And_Cooldown() {
                         text,
                         font32,
                         white);
+        renderTextCenter(player_skill_Hud[id][skill_id].getX() + player_skill_Hud[id][skill_id].getWidth() / 2,
+                        player_skill_Hud[id][skill_id].getY() + player_skill_Hud[id][skill_id].getHeight() / 2,
+                        text,
+                        font32_outline,
+                        black);
       }
     }
+}
+
+void Game::PlaySFX(int skill_ID) {
+  switch (skill_ID) {
+    case (skillQ_ID): {
+      Mix_PlayChannel(-1, SFX[Q1_sfx_ID], 0);
+      Mix_PlayChannel(-1, SFX[Q2_sfx_ID], 0);
+      break;
+    }
+    case (skillW_ID): {
+      Mix_PlayChannel(-1, SFX[W_sfx_ID], 0);
+      break;
+    }
+    case (skillE_ID): {
+      Mix_PlayChannel(-1, SFX[E_sfx_ID], 0);
+      break;
+    }
+    case (skillR_ID): {
+
+      break;
+    }
+  }
 }
 
 void Game::ProcessingSkill(int player_id, int skill_ID) {
@@ -296,6 +413,7 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
 
   player[player_id].setCastTimeCooldown(skill_castTime[skill_ID]);
   player[player_id].setSkillCooldown(skill_Cooldown[skill_ID], skill_ID);
+  PlaySFX(skill_ID);
 
   switch (skill_ID) {
     case (skillE_ID): {
@@ -403,11 +521,14 @@ void Game::update() {
         ProcessingSkill(1, skillE_ID);
       }
 
+      if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
+        player_Arrow[1].increaseAngleDelta();
+
       if (new_key[KEY_PRESS_LEFT]) {
         if (old_key[KEY_PRESS_LEFT] == 0) {
           player[1].setCurrentFrame(0);
-          player[1].setFlip(SDL_FLIP_HORIZONTAL);
         }
+        player[1].setFlip(SDL_FLIP_HORIZONTAL);
         player[1].moveLeft();
         player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
       }
@@ -418,8 +539,8 @@ void Game::update() {
       if (new_key[KEY_PRESS_RIGHT]) {
         if (old_key[KEY_PRESS_RIGHT] == 0) {
           player[1].setCurrentFrame(0);
-          player[1].setFlip(SDL_FLIP_NONE);
         }
+          player[1].setFlip(SDL_FLIP_NONE);
         player[1].moveRight();
         player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
       }
@@ -450,11 +571,14 @@ void Game::update() {
         ProcessingSkill(2, skillE_ID);
       }
 
+      if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
+        player_Arrow[2].increaseAngleDelta();
+
       if (new_key[KEY_PRESS_A]) {
         if (old_key[KEY_PRESS_A] == 0) {
           player[2].setCurrentFrame(0);
-          player[2].setFlip(SDL_FLIP_HORIZONTAL);
         }
+        player[2].setFlip(SDL_FLIP_HORIZONTAL);
         player[2].moveLeft();
         player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
       }
@@ -465,8 +589,8 @@ void Game::update() {
       if (new_key[KEY_PRESS_D]) {
         if (old_key[KEY_PRESS_D] == 0) {
           player[2].setCurrentFrame(0);
-          player[2].setFlip(SDL_FLIP_NONE);
         }
+        player[2].setFlip(SDL_FLIP_NONE);
         player[2].moveRight();
         player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
       }
@@ -543,46 +667,54 @@ void Game::render_Player() {
 
 void Game::gameLoop() {
   clear();
-  // handleEvents();
+  handleEvents();
   render_GameBackground();
 
-  // update();
+  update();
   render_Player();
 
-  // for (int id = 1; id <= 2; id++) {
-  //   for (Bullet &bullet : player_bullets[id]) {
-  //     Player &Enemy = player[3 - id];
-  //     Rectangle Agent(Enemy);
-  //     Rectangle Shot(bullet);
-  //     render(bullet);
-  //     bullet.move();
-  //     if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
-  //       cout << "player " << 3 - id << " is being shoted\n";
-  //       switch (bullet.getSkillId()) {
-  //         case (skillQ_ID): {
-  //           Enemy.setHealth(-2);
-  //           if (Enemy.getVulnerable() > 0) {
-  //             Enemy.setHealth(-2);
-  //             Enemy.setVulnerable(0);
-  //           }
-  //           break;
-  //         }
-  //         case (skillW_ID): {
-  //           Enemy.setVulnerable(vulnerableTime);
-  //           break;
-  //         }
-  //         case (skillR_ID): { ///***
+  for (int id = 1; id <= 2; id++) {
+    for (Bullet &bullet : player_bullets[id]) {
+      Player &Enemy = player[3 - id];
+      Rectangle Agent(Enemy);
+      Rectangle Shot(bullet);
+      render(bullet);
+      bullet.move();
+      if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
+        cout << "player " << 3 - id << " is being shoted\n";
+        switch (bullet.getSkillId()) {
+          case (skillQ_ID): {
+            Enemy.setHealth(-2);
+            Mix_Volume(-1, 100);
+            cout << "*\n";
+            Mix_PlayChannel(-1, SFX[Q_hit_sfx_ID], 0);
+            Mix_Volume(-1, 50);
+            if (Enemy.getVulnerable() > 0) {
+              Enemy.setHealth(-2);
+              Enemy.setVulnerable(0);
+              Mix_Volume(-1, 100);
+              Mix_PlayChannel(-1, SFX[W_hit_crashed_sfx_ID], 0);
+              Mix_Volume(-1, 50);
+            }
+            break;
+          }
+          case (skillW_ID): {
+            Enemy.setVulnerable(vulnerableTime);
+            Mix_PlayChannel(-1, SFX[W_hit_sfx_ID], 0);
+            break;
+          }
+          case (skillR_ID): { ///***
 
-  //           break;
-  //         }
-  //       }
-  //       player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
-  //     }
-  //     else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
-  //       player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
-  //     }
-  //   }
-  // }
+            break;
+          }
+        }
+        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+      }
+      else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
+        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+      }
+    }
+  }
 
   display();
 }
