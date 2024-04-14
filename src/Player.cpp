@@ -1,7 +1,7 @@
 #include "Player.h"
 
 Player::Player() {
-  type = false;
+  type = Human;
   vulnerable = 0;
   health = 20;
   cntShot = 0;
@@ -14,7 +14,7 @@ Player::Player() {
   player_skill_Cooldown[skillR_ID] = 15 * FPS;
 }
 
-void Player::setType(bool value) {
+void Player::setType(int value) {
   type = value;
 }
 
@@ -34,7 +34,7 @@ void Player::setCastTimeCooldown(int value) {
   castTimeCooldown = value;
 }
 
-bool Player::getType() {
+int Player::getType() {
   return type;
 }
 

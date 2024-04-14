@@ -1,19 +1,24 @@
-#include <iostream>
-#include <vector>
-#include <time.h>
-
 #include "Game.h"
 
-const Uint8* keystate = SDL_GetKeyboardState(NULL);
+enum Game_State {
+  MainMenu,
+  GamePlay,
+  Exit,
+};
 
 enum KeyPressSurfaces {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT, KEY_PRESS_UP, KEY_PRESS_DOWN,
   KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_U, KEY_PRESS_I,
+  KEY_PRESS_KP_1, KEY_PRESS_KP_2, KEY_PRESS_KP_3, KEY_PRESS_KP_4, KEY_PRESS_KP_6,
+
   KEY_PRESS_A, KEY_PRESS_D, KEY_PRESS_W, KEY_PRESS_S,
   KEY_PRESS_C, KEY_PRESS_V, KEY_PRESS_B, KEY_PRESS_F, KEY_PRESS_G,
   KEY_PRESS_P, KEY_PRESS_F11,
+  KEY_PRESS_ESC,
   KEY_PRESS_TOTAL
 };
+
+const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
 int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
@@ -54,12 +59,11 @@ Game::Game() {
   gWindow = NULL;
   gRenderer = NULL;
   gameRunning = true;
-  mainMenu = true;
+  gameState = MainMenu;
   fullscreen = false;
 };
 
 void Game::init() {
-  srand(time(NULL));
   initSDL();
   loadMedia();
 }
@@ -68,7 +72,7 @@ void Game::initSDL() {
   if (SDL_Init(SDL_INIT_EVERYTHING & ~(SDL_INIT_TIMER | SDL_INIT_HAPTIC))!= 0)
     logError("Failed to initialize SDL.", SDL_GetError());
 
-  gWindow = SDL_CreateWindow("Game v1.0", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   if (gWindow == NULL)
     logError("Failed to create window.", SDL_GetError());
   
@@ -444,7 +448,7 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
   }
 }
 
-void Game::handleEvents() { 
+void Game::handleEvents() {
   ///player1
   if (keystate[SDL_SCANCODE_LEFT]) new_key[KEY_PRESS_LEFT] = 1;
   if (keystate[SDL_SCANCODE_RIGHT]) new_key[KEY_PRESS_RIGHT] = 1;
@@ -470,6 +474,7 @@ void Game::handleEvents() {
   ///utility
   if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
   if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
+  if (keystate[SDL_SCANCODE_ESCAPE]) new_key[KEY_PRESS_ESC] = 1;
 
   if (new_key[KEY_PRESS_LEFT] && new_key[KEY_PRESS_RIGHT]) {
     new_key[KEY_PRESS_LEFT] = new_key[KEY_PRESS_RIGHT] = 0;
@@ -499,9 +504,16 @@ void Game::update() {
     }
   }
   
+  if (new_key[KEY_PRESS_ESC] && old_key[KEY_PRESS_ESC] == 0) {
+    if (fullscreen) {
+      SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
+      fullscreen = false;
+    }
+  }
   if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0) {
     
   }
+
 
   ///player1
   if (player[1].isDead() == 0) {
@@ -665,14 +677,13 @@ void Game::render_Player() {
   }
 }
 
-void Game::gameLoop() {
-  clear();
-  handleEvents();
+void Game::render_MainMenu() {
+  
+}
+
+void Game::render_GamePlay() {
   render_GameBackground();
-
-  update();
   render_Player();
-
   for (int id = 1; id <= 2; id++) {
     for (Bullet &bullet : player_bullets[id]) {
       Player &Enemy = player[3 - id];
@@ -681,7 +692,7 @@ void Game::gameLoop() {
       render(bullet);
       bullet.move();
       if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
-        cout << "player " << 3 - id << " is being shoted\n";
+        cout << "player " << 3 - id << " is being shot\n";
         switch (bullet.getSkillId()) {
           case (skillQ_ID): {
             Enemy.setHealth(-2);
@@ -715,6 +726,21 @@ void Game::gameLoop() {
       }
     }
   }
+}
 
+void Game::render_Game() {
+  if (gameState == MainMenu) {
+    render_MainMenu();
+  }
+  else if (gameState == GamePlay) {
+    render_GamePlay();
+  }
+}
+
+void Game::gameLoop() {
+  clear();
+  handleEvents();
+  update();
+  render_Game();
   display();
 }

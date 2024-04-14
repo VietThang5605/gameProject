@@ -5,6 +5,8 @@
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
 
+#include <iostream>
+#include <vector>
 #include <string.h>
 
 #include "ScrollingBackground.h"
@@ -53,12 +55,15 @@ public:
   void update();
   void render_GameBackground();
   void render_Player();
+  void render_MainMenu();
+  void render_GamePlay();
+  void render_Game();
   void gameLoop();
 private:
   SDL_Window* gWindow;
   SDL_Renderer* gRenderer;
   SDL_Event gEvent;
   bool gameRunning;
-  bool mainMenu;
   bool fullscreen;
+  int gameState;
 };
