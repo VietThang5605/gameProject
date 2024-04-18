@@ -47,6 +47,14 @@ enum sfx_ID {
   sfx_ID_Total
 };
 
+enum ButtonName {
+  VSAI_Button,
+  VSPlayer_Button,
+  Help_Button,
+  Exit_Button,
+  Button_Total
+};
+
 enum Player_Type {
   Human,
   Bot,

@@ -1,7 +1,18 @@
 #include "Player.h"
 
 Player::Player() {
-  type = Human;
+
+}
+
+void Player::setStartXY(double x, double y) {
+  startX = x;
+  startY = y;
+}
+
+void Player::reset(int Player_Type) {
+  x = startX;
+  y = startY;
+  type = Player_Type;
   vulnerable = 0;
   health = 20;
   cntShot = 0;
@@ -14,8 +25,8 @@ Player::Player() {
   player_skill_Cooldown[skillR_ID] = 15 * FPS;
 }
 
-void Player::setType(int value) {
-  type = value;
+void Player::setType(int Player_Type) {
+  type = Player_Type;
 }
 
 void Player::setHealth(int delta) {

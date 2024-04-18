@@ -1,9 +1,11 @@
 #include "Game.h"
 
-enum Game_State {
+enum GameState {
   MainMenu,
   GamePlay,
+  Help,
   Exit,
+  GameState_Total
 };
 
 enum KeyPressSurfaces {
@@ -20,34 +22,41 @@ enum KeyPressSurfaces {
 
 const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
+int MouseX, MouseY;
+
 int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
 
-TTF_Font* font32;
-TTF_Font* font32_outline;
-
 SDL_Color white = {255, 255, 255};
 SDL_Color black = {0, 0, 0};
+
+TTF_Font* font32;
+TTF_Font* font32_outline;
+TTF_Font* font80;
 
 Mix_Chunk* SFX[sfx_ID_Total] = { NULL };
 
 SDL_Texture* waterTexture = NULL;
 SDL_Texture* grassTexture = NULL;
+
 SDL_Texture* ezrealTexture = NULL;
 
-SDL_Texture* healthBarTexture = NULL;
-
 SDL_Texture* skill_Hud[skill_ID_Total] = { NULL };
-
 SDL_Texture* skillArrow = NULL;
 SDL_Texture* skillQ = NULL;
 SDL_Texture* skillW = NULL;
 SDL_Texture* skillW_ground = NULL;
 
+SDL_Texture* Background[GameState_Total] = { NULL };
+
+SDL_Texture* Button_Texture[Button_Total][2] = { NULL };
+
 vector<Entity> waterBackground;
 
 Entity player_skill_Hud[3][skill_ID_Total];
 Entity skillW_effect;
+
+Button button[Button_Total];
 
 PlayerArrow player_Arrow[3];
 Player player[3];
@@ -96,6 +105,13 @@ void Game::initSDL() {
 }
 
 void Game::loadMedia() {
+  ///Fonts
+  font32 = loadFont("res/fonts/cocogoose.ttf", 32);
+  font32_outline = loadFont("res/fonts/cocogoose.ttf", 32);
+  TTF_SetFontOutline(font32_outline, 1);
+
+  font80 = loadFont("res/fonts/DTM-Sans.ttf", 80);
+
   ///Textures
   waterTexture = loadTexture("res/images/Water.png");
   grassTexture = loadTexture("res/images/Grass.png");
@@ -111,12 +127,34 @@ void Game::loadMedia() {
   skillW = loadTexture("res/images/skillW.png");
   skillW_ground = loadTexture("res/images/skillW_ground.png");
 
-  ///Fonts
-  font32 = loadFont("res/fonts/cocogoose.ttf", 32);
-  font32_outline = loadFont("res/fonts/cocogoose.ttf", 32);
-  TTF_SetFontOutline(font32_outline, 1);
+  Background[MainMenu] = loadTexture("res/images/MainMenu_background.png");
+  Background[Help] = loadTexture("res/images/Help_background.png");
 
-  //Sounds
+  Button_Texture[VSAI_Button][0] = loadTextureFromText("VS AI", font80, black);
+  Button_Texture[VSAI_Button][1] = loadTextureFromText("VS AI", font80, white);
+  button[VSAI_Button].init(Button_Texture[VSAI_Button][0], Button_Texture[VSAI_Button][1]);
+  button[VSAI_Button].setX(SCREEN_WIDTH / 2 - button[VSAI_Button].getWidth() / 2);
+  button[VSAI_Button].setY(SCREEN_HEIGHT / 2 - button[VSAI_Button].getHeight() - 100);
+
+  Button_Texture[VSPlayer_Button][0] = loadTextureFromText("VS Player", font80, black);
+  Button_Texture[VSPlayer_Button][1] = loadTextureFromText("VS Player", font80, white);
+  button[VSPlayer_Button].init(Button_Texture[VSPlayer_Button][0], Button_Texture[VSPlayer_Button][1]);
+  button[VSPlayer_Button].setX(SCREEN_WIDTH / 2 - button[VSPlayer_Button].getWidth() / 2);
+  button[VSPlayer_Button].setY(button[VSAI_Button].getY() + button[VSAI_Button].getHeight() + 10);
+
+  Button_Texture[Help_Button][0] = loadTextureFromText("Help", font80, black);
+  Button_Texture[Help_Button][1] = loadTextureFromText("Help", font80, white);
+  button[Help_Button].init(Button_Texture[Help_Button][0], Button_Texture[Help_Button][1]);
+  button[Help_Button].setX(SCREEN_WIDTH / 2 - button[Help_Button].getWidth() / 2);
+  button[Help_Button].setY(button[VSPlayer_Button].getY() + button[VSPlayer_Button].getHeight() + 10);
+
+  Button_Texture[Exit_Button][0] = loadTextureFromText("Exit", font80, black);
+  Button_Texture[Exit_Button][1] = loadTextureFromText("Exit", font80, white);
+  button[Exit_Button].init(Button_Texture[Exit_Button][0], Button_Texture[Exit_Button][1]);
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[Help_Button].getY() + button[Help_Button].getHeight() + 10);
+
+  ///Sounds
   SFX[Q1_sfx_ID] = loadSFX("res/audio/sfx/Q1.wav");
   SFX[Q2_sfx_ID] = loadSFX("res/audio/sfx/Q2.wav");
   SFX[Q_hit_sfx_ID] = loadSFX("res/audio/sfx/Q_hit.wav");
@@ -141,8 +179,8 @@ void Game::loadMedia() {
   
   ///player1's initialization
   player[1].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
-  player[1].setX(SCREEN_WIDTH / 2 - player[1].getWidth() / 2);
-  player[1].setY(150);
+  player[1].setStartXY(SCREEN_WIDTH / 2 - player[1].getWidth() / 2, 150);
+  player[1].reset(Human);
 
   player_Arrow[1].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
   player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
@@ -166,8 +204,8 @@ void Game::loadMedia() {
   
   ///player2's initialization
   player[2].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
-  player[2].setX(SCREEN_WIDTH / 2 - player[2].getWidth() / 2);
-  player[2].setY(720);
+  player[2].setStartXY(SCREEN_WIDTH / 2 - player[2].getWidth() / 2, 720);
+  player[2].reset(Human);
 
   player_Arrow[2].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
   player_Arrow[2].setCenter(player_Arrow[2].getWidth() / 2, player_Arrow[2].getHeight());
@@ -195,16 +233,27 @@ void Game::closeMedia() {
   SDL_DestroyTexture(waterTexture); waterTexture = NULL;
   SDL_DestroyTexture(grassTexture); grassTexture = NULL;
   SDL_DestroyTexture(ezrealTexture); ezrealTexture = NULL;
-  
-  SDL_DestroyTexture(healthBarTexture); healthBarTexture = NULL;
 
   SDL_DestroyTexture(skillArrow); skillArrow = NULL;
   SDL_DestroyTexture(skillQ); skillQ = NULL;
   SDL_DestroyTexture(skillW); skillW = NULL;
   SDL_DestroyTexture(skillW_ground); skillW_ground = NULL;
 
+  for (int id = 0; id < GameState_Total; id++) {
+    SDL_DestroyTexture(Background[id]);
+    Background[id] = NULL;
+  }
+
+  for (int id = 0; id < Button_Total; id++) {
+    for (int state = 0; state <= 1; state++) {
+      SDL_DestroyTexture(Button_Texture[id][state]);
+      Button_Texture[id][state] = NULL;
+    }
+  }
+
   TTF_CloseFont(font32);
   TTF_CloseFont(font32_outline);
+  TTF_CloseFont(font80);
 
   for (int id = 0; id < skill_ID_Total; id++) {
     SDL_DestroyTexture(skill_Hud[id]);
@@ -242,32 +291,52 @@ bool Game::running() {
 SDL_Texture* Game::loadTexture(const char* p_filePath) {
   SDL_Texture* texture = NULL;
   texture = IMG_LoadTexture(gRenderer, p_filePath);
+
   if (texture == NULL)
     logError("Failed to load texture.", IMG_GetError());
+
   return texture;
+}
+
+SDL_Texture* Game::loadTextureFromText(const char* p_text, TTF_Font* font, SDL_Color textColor) {
+  SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, p_text, textColor);
+  SDL_Texture* message = NULL;
+  message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
+  
+  if (message == NULL)
+    logError("Failed to create texture from surface.", SDL_GetError());
+
+  SDL_FreeSurface(surfaceMessage);
+  return message;
 }
 
 Mix_Chunk* Game::loadSFX(const char* p_filePath) {
   Mix_Chunk* sound = NULL;
   sound = Mix_LoadWAV(p_filePath);
+
   if (sound == NULL)
     logError("Failed to load sound effct with path:", p_filePath);
+
   return sound;
 }
 
 Mix_Music* Game::loadMusic(const char* p_filePath) {
   Mix_Music* music = NULL;
   music = Mix_LoadMUS(p_filePath);
+
   if (music == NULL)
     logError("Failed to load music.", Mix_GetError());
+
   return music;
 }
 
 TTF_Font* Game::loadFont(const char* p_filePath, int sz) {
   TTF_Font* font = NULL;
   font = TTF_OpenFont(p_filePath, sz);
+
   if (font == NULL)
     logError("Failed to load font.", TTF_GetError());
+
   return font;
 }
 
@@ -289,11 +358,6 @@ void Game::render(SDL_Texture* p_tex, double x, double y, double w, double h, do
   SDL_RenderCopyEx(gRenderer, p_tex, &src, &dst, angle, center, flip);
 }
 
-void Game::render(ScrollingBackground &bgr) {
-  render(bgr.getTexture(), bgr.getScrollingOffset(), 0);
-  render(bgr.getTexture(), bgr.getScrollingOffset() - bgr.getWidth(), 0);
-}
-
 void Game::render(Entity &p_entity, double w, double h) {
   SDL_Rect dst;
   dst.x = p_entity.getX();
@@ -307,6 +371,27 @@ void Game::render(Entity &p_entity, double w, double h) {
     dst.h = p_entity.getHeight();
   }
   SDL_RenderCopyEx(gRenderer, p_entity.getTexture(), p_entity.getCurrentClip(), &dst, p_entity.getAngle(), p_entity.getCenter(), p_entity.getFlip());
+}
+
+void Game::renderText(double p_x, double p_y, const char* p_text, TTF_Font* font, SDL_Color textColor) {
+  SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, p_text, textColor);
+  SDL_Texture* message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
+
+  SDL_Rect src;
+  src.x = 0;
+  src.y = 0;
+  src.w = surfaceMessage->w;
+  src.h = surfaceMessage->h;
+
+  SDL_Rect dst;
+  dst.x = p_x;
+  dst.y = p_y;
+  dst.w = src.w;
+  dst.h = src.h;
+
+  SDL_RenderCopy(gRenderer, message, &src, &dst);
+  SDL_FreeSurface(surfaceMessage);
+  SDL_DestroyTexture(message);
 }
 
 void Game::renderText(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor) {
@@ -323,6 +408,27 @@ void Game::renderText(double p_x, double p_y, string& p_text, TTF_Font* font, SD
   SDL_Rect dst;
   dst.x = p_x;
   dst.y = p_y;
+  dst.w = src.w;
+  dst.h = src.h;
+
+  SDL_RenderCopy(gRenderer, message, &src, &dst);
+  SDL_FreeSurface(surfaceMessage);
+  SDL_DestroyTexture(message);
+}
+
+void Game::renderTextCenter(double p_x, double p_y, const char* p_text, TTF_Font* font, SDL_Color textColor) {
+  SDL_Surface* surfaceMessage = TTF_RenderText_Blended(font, p_text, textColor);
+  SDL_Texture* message = SDL_CreateTextureFromSurface(gRenderer, surfaceMessage);
+
+  SDL_Rect src;
+  src.x = 0;
+  src.y = 0;
+  src.w = surfaceMessage->w;
+  src.h = surfaceMessage->h;
+
+  SDL_Rect dst;
+  dst.x = p_x - src.w / 2;
+  dst.y = p_y - src.h / 2;
   dst.w = src.w;
   dst.h = src.h;
 
@@ -358,14 +464,18 @@ void Game::render_Skill_Hud_And_Cooldown() {
     string health;
     if (player[1].getHealth() > 0)
       health = "Health: " + IntToString(player[1].getHealth());
-    else
+    else {
       health = "Health: !!";
+      gameState = MainMenu;
+    }
     renderText(0, 0, health, font32, white);
     renderText(0, 0, health, font32_outline, black);
     if (player[2].getHealth() > 0)
       health = "Health: " + IntToString(player[2].getHealth());
-    else
+    else {
       health = "Health: !!";
+      gameState = MainMenu;
+    }
     renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32, white);
     renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32_outline, black);
   }
@@ -483,10 +593,14 @@ void Game::handleEvents() {
     new_key[KEY_PRESS_A] = new_key[KEY_PRESS_D] = 0;
   }
 
-  while (SDL_PollEvent(&gEvent)) {
+  SDL_GetMouseState(&MouseX, &MouseY);
+
+  // while (SDL_PollEvent(&gEvent)) 
+  SDL_PollEvent(&gEvent);
+  {
     if (gEvent.type == SDL_QUIT || gEvent.key.keysym.sym == SDLK_RETURN) {
       gameRunning = false;
-      break;
+      // break;
     }
   }
 }
@@ -510,110 +624,112 @@ void Game::update() {
       fullscreen = false;
     }
   }
+
   if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0) {
     
   }
 
+  if (gameState == GamePlay) {
+    ///player1
+    if (player[1].isDead() == 0) {
+      player[1].updatePlayerEffects();
+      player[1].updateCooldown();
 
-  ///player1
-  if (player[1].isDead() == 0) {
-    player[1].updatePlayerEffects();
-    player[1].updateCooldown();
+      if (player[1].getCastTimeCooldown() == 0) {
+        if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
+          ProcessingSkill(1, skillQ_ID);
 
-    if (player[1].getCastTimeCooldown() == 0) {
-      if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
-        ProcessingSkill(1, skillQ_ID);
+        if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
+          ProcessingSkill(1, skillW_ID);
+        
+        if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
+            && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
+        {
+          ProcessingSkill(1, skillE_ID);
+        }
 
-      if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
-        ProcessingSkill(1, skillW_ID);
-      
-      if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
-          && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
-      {
-        ProcessingSkill(1, skillE_ID);
-      }
+        if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
+          player_Arrow[1].increaseAngleDelta();
 
-      if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
-        player_Arrow[1].increaseAngleDelta();
-
-      if (new_key[KEY_PRESS_LEFT]) {
-        if (old_key[KEY_PRESS_LEFT] == 0) {
+        if (new_key[KEY_PRESS_LEFT]) {
+          if (old_key[KEY_PRESS_LEFT] == 0) {
+            player[1].setCurrentFrame(0);
+          }
+          player[1].setFlip(SDL_FLIP_HORIZONTAL);
+          player[1].moveLeft();
+          player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
+        }
+        else if (old_key[KEY_PRESS_LEFT]) {
           player[1].setCurrentFrame(0);
         }
-        player[1].setFlip(SDL_FLIP_HORIZONTAL);
-        player[1].moveLeft();
-        player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
-      }
-      else if (old_key[KEY_PRESS_LEFT]) {
-        player[1].setCurrentFrame(0);
-      }
 
-      if (new_key[KEY_PRESS_RIGHT]) {
-        if (old_key[KEY_PRESS_RIGHT] == 0) {
+        if (new_key[KEY_PRESS_RIGHT]) {
+          if (old_key[KEY_PRESS_RIGHT] == 0) {
+            player[1].setCurrentFrame(0);
+          }
+            player[1].setFlip(SDL_FLIP_NONE);
+          player[1].moveRight();
+          player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
+        }
+        else if (old_key[KEY_PRESS_RIGHT]) {
           player[1].setCurrentFrame(0);
         }
-          player[1].setFlip(SDL_FLIP_NONE);
-        player[1].moveRight();
-        player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
-      }
-      else if (old_key[KEY_PRESS_RIGHT]) {
-        player[1].setCurrentFrame(0);
       }
     }
-  }
 
-  if (player[1].getCastTimeCooldown() > 0)
-    player[1].setCurrentFrame(0);
+    if (player[1].getCastTimeCooldown() > 0)
+      player[1].setCurrentFrame(0);
 
-  ///player2
-  if (player[2].isDead() == 0) {
-    player[2].updatePlayerEffects();
-    player[2].updateCooldown();
+    ///player2
+    if (player[2].isDead() == 0) {
+      player[2].updatePlayerEffects();
+      player[2].updateCooldown();
 
-    if (player[2].getCastTimeCooldown() == 0) {
-      if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0)
-        ProcessingSkill(2, skillQ_ID);
-      
-      if (new_key[KEY_PRESS_V] && old_key[KEY_PRESS_V] == 0)
-        ProcessingSkill(2, skillW_ID);
+      if (player[2].getCastTimeCooldown() == 0) {
+        if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0)
+          ProcessingSkill(2, skillQ_ID);
+        
+        if (new_key[KEY_PRESS_V] && old_key[KEY_PRESS_V] == 0)
+          ProcessingSkill(2, skillW_ID);
 
-      if ((new_key[KEY_PRESS_A] || new_key[KEY_PRESS_D])
-          && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0 && player[2].getSkillCooldown(skillE_ID) == 0) 
-      {
-        ProcessingSkill(2, skillE_ID);
-      }
+        if ((new_key[KEY_PRESS_A] || new_key[KEY_PRESS_D])
+            && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0 && player[2].getSkillCooldown(skillE_ID) == 0) 
+        {
+          ProcessingSkill(2, skillE_ID);
+        }
 
-      if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
-        player_Arrow[2].increaseAngleDelta();
+        if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
+          player_Arrow[2].increaseAngleDelta();
 
-      if (new_key[KEY_PRESS_A]) {
-        if (old_key[KEY_PRESS_A] == 0) {
+        if (new_key[KEY_PRESS_A]) {
+          if (old_key[KEY_PRESS_A] == 0) {
+            player[2].setCurrentFrame(0);
+          }
+          player[2].setFlip(SDL_FLIP_HORIZONTAL);
+          player[2].moveLeft();
+          player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
+        }
+        else if (old_key[KEY_PRESS_A]) {
           player[2].setCurrentFrame(0);
         }
-        player[2].setFlip(SDL_FLIP_HORIZONTAL);
-        player[2].moveLeft();
-        player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
-      }
-      else if (old_key[KEY_PRESS_A]) {
-        player[2].setCurrentFrame(0);
-      }
 
-      if (new_key[KEY_PRESS_D]) {
-        if (old_key[KEY_PRESS_D] == 0) {
+        if (new_key[KEY_PRESS_D]) {
+          if (old_key[KEY_PRESS_D] == 0) {
+            player[2].setCurrentFrame(0);
+          }
+          player[2].setFlip(SDL_FLIP_NONE);
+          player[2].moveRight();
+          player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
+        }
+        else if (old_key[KEY_PRESS_D]) {
           player[2].setCurrentFrame(0);
         }
-        player[2].setFlip(SDL_FLIP_NONE);
-        player[2].moveRight();
-        player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
-      }
-      else if (old_key[KEY_PRESS_D]) {
-        player[2].setCurrentFrame(0);
       }
     }
-  }
 
-  if (player[2].getCastTimeCooldown() > 0)
-    player[2].setCurrentFrame(0);
+    if (player[2].getCastTimeCooldown() > 0)
+      player[2].setCurrentFrame(0);
+  }
 
   ///reset
   for (int i = 0; i < KEY_PRESS_TOTAL; i++) {
@@ -677,13 +793,7 @@ void Game::render_Player() {
   }
 }
 
-void Game::render_MainMenu() {
-  
-}
-
-void Game::render_GamePlay() {
-  render_GameBackground();
-  render_Player();
+void Game::render_Bullet() {
   for (int id = 1; id <= 2; id++) {
     for (Bullet &bullet : player_bullets[id]) {
       Player &Enemy = player[3 - id];
@@ -691,6 +801,7 @@ void Game::render_GamePlay() {
       Rectangle Shot(bullet);
       render(bullet);
       bullet.move();
+      
       if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
         cout << "player " << 3 - id << " is being shot\n";
         switch (bullet.getSkillId()) {
@@ -728,12 +839,76 @@ void Game::render_GamePlay() {
   }
 }
 
+void Game::render_MainMenu() {
+  render(Background[MainMenu], 0, 0);
+
+  if (button[VSAI_Button].isClicked(MouseX, MouseY, gEvent)) {
+    player[1].reset(Bot);
+    player[2].reset(Human);
+    gameState = GamePlay;
+  }
+  render(button[VSAI_Button]);
+
+  if (button[VSPlayer_Button].isClicked(MouseX, MouseY, gEvent)) {
+    player[1].reset(Human);
+    player[2].reset(Human);
+    gameState = GamePlay;
+  }
+  render(button[VSPlayer_Button]);
+
+  if (button[Help_Button].isClicked(MouseX, MouseY, gEvent))
+    gameState = Help;
+  render(button[Help_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, gEvent))
+    gameRunning = false;
+  render(button[Exit_Button]);
+}
+
+void Game::render_GamePlay() {
+  render_GameBackground();
+  render_Player();
+  render_Bullet();
+}
+
+void Game::render_Help() {
+  render(Background[Help], 0, 0);
+
+  // if (button[VSAI_Button].isClicked(MouseX, MouseY, gEvent)) {
+  //   player[1].reset(Bot);
+  //   player[2].reset(Human);
+  //   gameState = GamePlay;
+  // }
+  // render(button[VSAI_Button]);
+
+  // if (button[VSPlayer_Button].isClicked(MouseX, MouseY, gEvent)) {
+  //   player[1].reset(Human);
+  //   player[2].reset(Human);
+  //   gameState = GamePlay;
+  // }
+  // render(button[VSPlayer_Button]);
+
+  if (button[Help_Button].isClicked(MouseX, MouseY, gEvent)) {
+    if (gameState == Help) gameState = MainMenu;
+    else
+      gameState = Help;
+  }
+  render(button[Help_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, gEvent))
+    gameRunning = false;
+  render(button[Exit_Button]);
+}
+
 void Game::render_Game() {
   if (gameState == MainMenu) {
     render_MainMenu();
   }
   else if (gameState == GamePlay) {
     render_GamePlay();
+  }
+  else if (gameState == Help) {
+    render_Help();
   }
 }
 

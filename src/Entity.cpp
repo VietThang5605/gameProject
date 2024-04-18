@@ -12,7 +12,7 @@ Entity::Entity() {
 
 Entity::~Entity() {}
 
-void Entity::init(SDL_Texture* p_tex, double width, double height, int frames, int lines) {
+void Entity::init(SDL_Texture* p_tex, int width, int height, int frames, int lines) {
   texture = p_tex;
   this->width = width;
   this->height = height;
@@ -69,11 +69,11 @@ double Entity::getY() {
   return y;
 }
 
-double Entity::getWidth() {
+int Entity::getWidth() {
   return width;
 }
 
-double Entity::getHeight() {
+int Entity::getHeight() {
   return height;
 }
 

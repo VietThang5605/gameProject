@@ -11,7 +11,11 @@
 class Player : public Entity {
 public:
   Player();
-  void setType(int value);
+
+  void reset(int Player_Type);
+
+  void setStartXY(double x, double y);
+  void setType(int Player_Type);
   void setHealth(int health);
   void setSkillCooldown(int time, int skill_ID);
   void setVulnerable(int value);
@@ -29,6 +33,7 @@ public:
   void moveLeft();
   void moveRight();
 private:
+  double startX, startY;
   int type;
   int vulnerable;
   int health;

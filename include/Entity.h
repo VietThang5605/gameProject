@@ -16,7 +16,7 @@ public:
   Entity();
   ~Entity();
 
-  void init(SDL_Texture* p_tex, double width, double height, int frames, int lines);
+  void init(SDL_Texture* p_tex, int width, int height, int frames, int lines);
   void move();
   void setX(double p_x);
   void setY(double p_y);
@@ -28,8 +28,8 @@ public:
   
   double getX();
   double getY();
-  double getWidth();
-  double getHeight();
+  int getWidth();
+  int getHeight();
   int getCurrentFrame();
   double getAngle();
   Point* getRotPoint();
@@ -38,9 +38,9 @@ public:
   SDL_RendererFlip getFlip();
   SDL_Point* getCenter();
   
-private:
+protected:
   double x, y;
-  double width, height;
+  int width, height;
   int currentFrame;
   double angle;
   SDL_Texture* texture;

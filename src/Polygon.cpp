@@ -32,9 +32,6 @@ Rectangle::Rectangle(Entity &p_entity) {
   *this = Rectangle(p_entity.getX(), p_entity.getY(), p_entity.getWidth(), p_entity.getHeight(), p_entity.getAngle(), p_entity.getRotPoint());
 }
 
-///Circle
-
-
 ///utility
 bool isColliding(Rectangle &poly1, Rectangle &poly2) {
   Rectangle *r1 = &poly1;
