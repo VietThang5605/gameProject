@@ -24,6 +24,8 @@ using std::vector;
 struct Game {
 public:
   Game();
+
+  void resetGame();
   
   void init();
   void initSDL();

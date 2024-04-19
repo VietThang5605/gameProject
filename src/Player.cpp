@@ -45,6 +45,14 @@ void Player::setCastTimeCooldown(int value) {
   castTimeCooldown = value;
 }
 
+void Player::setSkillDelay(int value) {
+  skillDelay = value;
+}
+
+void Player::setDamagedDelay(int value) {
+  damagedDelay = value;
+}
+
 int Player::getType() {
   return type;
 }
@@ -65,12 +73,22 @@ int Player::getCastTimeCooldown() {
   return castTimeCooldown;
 }
 
+int Player::getSkillDelay() {
+  return skillDelay;
+}
+
+int Player::getDamagedDelay() {
+  return damagedDelay;
+}
+
 bool Player::isDead() {
   return getHealth() <= 0;
 }
 
 void Player::updateCooldown() {
   if (castTimeCooldown > 0) castTimeCooldown--;
+  if (skillDelay > 0) skillDelay--;
+  if (damagedDelay > 0) damagedDelay--;
   
   for (int id = 0; id < skill_ID_Total; id++) {
     if (player_skill_Cooldown[id] > 0)

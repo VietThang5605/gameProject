@@ -20,12 +20,16 @@ public:
   void setSkillCooldown(int time, int skill_ID);
   void setVulnerable(int value);
   void setCastTimeCooldown(int value);
+  void setSkillDelay(int value);
+  void setDamagedDelay(int value);
 
   int getType();
   int getHealth();
   int getSkillCooldown(int skill_ID);
   int getVulnerable();
   int getCastTimeCooldown();
+  int getSkillDelay();
+  int getDamagedDelay();
 
   bool isDead();
   void updateCooldown();
@@ -42,4 +46,6 @@ private:
   int velocityTeleport;
   int castTimeCooldown;
   int player_skill_Cooldown[4];
+  int skillDelay;
+  int damagedDelay;
 };

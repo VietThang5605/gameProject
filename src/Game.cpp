@@ -10,7 +10,7 @@ enum GameState {
 
 enum KeyPressSurfaces {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT, KEY_PRESS_UP, KEY_PRESS_DOWN,
-  KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_U, KEY_PRESS_I,
+  KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_I, KEY_PRESS_O,
   KEY_PRESS_KP_1, KEY_PRESS_KP_2, KEY_PRESS_KP_3, KEY_PRESS_KP_4, KEY_PRESS_KP_6,
 
   KEY_PRESS_A, KEY_PRESS_D, KEY_PRESS_W, KEY_PRESS_S,
@@ -46,6 +46,7 @@ SDL_Texture* skillArrow = NULL;
 SDL_Texture* skillQ = NULL;
 SDL_Texture* skillW = NULL;
 SDL_Texture* skillW_ground = NULL;
+SDL_Texture* skillR = NULL;
 
 SDL_Texture* Background[GameState_Total] = { NULL };
 
@@ -71,6 +72,11 @@ Game::Game() {
   gameState = MainMenu;
   fullscreen = false;
 };
+
+void Game::resetGame() {
+  for (int id = 1; id <= 2; id++)
+    player_bullets[id].erase(player_bullets[id].begin(), player_bullets[id].end());
+}
 
 void Game::init() {
   initSDL();
@@ -126,6 +132,7 @@ void Game::loadMedia() {
   skillQ = loadTexture("res/images/skillQ.png");
   skillW = loadTexture("res/images/skillW.png");
   skillW_ground = loadTexture("res/images/skillW_ground.png");
+  skillR = loadTexture("res/images/skillR.png");
 
   Background[MainMenu] = loadTexture("res/images/MainMenu_background.png");
   Background[Help] = loadTexture("res/images/Help_background.png");
@@ -162,11 +169,14 @@ void Game::loadMedia() {
   SFX[W_hit_sfx_ID] = loadSFX("res/audio/sfx/W_hit.wav");
   SFX[W_hit_crashed_sfx_ID] = loadSFX("res/audio/sfx/W_hit_crashed.wav");
   SFX[E_sfx_ID] = loadSFX("res/audio/sfx/E.wav");
+  SFX[R1_sfx_ID] = loadSFX("res/audio/sfx/R1_sfx.wav");
+  SFX[R2_sfx_ID] = loadSFX("res/audio/sfx/R2_sfx.wav");
 
   ///entity's initialization
   skillW_effect.init(skillW_ground, 128, 64, 1, 1);
   bullet[skillQ_ID].init(skillQ, 4 * 9, 16 * 9, 1, 1, skillQ_ID);
   bullet[skillW_ID].init(skillW, 8 * 14, 8 * 14, 1, 1, skillW_ID);
+  bullet[skillR_ID].init(skillR, 224, 224, 1, 1, skillR_ID);
 
   for (int j = 20; j < 45; j++)
     for (int i = 0; i < 32; i++) {
@@ -238,6 +248,7 @@ void Game::closeMedia() {
   SDL_DestroyTexture(skillQ); skillQ = NULL;
   SDL_DestroyTexture(skillW); skillW = NULL;
   SDL_DestroyTexture(skillW_ground); skillW_ground = NULL;
+  SDL_DestroyTexture(skillR); skillR = NULL;
 
   for (int id = 0; id < GameState_Total; id++) {
     SDL_DestroyTexture(Background[id]);
@@ -515,7 +526,7 @@ void Game::PlaySFX(int skill_ID) {
       break;
     }
     case (skillR_ID): {
-
+      Mix_PlayChannel(-1, SFX[R1_sfx_ID], 0);
       break;
     }
   }
@@ -554,6 +565,8 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
         tmp.setVelocityY(-tmp.getVelocityY());
       }
       player_bullets[player_id].push_back(tmp);
+      if (skill_ID == skillR_ID)
+        player[player_id].setSkillDelay(FPS);
     }
   }
 }
@@ -567,8 +580,8 @@ void Game::handleEvents() {
   if (keystate[SDL_SCANCODE_J]) new_key[KEY_PRESS_J] = 1;
   if (keystate[SDL_SCANCODE_K]) new_key[KEY_PRESS_K] = 1;
   if (keystate[SDL_SCANCODE_L]) new_key[KEY_PRESS_L] = 1;
-  if (keystate[SDL_SCANCODE_U]) new_key[KEY_PRESS_U] = 1;
   if (keystate[SDL_SCANCODE_I]) new_key[KEY_PRESS_I] = 1;
+  if (keystate[SDL_SCANCODE_O]) new_key[KEY_PRESS_O] = 1;
 
   ///player2
   if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
@@ -630,6 +643,7 @@ void Game::update() {
   }
 
   if (gameState == GamePlay) {
+    while (SDL_PollEvent(&gEvent));
     ///player1
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
@@ -648,7 +662,10 @@ void Game::update() {
           ProcessingSkill(1, skillE_ID);
         }
 
-        if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
+        if (new_key[KEY_PRESS_O] && old_key[KEY_PRESS_O] == 0)
+          ProcessingSkill(1, skillR_ID);
+
+        if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
           player_Arrow[1].increaseAngleDelta();
 
         if (new_key[KEY_PRESS_LEFT]) {
@@ -697,6 +714,9 @@ void Game::update() {
         {
           ProcessingSkill(2, skillE_ID);
         }
+
+        if (new_key[KEY_PRESS_G] && old_key[KEY_PRESS_G] == 0)
+          ProcessingSkill(2, skillR_ID);
 
         if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
           player_Arrow[2].increaseAngleDelta();
@@ -799,18 +819,23 @@ void Game::render_Bullet() {
       Player &Enemy = player[3 - id];
       Rectangle Agent(Enemy);
       Rectangle Shot(bullet);
-      render(bullet);
-      bullet.move();
+
+      if (bullet.getSkillId() == skillR_ID) {
+        if (player[id].getSkillDelay() == 0)
+          render(bullet);
+      }
+      else
+        render(bullet);
       
       if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
-        cout << "player " << 3 - id << " is being shot\n";
+        // cout << "player " << 3 - id << " is being shot\n";
         switch (bullet.getSkillId()) {
           case (skillQ_ID): {
-            Enemy.setHealth(-2);
             Mix_Volume(-1, 100);
-            cout << "*\n";
             Mix_PlayChannel(-1, SFX[Q_hit_sfx_ID], 0);
             Mix_Volume(-1, 50);
+
+            Enemy.setHealth(-2);
             if (Enemy.getVulnerable() > 0) {
               Enemy.setHealth(-2);
               Enemy.setVulnerable(0);
@@ -825,15 +850,40 @@ void Game::render_Bullet() {
             Mix_PlayChannel(-1, SFX[W_hit_sfx_ID], 0);
             break;
           }
-          case (skillR_ID): { ///***
+          case (skillR_ID): {
+            if (Enemy.getDamagedDelay() == 0) {
+              Mix_Volume(-1, 100);
+              Mix_PlayChannel(-1, SFX[R2_sfx_ID], 0);
+              Mix_Volume(-1, 50);
 
+              Enemy.setDamagedDelay(5 * FPS);
+              Enemy.setHealth(-5);
+              if (Enemy.getVulnerable() > 0) {
+                Enemy.setHealth(-2);
+                Enemy.setVulnerable(0);
+                Mix_Volume(-1, 100);
+                Mix_PlayChannel(-1, SFX[W_hit_crashed_sfx_ID], 0);
+                Mix_Volume(-1, 50);
+              }
+            }
             break;
           }
         }
-        player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+        if (bullet.getSkillId() != skillR_ID)
+          player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+        else
+          bullet.move();
       }
       else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
         player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
+      }
+      else {
+        if (bullet.getSkillId() == skillR_ID) {
+          if (player[id].getSkillDelay() == 0)
+            bullet.move();
+        }
+        else
+          bullet.move();
       }
     }
   }
@@ -845,6 +895,7 @@ void Game::render_MainMenu() {
   if (button[VSAI_Button].isClicked(MouseX, MouseY, gEvent)) {
     player[1].reset(Bot);
     player[2].reset(Human);
+    resetGame();
     gameState = GamePlay;
   }
   render(button[VSAI_Button]);
@@ -852,6 +903,7 @@ void Game::render_MainMenu() {
   if (button[VSPlayer_Button].isClicked(MouseX, MouseY, gEvent)) {
     player[1].reset(Human);
     player[2].reset(Human);
+    resetGame();
     gameState = GamePlay;
   }
   render(button[VSPlayer_Button]);
