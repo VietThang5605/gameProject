@@ -42,3 +42,4 @@ string TimeToString(double x) {
   res += char('0' + num % 10);
   return res;
 }
+

@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include <math.h>
 #include <string.h>
 
 #include "Entity.h"
@@ -54,6 +55,11 @@ public:
 
   void PlaySFX(int skill_ID);
 
+  void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
+  double CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow);
+
+  double HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
+  double Minimax(int depth, bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
   void ProcessingSkill(int player_id, int skill_ID);
 
   void handleEvents();

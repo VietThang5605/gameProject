@@ -10,7 +10,7 @@
 class Button : public Entity {
 public:
   void init(SDL_Texture* not_selected_texture, SDL_Texture* selected_texture);
-  bool isClicked(int x, int y, SDL_Event &gEvent);
+  bool isClicked(int x, int y, bool mouseClicked);
 private:
   bool selected;
   SDL_Texture* not_selected_texture;

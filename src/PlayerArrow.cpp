@@ -1,21 +1,29 @@
 #include "PlayerArrow.h"
 
 PlayerArrow::PlayerArrow() {
-  angleDelta = 3;
+  delta = angleDelta;
   dir = 1;
 }
+
+void PlayerArrow::reset() {
+  angle = 0;
+  delta = angleDelta;
+  increaseCooldown = 0;
+}
+
+
 
 void PlayerArrow::increaseAngleDelta() {
   if (increaseCooldown > 0) return;
   increaseCooldown = increaseAngleDeltaCooldown;
-  angleDelta += 3;
-  if (angleDelta > 6)
-    angleDelta = 3;
+  delta += angleDelta;
+  if (delta > angleDeltaMax)
+    delta = angleDelta;
 }
 
 void PlayerArrow::moveAngle() {
   if (increaseCooldown > 0) increaseCooldown--;
-  if (getAngle() + angleDelta * dir > maxAngle) dir = -dir;
-  if (getAngle() + angleDelta * dir < -maxAngle) dir = -dir;
-  setAngle(getAngle() + angleDelta * dir);
+  if (getAngle() + delta * dir > maxAngle) dir = -dir;
+  if (getAngle() + delta * dir < -maxAngle) dir = -dir;
+  setAngle(getAngle() + delta * dir);
 }

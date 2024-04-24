@@ -11,10 +11,11 @@
 class PlayerArrow : public Entity {
 public:
   PlayerArrow();
+  void reset();
   void increaseAngleDelta();
   void moveAngle();
 private:
-  double angleDelta;
+  double delta;
   int dir;
   int increaseCooldown;
 };

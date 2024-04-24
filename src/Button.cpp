@@ -7,7 +7,7 @@ void Button::init(SDL_Texture* not_selected_texture, SDL_Texture* selected_textu
   SDL_QueryTexture(texture, NULL, NULL, &width, &height);
 }
 
-bool Button::isClicked(int x, int y, SDL_Event &gEvent) {
+bool Button::isClicked(int x, int y, bool mouseClicked) {
   if ((getX() <= x && x <= getX() + getWidth()) && (getY() <= y && y <= getY() + getHeight())) {
     selected = true;
     texture = selected_texture;
@@ -16,11 +16,8 @@ bool Button::isClicked(int x, int y, SDL_Event &gEvent) {
     selected = false;
     texture = not_selected_texture;
   }
-  if (selected) {
-    bool ok = false;
-    if (gEvent.type == SDL_MOUSEBUTTONUP && gEvent.button.button == SDL_BUTTON_LEFT)
-      ok = true;
-    return ok;
+  if (selected && mouseClicked) {
+    return true;
   }
   return false;
 }

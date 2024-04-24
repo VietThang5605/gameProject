@@ -24,8 +24,8 @@ public:
 class Point {
 public:
   Point(double x = 0, double y = 0);
-  void setX(int x);
-  void setY(int y);
+  void setX(double x);
+  void setY(double y);
 
   double x, y;
 };

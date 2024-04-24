@@ -10,6 +10,7 @@ void Player::setStartXY(double x, double y) {
 }
 
 void Player::reset(int Player_Type) {
+  setCurrentFrame(0);
   x = startX;
   y = startY;
   type = Player_Type;
@@ -22,7 +23,8 @@ void Player::reset(int Player_Type) {
   player_skill_Cooldown[skillQ_ID] = 1 * FPS;
   player_skill_Cooldown[skillW_ID] = 3 * FPS;
   player_skill_Cooldown[skillE_ID] = 3 * FPS;
-  player_skill_Cooldown[skillR_ID] = 15 * FPS;
+  // player_skill_Cooldown[skillR_ID] = 15 * FPS;
+  player_skill_Cooldown[skillR_ID] = 0;
 }
 
 void Player::setType(int Player_Type) {
@@ -101,17 +103,27 @@ void Player::updatePlayerEffects() {
 }
 
 void Player::moveLeft() {
+  if (getFlip() == SDL_FLIP_NONE) //last direction is right
+    setCurrentFrame(0);
+  setFlip(SDL_FLIP_HORIZONTAL);
+  setCurrentFrame(getCurrentFrame() + 1);
+
   if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
     setX(getX() - velocityTeleport);
   else
     setX(getX() - velocity);
-  if (getX() < 50) setX(50);
+  if (getX() < ScreenLeftBoundary) setX(ScreenLeftBoundary);
 }
 
 void Player::moveRight() {
+  if (getFlip() == SDL_FLIP_HORIZONTAL) //last direction is left
+    setCurrentFrame(0);
+  setFlip(SDL_FLIP_NONE);
+  setCurrentFrame(getCurrentFrame() + 1);
+
   if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
     setX(getX() + velocityTeleport);
   else
     setX(getX() + velocity);
-  if (getX() > SCREEN_WIDTH - 200) setX(SCREEN_WIDTH - 200);
+  if (getX() > ScreenRightBoundary) setX(ScreenRightBoundary);
 }

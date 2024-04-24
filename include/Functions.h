@@ -15,3 +15,17 @@ void logError(const char* msg, const char* error);
 string IntToString(int x);
 
 string TimeToString(double x);
+
+template<class T> T max(T a, T b) {
+  if (a > b) {
+    return a;
+  }
+  return b;
+}
+
+template<class T> T min(T a, T b) {
+  if (a < b) {
+    return a;
+  }
+  return b;
+}

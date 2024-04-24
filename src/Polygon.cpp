@@ -45,14 +45,14 @@ bool isColliding(Rectangle &poly1, Rectangle &poly2) {
     for (int i = 0; i < (int)r1->axis.size(); i++) {
       Vector axis = r1->axis[i];
       
-      double min_r1 = INF, max_r1 = -INF;
+      double min_r1 = DOUBLE_INF, max_r1 = -DOUBLE_INF;
       for (int j = 0; j < (int)r1->vertices.size(); j++) {
         double dotProduct = r1->vertices[j].x * axis.x + r1->vertices[j].y * axis.y;
         if (dotProduct < min_r1) min_r1 = dotProduct;
         if (dotProduct > max_r1) max_r1 = dotProduct;
       }
 
-      double min_r2 = INF, max_r2 = -INF;
+      double min_r2 = DOUBLE_INF, max_r2 = -DOUBLE_INF;
       for (int j = 0; j < (int)r2->vertices.size(); j++) {
         double dotProduct = r2->vertices[j].x * axis.x + r2->vertices[j].y * axis.y;
         if (dotProduct < min_r2) min_r2 = dotProduct;
@@ -72,4 +72,13 @@ void removeRepeat(vector<Vector> &v) {
       if (v[i].isCollinear(v[j]))
         v.erase(v.begin() + j);
   }
+}
+
+Point rotatePointAroundAngle(double x, double y, Point* rot_point, double angle) {
+  double radAngle = angle * PI / 180;
+  double cosAngle = cos(radAngle);
+  double sinAngle = sin(radAngle);
+  x = rot_point->x + (x - rot_point->x) * cosAngle - (y - rot_point->y) * sinAngle;
+  y = rot_point->y + (y - rot_point->y) * cosAngle + (x - rot_point->x) * sinAngle;
+  return Point(x, y);
 }

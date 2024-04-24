@@ -23,6 +23,7 @@ enum KeyPressSurfaces {
 const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
 int MouseX, MouseY;
+bool mouseClicked;
 
 int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
@@ -74,8 +75,10 @@ Game::Game() {
 };
 
 void Game::resetGame() {
-  for (int id = 1; id <= 2; id++)
+  for (int id = 1; id <= 2; id++) {
+    player_Arrow[id].reset();
     player_bullets[id].erase(player_bullets[id].begin(), player_bullets[id].end());
+  }
 }
 
 void Game::init() {
@@ -195,6 +198,9 @@ void Game::loadMedia() {
   player_Arrow[1].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
   player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
   player_Arrow[1].setAngle(0);
+  player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
+  player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
+  player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
 
   player_skill_Hud[1][skillR_ID].init(skill_Hud[skillR_ID], 96, 96, 1, 1);
   player_skill_Hud[1][skillR_ID].setX(SCREEN_WIDTH - 30 - player_skill_Hud[1][skillR_ID].getWidth());
@@ -221,6 +227,9 @@ void Game::loadMedia() {
   player_Arrow[2].setCenter(player_Arrow[2].getWidth() / 2, player_Arrow[2].getHeight());
   player_Arrow[2].setFlip(SDL_FLIP_VERTICAL);
   player_Arrow[2].setAngle(0);
+  player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
+  player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
+  player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
 
   player_skill_Hud[2][skillQ_ID].init(skill_Hud[skillQ_ID], 96, 96, 1, 1);
   player_skill_Hud[2][skillQ_ID].setX(30);
@@ -475,18 +484,14 @@ void Game::render_Skill_Hud_And_Cooldown() {
     string health;
     if (player[1].getHealth() > 0)
       health = "Health: " + IntToString(player[1].getHealth());
-    else {
+    else
       health = "Health: !!";
-      gameState = MainMenu;
-    }
     renderText(0, 0, health, font32, white);
     renderText(0, 0, health, font32_outline, black);
     if (player[2].getHealth() > 0)
       health = "Health: " + IntToString(player[2].getHealth());
-    else {
+    else
       health = "Health: !!";
-      gameState = MainMenu;
-    }
     renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32, white);
     renderText(SCREEN_WIDTH - 190, SCREEN_HEIGHT - 40, health, font32_outline, black);
   }
@@ -532,6 +537,232 @@ void Game::PlaySFX(int skill_ID) {
   }
 }
 
+void Game::setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow) {
+  if (isMaximizing == Human) {
+    tmp_arrow.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - tmp_arrow.getWidth() / 2);
+    tmp_arrow.setY(tmp_player.getY() - tmp_arrow.getHeight() - 10);
+    tmp_arrow.setRotPoint(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight());
+  }
+  else {
+    tmp_arrow.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - tmp_arrow.getWidth() / 2);
+    tmp_arrow.setY(tmp_player.getY() + tmp_player.getHeight() + 10);
+    tmp_arrow.setRotPoint(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY());
+  }
+}
+
+double Game::CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow) {
+  int player_id = isMaximizing;
+  int enemy_id = isMaximizing ^ 1;
+  
+  Point arrow;
+  if (player_id == Human)
+    arrow = rotatePointAroundAngle(tmp_arrow[player_id].getX() + tmp_arrow[player_id].getWidth() / 2, tmp_arrow[player_id].getY(), tmp_arrow[player_id].getRotPoint(), tmp_arrow[player_id].getAngle());
+  else
+    arrow = rotatePointAroundAngle(tmp_arrow[player_id].getX() + tmp_arrow[player_id].getWidth() / 2, tmp_arrow[player_id].getY() + tmp_arrow[player_id].getHeight(), tmp_arrow[player_id].getRotPoint(), tmp_arrow[player_id].getAngle());
+
+  Point rot_point = Point(tmp_arrow[player_id].getRotPoint()->x, tmp_arrow[player_id].getRotPoint()->y);
+  Vector vec;
+  if (player_id == Human)
+    vec = Vector(sin(PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180), -cos(PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180));
+  else
+    vec = Vector(sin(-PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180), -cos(-PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180));
+  
+  int Enemy_Y_Current;
+  if (player_id == Human) 
+    Enemy_Y_Current = tmp_player[enemy_id].getY() + tmp_player[enemy_id].getWidth();
+  else
+    Enemy_Y_Current = tmp_player[enemy_id].getY();
+    
+  Point arrow_y_tmp((vec.x * arrow.x - vec.y * Enemy_Y_Current + vec.y * arrow.y) / vec.x, Enemy_Y_Current);
+
+  // if (arrow_y_tmp.x < ScreenLeftBoundary)
+  //   arrow_y_tmp.x = ScreenLeftBoundary;
+  // if (arrow_y_tmp.x > ScreenRightBoundary)
+  //   arrow_y_tmp.x = ScreenRightBoundary;
+
+  // SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 255);
+  // SDL_RenderDrawLine(gRenderer, (int)arrow_y_tmp.x, (int)arrow_y_tmp.y, (int) rot_point.x, (int)rot_point.y);
+  // SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+
+  return abs(arrow_y_tmp.x - tmp_player[enemy_id].getX());
+}
+
+double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets) {
+  Player AI = tmp_player[0];
+  Player Enemy = tmp_player[1];
+
+  vector<double> ArrowAccuracy(2);
+  double Score = 0;
+  for (int id = 0; id <= 1; id++) {
+    ArrowAccuracy[id] = CalculateArrowAccuracy(id, tmp_player, tmp_arrow);
+    if (id == 0) {
+      if (AI.getSkillCooldown(skillQ_ID) == 0)
+        Score += ArrowAccuracy[id];
+      // if (ArrowAccuracy[id] > 200) {
+      //   Score -= ArrowAccuracy[id];
+      //   Score -= abs(AI.getX() - Enemy.getX());
+      // }
+    }
+    if (id == 1) {
+      if (AI.getSkillCooldown(skillQ_ID) > 0)
+        Score -= ArrowAccuracy[id];
+    }
+  }
+
+  return Score - 300;
+}
+
+double Game::Minimax(int depth, bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets) {
+  if (depth == 0) return HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
+  
+  vector<Player> tmp_player2 = tmp_player;
+  vector<PlayerArrow> tmp_arrow2 = tmp_arrow;
+  vector<vector<Bullet>> tmp_bullets2 = tmp_bullets;
+
+  int player_id = isMaximizing;
+
+  double bestScore = HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
+  // double bestScore;
+  // if (isMaximizing)
+  //   bestScore = -DOUBLE_INF;
+  // else
+  //   bestScore = DOUBLE_INF;
+
+  for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) { ///***cast time
+    switch (move_type) {
+      case (Do_Nothing): {
+        if (isMaximizing)
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        else
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+
+        // cout << "minimax do nothing: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
+        break;
+      }
+      case (Move_Left): {
+        int x = tmp_player2[player_id].getX(), y = tmp_player2[player_id].getY();
+        tmp_player2[player_id].moveLeft();
+        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+
+        if (isMaximizing)
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        else
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+
+        // cout << "minimax move left: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
+        tmp_player2[player_id].setX(x); tmp_player2[player_id].setY(y);
+        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        break;
+      }
+      case (Move_Right): {
+        int x = tmp_player2[player_id].getX(), y = tmp_player2[player_id].getY();
+        tmp_player2[player_id].moveRight();
+        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+
+        if (isMaximizing)
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        else
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+
+        // cout << "minimax do move right: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
+        tmp_player2[player_id].setX(x); tmp_player2[player_id].setY(y);
+        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        break;
+      }
+    }
+  }
+
+  // cout << "minimax bestScore: " << bestScore << '\n';
+
+  return bestScore;
+}
+
+void Game::ProcessingAIMove(int player_id) {
+  if (player[player_id].isDead() || player[3  - player_id].isDead())
+    return;
+
+  vector<Player> tmp_player(2);
+  tmp_player[0] = player[player_id];
+  tmp_player[1] = player[3 - player_id];
+
+  vector<PlayerArrow> tmp_arrow(2);
+  tmp_arrow[0] = player_Arrow[player_id];
+  tmp_arrow[1] = player_Arrow[3 - player_id];
+
+  vector<vector<Bullet>> tmp_bullets(3);
+  tmp_bullets[0] = player_bullets[player_id];
+  tmp_bullets[1] = player_bullets[3 - player_id];
+
+  double bestScore = DOUBLE_INF;
+  int bestMove = -1;
+  int depth = 4;
+
+  for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) {
+    switch (move_type) {
+      case (Do_Nothing): {
+        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move_type;
+        }
+        // cout << "do nothing: " << score << '\n';
+        
+        break;
+      }
+      case (Move_Left): {
+        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
+        tmp_player[0].moveLeft();
+        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+
+        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move_type;
+        }
+        // cout << "move left: " << score << '\n';
+
+        tmp_player[0].setX(x); tmp_player[0].setY(y);
+        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        break;
+      }
+      case (Move_Right): {
+        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
+        tmp_player[0].moveRight();
+        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+
+        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move_type;
+        }
+        // cout << "move right: " << score << '\n';
+
+        tmp_player[0].setX(x); tmp_player[0].setY(y);
+        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        break;
+      }
+    }
+  }
+
+  // cout << bestScore << '\n';
+  // cout << '\n';
+
+  switch (bestMove) {
+    case (Do_Nothing): {
+      player[player_id].setCurrentFrame(0);
+      break;
+    }
+    case (Move_Left): {
+      player[player_id].moveLeft();
+      break;
+    }
+    case (Move_Right): {
+      player[player_id].moveRight();
+      break;
+    }
+  }
+}
+
 void Game::ProcessingSkill(int player_id, int skill_ID) {
   if (player[player_id].getSkillCooldown(skill_ID) > 0)
     return;
@@ -561,6 +792,7 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
         tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
         tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY() + tmp.getHeight()); ///reset after each frame in void move();
         tmp.setFlip(SDL_FLIP_VERTICAL);
+
         tmp.setVelocityX(-tmp.getVelocityX());
         tmp.setVelocityY(-tmp.getVelocityY());
       }
@@ -573,31 +805,30 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
 
 void Game::handleEvents() {
   ///player1
-  if (keystate[SDL_SCANCODE_LEFT]) new_key[KEY_PRESS_LEFT] = 1;
-  if (keystate[SDL_SCANCODE_RIGHT]) new_key[KEY_PRESS_RIGHT] = 1;
-  if (keystate[SDL_SCANCODE_UP]) new_key[KEY_PRESS_UP] = 1;
-  if (keystate[SDL_SCANCODE_DOWN]) new_key[KEY_PRESS_DOWN] = 1;
-  if (keystate[SDL_SCANCODE_J]) new_key[KEY_PRESS_J] = 1;
-  if (keystate[SDL_SCANCODE_K]) new_key[KEY_PRESS_K] = 1;
-  if (keystate[SDL_SCANCODE_L]) new_key[KEY_PRESS_L] = 1;
-  if (keystate[SDL_SCANCODE_I]) new_key[KEY_PRESS_I] = 1;
-  if (keystate[SDL_SCANCODE_O]) new_key[KEY_PRESS_O] = 1;
+  if (player[1].getType() == Human) {
+    if (keystate[SDL_SCANCODE_LEFT]) new_key[KEY_PRESS_LEFT] = 1;
+    if (keystate[SDL_SCANCODE_RIGHT]) new_key[KEY_PRESS_RIGHT] = 1;
+    if (keystate[SDL_SCANCODE_UP]) new_key[KEY_PRESS_UP] = 1;
+    if (keystate[SDL_SCANCODE_DOWN]) new_key[KEY_PRESS_DOWN] = 1;
+    if (keystate[SDL_SCANCODE_J]) new_key[KEY_PRESS_J] = 1;
+    if (keystate[SDL_SCANCODE_K]) new_key[KEY_PRESS_K] = 1;
+    if (keystate[SDL_SCANCODE_L]) new_key[KEY_PRESS_L] = 1;
+    if (keystate[SDL_SCANCODE_I]) new_key[KEY_PRESS_I] = 1;
+    if (keystate[SDL_SCANCODE_O]) new_key[KEY_PRESS_O] = 1;
+  }
 
   ///player2
-  if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
-  if (keystate[SDL_SCANCODE_D]) new_key[KEY_PRESS_D] = 1;
-  if (keystate[SDL_SCANCODE_W]) new_key[KEY_PRESS_W] = 1;
-  if (keystate[SDL_SCANCODE_S]) new_key[KEY_PRESS_S] = 1;
-  if (keystate[SDL_SCANCODE_C]) new_key[KEY_PRESS_C] = 1;
-  if (keystate[SDL_SCANCODE_V]) new_key[KEY_PRESS_V] = 1;
-  if (keystate[SDL_SCANCODE_B]) new_key[KEY_PRESS_B] = 1;
-  if (keystate[SDL_SCANCODE_F]) new_key[KEY_PRESS_F] = 1;
-  if (keystate[SDL_SCANCODE_G]) new_key[KEY_PRESS_G] = 1;
-
-  ///utility
-  if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
-  if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
-  if (keystate[SDL_SCANCODE_ESCAPE]) new_key[KEY_PRESS_ESC] = 1;
+  if (player[2].getType() == Human) {
+    if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
+    if (keystate[SDL_SCANCODE_D]) new_key[KEY_PRESS_D] = 1;
+    if (keystate[SDL_SCANCODE_W]) new_key[KEY_PRESS_W] = 1;
+    if (keystate[SDL_SCANCODE_S]) new_key[KEY_PRESS_S] = 1;
+    if (keystate[SDL_SCANCODE_C]) new_key[KEY_PRESS_C] = 1;
+    if (keystate[SDL_SCANCODE_V]) new_key[KEY_PRESS_V] = 1;
+    if (keystate[SDL_SCANCODE_B]) new_key[KEY_PRESS_B] = 1;
+    if (keystate[SDL_SCANCODE_F]) new_key[KEY_PRESS_F] = 1;
+    if (keystate[SDL_SCANCODE_G]) new_key[KEY_PRESS_G] = 1;
+  }
 
   if (new_key[KEY_PRESS_LEFT] && new_key[KEY_PRESS_RIGHT]) {
     new_key[KEY_PRESS_LEFT] = new_key[KEY_PRESS_RIGHT] = 0;
@@ -606,14 +837,21 @@ void Game::handleEvents() {
     new_key[KEY_PRESS_A] = new_key[KEY_PRESS_D] = 0;
   }
 
-  SDL_GetMouseState(&MouseX, &MouseY);
+  ///utility
+  if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
+  if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
+  if (keystate[SDL_SCANCODE_ESCAPE]) new_key[KEY_PRESS_ESC] = 1;
 
-  // while (SDL_PollEvent(&gEvent)) 
-  SDL_PollEvent(&gEvent);
-  {
-    if (gEvent.type == SDL_QUIT || gEvent.key.keysym.sym == SDLK_RETURN) {
+  SDL_GetMouseState(&MouseX, &MouseY);
+  mouseClicked = false;
+
+  while (SDL_PollEvent(&gEvent)) {
+    if (gEvent.type == SDL_QUIT) {
       gameRunning = false;
-      // break;
+      break;
+    }
+    if (gEvent.type == SDL_MOUSEBUTTONUP && gEvent.button.button == SDL_BUTTON_LEFT) {
+      mouseClicked = true;
     }
   }
 }
@@ -643,53 +881,44 @@ void Game::update() {
   }
 
   if (gameState == GamePlay) {
-    while (SDL_PollEvent(&gEvent));
     ///player1
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
       player[1].updateCooldown();
+      if (player[1].getType() == Bot) ProcessingAIMove(1);
+      else {
+        if (player[1].getCastTimeCooldown() == 0) {
+          if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
+            ProcessingSkill(1, skillQ_ID);
 
-      if (player[1].getCastTimeCooldown() == 0) {
-        if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
-          ProcessingSkill(1, skillQ_ID);
+          if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
+            ProcessingSkill(1, skillW_ID);
+          
+          if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
+              && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
+          {
+            ProcessingSkill(1, skillE_ID);
+          }
 
-        if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
-          ProcessingSkill(1, skillW_ID);
-        
-        if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
-            && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
-        {
-          ProcessingSkill(1, skillE_ID);
-        }
+          if (new_key[KEY_PRESS_O] && old_key[KEY_PRESS_O] == 0)
+            ProcessingSkill(1, skillR_ID);
 
-        if (new_key[KEY_PRESS_O] && old_key[KEY_PRESS_O] == 0)
-          ProcessingSkill(1, skillR_ID);
+          if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
+            player_Arrow[1].increaseAngleDelta();
 
-        if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
-          player_Arrow[1].increaseAngleDelta();
-
-        if (new_key[KEY_PRESS_LEFT]) {
-          if (old_key[KEY_PRESS_LEFT] == 0) {
+          if (new_key[KEY_PRESS_LEFT]) {
+            player[1].moveLeft();
+          }
+          else if (old_key[KEY_PRESS_LEFT]) {
             player[1].setCurrentFrame(0);
           }
-          player[1].setFlip(SDL_FLIP_HORIZONTAL);
-          player[1].moveLeft();
-          player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
-        }
-        else if (old_key[KEY_PRESS_LEFT]) {
-          player[1].setCurrentFrame(0);
-        }
 
-        if (new_key[KEY_PRESS_RIGHT]) {
-          if (old_key[KEY_PRESS_RIGHT] == 0) {
+          if (new_key[KEY_PRESS_RIGHT]) {
+            player[1].moveRight();
+          }
+          else if (old_key[KEY_PRESS_RIGHT]) {
             player[1].setCurrentFrame(0);
           }
-            player[1].setFlip(SDL_FLIP_NONE);
-          player[1].moveRight();
-          player[1].setCurrentFrame(player[1].getCurrentFrame() + 1);
-        }
-        else if (old_key[KEY_PRESS_RIGHT]) {
-          player[1].setCurrentFrame(0);
         }
       }
     }
@@ -701,7 +930,6 @@ void Game::update() {
     if (player[2].isDead() == 0) {
       player[2].updatePlayerEffects();
       player[2].updateCooldown();
-
       if (player[2].getCastTimeCooldown() == 0) {
         if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0)
           ProcessingSkill(2, skillQ_ID);
@@ -722,24 +950,14 @@ void Game::update() {
           player_Arrow[2].increaseAngleDelta();
 
         if (new_key[KEY_PRESS_A]) {
-          if (old_key[KEY_PRESS_A] == 0) {
-            player[2].setCurrentFrame(0);
-          }
-          player[2].setFlip(SDL_FLIP_HORIZONTAL);
           player[2].moveLeft();
-          player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
         }
         else if (old_key[KEY_PRESS_A]) {
           player[2].setCurrentFrame(0);
         }
 
         if (new_key[KEY_PRESS_D]) {
-          if (old_key[KEY_PRESS_D] == 0) {
-            player[2].setCurrentFrame(0);
-          }
-          player[2].setFlip(SDL_FLIP_NONE);
           player[2].moveRight();
-          player[2].setCurrentFrame(player[2].getCurrentFrame() + 1);
         }
         else if (old_key[KEY_PRESS_D]) {
           player[2].setCurrentFrame(0);
@@ -892,7 +1110,7 @@ void Game::render_Bullet() {
 void Game::render_MainMenu() {
   render(Background[MainMenu], 0, 0);
 
-  if (button[VSAI_Button].isClicked(MouseX, MouseY, gEvent)) {
+  if (button[VSAI_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     player[1].reset(Bot);
     player[2].reset(Human);
     resetGame();
@@ -900,7 +1118,7 @@ void Game::render_MainMenu() {
   }
   render(button[VSAI_Button]);
 
-  if (button[VSPlayer_Button].isClicked(MouseX, MouseY, gEvent)) {
+  if (button[VSPlayer_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     player[1].reset(Human);
     player[2].reset(Human);
     resetGame();
@@ -908,46 +1126,51 @@ void Game::render_MainMenu() {
   }
   render(button[VSPlayer_Button]);
 
-  if (button[Help_Button].isClicked(MouseX, MouseY, gEvent))
+  if (button[Help_Button].isClicked(MouseX, MouseY, mouseClicked))
     gameState = Help;
   render(button[Help_Button]);
 
-  if (button[Exit_Button].isClicked(MouseX, MouseY, gEvent))
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
     gameRunning = false;
   render(button[Exit_Button]);
 }
 
 void Game::render_GamePlay() {
-  render_GameBackground();
-  render_Player();
-  render_Bullet();
+  if (player[1].isDead() || player[2].isDead()) {
+    gameState = MainMenu;
+  }
+  else {
+    render_GameBackground();
+    render_Player();
+    render_Bullet();
+  }
 }
 
 void Game::render_Help() {
   render(Background[Help], 0, 0);
 
-  // if (button[VSAI_Button].isClicked(MouseX, MouseY, gEvent)) {
+  // if (button[VSAI_Button].isClicked(MouseX, MouseY, mouseClicked)) {
   //   player[1].reset(Bot);
   //   player[2].reset(Human);
   //   gameState = GamePlay;
   // }
   // render(button[VSAI_Button]);
 
-  // if (button[VSPlayer_Button].isClicked(MouseX, MouseY, gEvent)) {
+  // if (button[VSPlayer_Button].isClicked(MouseX, MouseY, mouseClicked)) {
   //   player[1].reset(Human);
   //   player[2].reset(Human);
   //   gameState = GamePlay;
   // }
   // render(button[VSPlayer_Button]);
 
-  if (button[Help_Button].isClicked(MouseX, MouseY, gEvent)) {
+  if (button[Help_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     if (gameState == Help) gameState = MainMenu;
     else
       gameState = Help;
   }
   render(button[Help_Button]);
 
-  if (button[Exit_Button].isClicked(MouseX, MouseY, gEvent))
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
     gameRunning = false;
   render(button[Exit_Button]);
 }

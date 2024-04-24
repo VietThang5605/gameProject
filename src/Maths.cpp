@@ -16,10 +16,10 @@ Point::Point(double x, double y) {
   this->y = y;
 }
 
-void Point::setX(int x) {
+void Point::setX(double x) {
   this->x = x;
 }
 
-void Point::setY(int y) {
+void Point::setY(double y) {
   this->y = y;
 }

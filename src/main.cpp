@@ -47,6 +47,8 @@ int main(int argc, char* argv[]) {
       maxFrameTicks = frameTicks;
     if (frameTicks < frameDelay)
       SDL_Delay(frameDelay - frameTicks);
+    
+    // SDL_Delay(100);
   }
 #endif
 
