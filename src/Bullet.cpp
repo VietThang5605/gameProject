@@ -1,8 +1,8 @@
 #include "Bullet.h"
 
 Bullet::Bullet() {
-  velocityX = 50;
-  velocityY = 50;
+  velocityX = 45;
+  velocityY = 45;
 }
 
 void Bullet::init(SDL_Texture* p_tex, double width, double height, int frames, int lines, int skill_ID) {

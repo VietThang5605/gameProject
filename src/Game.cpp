@@ -8,7 +8,7 @@ enum GameState {
   GameState_Total
 };
 
-enum KeyPressSurfaces {
+enum KeyPress {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT, KEY_PRESS_UP, KEY_PRESS_DOWN,
   KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_I, KEY_PRESS_O,
   KEY_PRESS_KP_1, KEY_PRESS_KP_2, KEY_PRESS_KP_3, KEY_PRESS_KP_4, KEY_PRESS_KP_6,
@@ -22,11 +22,11 @@ enum KeyPressSurfaces {
 
 const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
-int MouseX, MouseY;
-bool mouseClicked;
-
 int old_key[KEY_PRESS_TOTAL];
 int new_key[KEY_PRESS_TOTAL];
+
+int MouseX, MouseY;
+bool mouseClicked;
 
 SDL_Color white = {255, 255, 255};
 SDL_Color black = {0, 0, 0};
@@ -90,7 +90,9 @@ void Game::initSDL() {
   if (SDL_Init(SDL_INIT_EVERYTHING & ~(SDL_INIT_TIMER | SDL_INIT_HAPTIC))!= 0)
     logError("Failed to initialize SDL.", SDL_GetError());
 
-  gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  // gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  // gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_RESIZABLE);
+  gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN_DESKTOP);
   if (gWindow == NULL)
     logError("Failed to create window.", SDL_GetError());
   
@@ -99,6 +101,7 @@ void Game::initSDL() {
     logError("Failted to create renderer.", SDL_GetError());
   
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+  // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "1");
   SDL_RenderSetLogicalSize(gRenderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   if (IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) == 0)
@@ -584,40 +587,42 @@ double Game::CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player
   // SDL_RenderDrawLine(gRenderer, (int)arrow_y_tmp.x, (int)arrow_y_tmp.y, (int) rot_point.x, (int)rot_point.y);
   // SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 
-  return abs(arrow_y_tmp.x - tmp_player[enemy_id].getX());
+  return abs(arrow_y_tmp.x - (tmp_player[enemy_id].getX() + tmp_player[enemy_id].getWidth() / 2));
+}
+
+void Game::makeBullet(bool isMaximizing, Player tmp_player, PlayerArrow tmp_arrow, vector<Bullet> &tmp_bullets) {
+
 }
 
 double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets) {
-  Player AI = tmp_player[0];
-  Player Enemy = tmp_player[1];
-
   vector<double> ArrowAccuracy(2);
   double Score = 0;
   for (int id = 0; id <= 1; id++) {
     ArrowAccuracy[id] = CalculateArrowAccuracy(id, tmp_player, tmp_arrow);
     if (id == 0) {
-      if (AI.getSkillCooldown(skillQ_ID) == 0)
+      if (tmp_player[0].getSkillCooldown(skillQ_ID) == 0)
         Score += ArrowAccuracy[id];
       // if (ArrowAccuracy[id] > 200) {
       //   Score -= ArrowAccuracy[id];
-      //   Score -= abs(AI.getX() - Enemy.getX());
+      //   Score -= abs(tmp_player[0].getX() - Enemy.getX());
       // }
     }
     if (id == 1) {
-      if (AI.getSkillCooldown(skillQ_ID) > 0)
+      if (tmp_player[0].getSkillCooldown(skillQ_ID) > 0)
         Score -= ArrowAccuracy[id];
     }
   }
 
-  return Score - 300;
+  if (tmp_bullets[0].empty() == 0) {
+    if (ArrowAccuracy[0] < 100)
+      Score -= 100;
+  }
+
+  return Score;
 }
 
-double Game::Minimax(int depth, bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets) {
+double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, vector<Player> &tmp_player, vector<PlayerArrow> &tmp_arrow, vector<vector<Bullet>> &tmp_bullets) {
   if (depth == 0) return HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
-  
-  vector<Player> tmp_player2 = tmp_player;
-  vector<PlayerArrow> tmp_arrow2 = tmp_arrow;
-  vector<vector<Bullet>> tmp_bullets2 = tmp_bullets;
 
   int player_id = isMaximizing;
 
@@ -631,42 +636,100 @@ double Game::Minimax(int depth, bool isMaximizing, vector<Player> tmp_player, ve
   for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) { ///***cast time
     switch (move_type) {
       case (Do_Nothing): {
-        if (isMaximizing)
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
-        else
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        if (isMaximizing) {
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = max(Alpha, bestScore);
+        }
+        else { 
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = min(Beta, bestScore);
+        }
 
-        // cout << "minimax do nothing: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
+        // cout << "minimax do nothing: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player, tmp_arrow, tmp_bullets) << '\n';
+
+        if (Beta <= Alpha)
+          return bestScore;
         break;
       }
       case (Move_Left): {
-        int x = tmp_player2[player_id].getX(), y = tmp_player2[player_id].getY();
-        tmp_player2[player_id].moveLeft();
-        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        int x = tmp_player[player_id].getX(), y = tmp_player[player_id].getY();
+        tmp_player[player_id].moveLeft();
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
 
-        if (isMaximizing)
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
-        else
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        if (isMaximizing) { 
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = max(Alpha, bestScore);
+        }
+        else { 
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = min(Beta, bestScore);
+        }
 
-        // cout << "minimax move left: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
-        tmp_player2[player_id].setX(x); tmp_player2[player_id].setY(y);
-        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        // cout << "minimax move left: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player, tmp_arrow, tmp_bullets) << '\n';
+        tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
+
+        if (Beta <= Alpha)
+          return bestScore;
         break;
       }
       case (Move_Right): {
-        int x = tmp_player2[player_id].getX(), y = tmp_player2[player_id].getY();
-        tmp_player2[player_id].moveRight();
-        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        int x = tmp_player[player_id].getX(), y = tmp_player[player_id].getY();
+        tmp_player[player_id].moveRight();
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
 
-        if (isMaximizing)
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
-        else
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2));
+        if (isMaximizing) {
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = max(Alpha, bestScore);
+        }
+        else { 
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = min(Beta, bestScore);
+        }
 
-        // cout << "minimax do move right: " << Minimax(depth - 1, isMaximizing ^ 1, tmp_player2, tmp_arrow2, tmp_bullets2) << '\n';
-        tmp_player2[player_id].setX(x); tmp_player2[player_id].setY(y);
-        setArrowToPlayer(player_id, tmp_player2[player_id], tmp_arrow2[player_id]);
+        // cout << "minimax do move right: " << Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets) << '\n';
+        tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
+
+        if (Beta <= Alpha)
+          return bestScore;
+        break;
+      }
+      case (Use_Q): {
+        if (tmp_player[player_id].getSkillCooldown(skillQ_ID) > 0)
+          break;
+        
+        Bullet tmp;
+        tmp.setX(tmp_player[0].getX() + tmp_player[0].getWidth() / 2 - tmp.getWidth() / 2);
+        tmp.setY(tmp_player[0].getY() + tmp_player[0].getHeight());
+        tmp.setAngle(tmp_arrow[0].getAngle());
+        tmp.setCenter(tmp.getWidth() / 2, 0);
+        tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///reset after each frame in void move();
+        
+        tmp_bullets[0].push_back(tmp);
+        if (isMaximizing) {
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = max(Alpha, bestScore);
+        }
+        else { 
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = min(Beta, bestScore);
+        }
+
+        tmp_bullets[0].pop_back();
+
+        if (Beta <= Alpha)
+          return bestScore;
+        break;
+      }
+      case (Use_W): {
+        if (tmp_player[player_id].getSkillCooldown(skillW_ID) > 0)
+          break;
+        
+        Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets);
+
+        if (Beta <= Alpha)
+          return bestScore;
         break;
       }
     }
@@ -700,7 +763,7 @@ void Game::ProcessingAIMove(int player_id) {
   for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) {
     switch (move_type) {
       case (Do_Nothing): {
-        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
@@ -714,7 +777,7 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[0].moveLeft();
         setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
 
-        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
@@ -730,7 +793,7 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[0].moveRight();
         setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
 
-        double score = Minimax(depth, 1, tmp_player, tmp_arrow, tmp_bullets);
+        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
@@ -739,6 +802,35 @@ void Game::ProcessingAIMove(int player_id) {
 
         tmp_player[0].setX(x); tmp_player[0].setY(y);
         setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        break;
+      }
+      case (Use_Q): {
+        if (tmp_player[0].getSkillCooldown(skillQ_ID) > 0)
+          break;
+
+        Bullet tmp;
+        tmp.setX(tmp_player[0].getX() + tmp_player[0].getWidth() / 2 - tmp.getWidth() / 2);
+        tmp.setY(tmp_player[0].getY() + tmp_player[0].getHeight());
+        tmp.setAngle(tmp_arrow[0].getAngle());
+        tmp.setCenter(tmp.getWidth() / 2, 0);
+        tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY()); ///reset after each frame in void move();
+        
+        tmp_bullets[0].push_back(tmp);
+        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move_type;
+        }
+
+        tmp_bullets[0].pop_back();
+        break;
+      }
+      case (Use_W): {
+        if (tmp_player[0].getSkillCooldown(skillW_ID) > 0)
+          break;
+        
+        Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
+
         break;
       }
     }
@@ -758,6 +850,10 @@ void Game::ProcessingAIMove(int player_id) {
     }
     case (Move_Right): {
       player[player_id].moveRight();
+      break;
+    }
+    case (Use_Q): {
+      ProcessingSkill(player_id, skillQ_ID);
       break;
     }
   }
@@ -842,7 +938,14 @@ void Game::handleEvents() {
   if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
   if (keystate[SDL_SCANCODE_ESCAPE]) new_key[KEY_PRESS_ESC] = 1;
 
+  int width, height;
+  SDL_GetWindowSize(gWindow, &width, &height);
   SDL_GetMouseState(&MouseX, &MouseY);
+  // cout << width << ' ' << height << ' ' << MouseX << ' ' << MouseY << '\n';
+  MouseX = (int)((double)SCREEN_WIDTH / width * MouseX);
+  MouseY = (int)((double)SCREEN_HEIGHT / height * MouseY);
+  // cout << width << ' ' << height << ' ' << MouseX << ' ' << MouseY << '\n';
+  // cout << '\n';
   mouseClicked = false;
 
   while (SDL_PollEvent(&gEvent)) {
@@ -858,23 +961,23 @@ void Game::handleEvents() {
 
 void Game::update() {
   ///Function keys
-  if (new_key[KEY_PRESS_F11] && old_key[KEY_PRESS_F11] == 0) {
-    if (fullscreen == false) {
-      SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-      fullscreen = true;
-    }
-    else {
-      SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
-      fullscreen = false;
-    }
-  }
+  // if (new_key[KEY_PRESS_F11] && old_key[KEY_PRESS_F11] == 0) {
+  //   if (fullscreen == false) {
+  //     SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  //     fullscreen = true;
+  //   }
+  //   else {
+  //     SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
+  //     fullscreen = false;
+  //   }
+  // }
   
-  if (new_key[KEY_PRESS_ESC] && old_key[KEY_PRESS_ESC] == 0) {
-    if (fullscreen) {
-      SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
-      fullscreen = false;
-    }
-  }
+  // if (new_key[KEY_PRESS_ESC] && old_key[KEY_PRESS_ESC] == 0) {
+  //   if (fullscreen) {
+  //     SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
+  //     fullscreen = false;
+  //   }
+  // }
 
   if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0) {
     

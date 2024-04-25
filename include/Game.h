@@ -56,10 +56,11 @@ public:
   void PlaySFX(int skill_ID);
 
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
+  void makeBullet(bool isMaximizing, Player tmp_player, PlayerArrow tmp_arrow, vector<Bullet> &tmp_bullets);
   double CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow);
 
   double HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
-  double Minimax(int depth, bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
+  double Minimax(int depth, bool isMaximizing, double Alpha, double Beta, vector<Player> &tmp_player, vector<PlayerArrow> &tmp_arrow, vector<vector<Bullet>> &tmp_bullets);
   void ProcessingAIMove(int player_id);
   void ProcessingSkill(int player_id, int skill_ID);
 
