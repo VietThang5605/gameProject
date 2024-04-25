@@ -56,7 +56,7 @@ public:
   void PlaySFX(int skill_ID);
 
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
-  void makeBullet(bool isMaximizing, Player tmp_player, PlayerArrow tmp_arrow, vector<Bullet> &tmp_bullets);
+  Bullet makeBullet(int skill_ID, Player tmp_player, PlayerArrow tmp_arrow);
   double CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow);
 
   double HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
