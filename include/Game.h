@@ -26,6 +26,7 @@ struct Game {
 public:
   Game();
 
+  void resetTimeDelay(int time);
   void resetGame();
   
   void init();
@@ -54,10 +55,11 @@ public:
   void render_Skill_Hud_And_Cooldown();
 
   void PlaySFX(int skill_ID);
+  void PlayMusic(int music_ID);
 
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
   Bullet makeBullet(int skill_ID, Player tmp_player, PlayerArrow tmp_arrow);
-  double CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow);
+  double CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> tmp_player, Entity tmp_arrow);
 
   double HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
   double Minimax(int depth, bool isMaximizing, double Alpha, double Beta, vector<Player> &tmp_player, vector<PlayerArrow> &tmp_arrow, vector<vector<Bullet>> &tmp_bullets);
@@ -73,6 +75,11 @@ public:
 
   void render_MainMenu();
   void render_GamePlay();
+  void render_GamePause();
+  void render_YouWin();
+  void render_YouLose();
+  void render_Player1Win();
+  void render_Player2Win();
   void render_Help();
   void render_Game();
 
@@ -84,4 +91,5 @@ private:
   bool gameRunning;
   bool fullscreen;
   int gameState;
+  int timeDelay;
 };

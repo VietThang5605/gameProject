@@ -23,8 +23,7 @@ void Player::reset(int Player_Type) {
   player_skill_Cooldown[skillQ_ID] = 1 * FPS;
   player_skill_Cooldown[skillW_ID] = 3 * FPS;
   player_skill_Cooldown[skillE_ID] = 3 * FPS;
-  // player_skill_Cooldown[skillR_ID] = 15 * FPS;
-  player_skill_Cooldown[skillR_ID] = 0;
+  player_skill_Cooldown[skillR_ID] = 15 * FPS;
 }
 
 void Player::setType(int Player_Type) {

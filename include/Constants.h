@@ -42,6 +42,11 @@ const int skill_castTime[skill_ID_Total] = {
   FPS
 };
 
+enum music_ID {
+  GameEnd_music_ID,
+  music_ID_Total,
+};
+
 enum sfx_ID {
   Q1_sfx_ID,
   Q2_sfx_ID,
@@ -60,6 +65,10 @@ enum ButtonName {
   VSPlayer_Button,
   Help_Button,
   Exit_Button,
+  Continue_Button,
+  Restart_Button,
+  PlayAgain_Button,
+  BackToMenu_Button,
   Button_Total
 };
 

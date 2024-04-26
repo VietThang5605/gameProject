@@ -3,8 +3,10 @@
 enum GameState {
   MainMenu,
   GamePlay,
+  GamePause,
   Help,
   Exit,
+  YouWin, YouLose, Player1Win, Player2Win, GameDraw,
   GameState_Total
 };
 
@@ -15,8 +17,7 @@ enum KeyPress {
 
   KEY_PRESS_A, KEY_PRESS_D, KEY_PRESS_W, KEY_PRESS_S,
   KEY_PRESS_C, KEY_PRESS_V, KEY_PRESS_B, KEY_PRESS_F, KEY_PRESS_G,
-  KEY_PRESS_P, KEY_PRESS_F11,
-  KEY_PRESS_ESC,
+  KEY_PRESS_ESC, KEY_PRESS_F11,
   KEY_PRESS_TOTAL
 };
 
@@ -30,12 +31,18 @@ bool mouseClicked;
 
 SDL_Color white = {255, 255, 255};
 SDL_Color black = {0, 0, 0};
+SDL_Color red = {255, 0, 0};
+SDL_Color green = {0, 255, 0};
+SDL_Color yellow = {255, 255, 0};
+SDL_Color orange = {255, 165, 0};
 
 TTF_Font* font32;
 TTF_Font* font32_outline;
 TTF_Font* font80;
+TTF_Font* font100;
 
 Mix_Chunk* SFX[sfx_ID_Total] = { NULL };
+Mix_Music* MUSIC[music_ID_Total] = { NULL };
 
 SDL_Texture* waterTexture = NULL;
 SDL_Texture* grassTexture = NULL;
@@ -74,7 +81,14 @@ Game::Game() {
   fullscreen = false;
 };
 
+void Game::resetTimeDelay(int time) {
+  timeDelay = time;
+}
+
 void Game::resetGame() {
+  resetTimeDelay(4 * FPS);
+  player[1].reset(player[1].getType());
+  player[2].reset(player[2].getType());
   for (int id = 1; id <= 2; id++) {
     player_Arrow[id].reset();
     player_bullets[id].erase(player_bullets[id].begin(), player_bullets[id].end());
@@ -122,6 +136,7 @@ void Game::loadMedia() {
   TTF_SetFontOutline(font32_outline, 1);
 
   font80 = loadFont("res/fonts/DTM-Sans.ttf", 80);
+  font100 = loadFont("res/fonts/DTM-Sans.ttf", 100);
 
   ///Textures
   waterTexture = loadTexture("res/images/Water.png");
@@ -141,30 +156,43 @@ void Game::loadMedia() {
 
   Background[MainMenu] = loadTexture("res/images/MainMenu_background.png");
   Background[Help] = loadTexture("res/images/Help_background.png");
+  Background[GamePause] = loadTexture("res/images/GamePause_background.png");
+  Background[YouWin] = loadTexture("res/images/YouWin_background.png");
+  Background[YouLose] = loadTexture("res/images/YouLose_background.png");
+  Background[Player1Win] = loadTexture("res/images/Player1Win_background.png");
+  Background[Player2Win] = loadTexture("res/images/Player2Win_background.png");
 
   Button_Texture[VSAI_Button][0] = loadTextureFromText("VS AI", font80, black);
   Button_Texture[VSAI_Button][1] = loadTextureFromText("VS AI", font80, white);
   button[VSAI_Button].init(Button_Texture[VSAI_Button][0], Button_Texture[VSAI_Button][1]);
-  button[VSAI_Button].setX(SCREEN_WIDTH / 2 - button[VSAI_Button].getWidth() / 2);
-  button[VSAI_Button].setY(SCREEN_HEIGHT / 2 - button[VSAI_Button].getHeight() - 100);
 
   Button_Texture[VSPlayer_Button][0] = loadTextureFromText("VS Player", font80, black);
   Button_Texture[VSPlayer_Button][1] = loadTextureFromText("VS Player", font80, white);
   button[VSPlayer_Button].init(Button_Texture[VSPlayer_Button][0], Button_Texture[VSPlayer_Button][1]);
-  button[VSPlayer_Button].setX(SCREEN_WIDTH / 2 - button[VSPlayer_Button].getWidth() / 2);
-  button[VSPlayer_Button].setY(button[VSAI_Button].getY() + button[VSAI_Button].getHeight() + 10);
 
   Button_Texture[Help_Button][0] = loadTextureFromText("Help", font80, black);
   Button_Texture[Help_Button][1] = loadTextureFromText("Help", font80, white);
   button[Help_Button].init(Button_Texture[Help_Button][0], Button_Texture[Help_Button][1]);
-  button[Help_Button].setX(SCREEN_WIDTH / 2 - button[Help_Button].getWidth() / 2);
-  button[Help_Button].setY(button[VSPlayer_Button].getY() + button[VSPlayer_Button].getHeight() + 10);
 
   Button_Texture[Exit_Button][0] = loadTextureFromText("Exit", font80, black);
   Button_Texture[Exit_Button][1] = loadTextureFromText("Exit", font80, white);
   button[Exit_Button].init(Button_Texture[Exit_Button][0], Button_Texture[Exit_Button][1]);
-  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
-  button[Exit_Button].setY(button[Help_Button].getY() + button[Help_Button].getHeight() + 10);
+
+  Button_Texture[Continue_Button][0] = loadTextureFromText("Continue", font80, black);
+  Button_Texture[Continue_Button][1] = loadTextureFromText("Continue", font80, white);
+  button[Continue_Button].init(Button_Texture[Continue_Button][0], Button_Texture[Continue_Button][1]);
+
+  Button_Texture[Restart_Button][0] = loadTextureFromText("Restart", font80, black);
+  Button_Texture[Restart_Button][1] = loadTextureFromText("Restart", font80, white);
+  button[Restart_Button].init(Button_Texture[Restart_Button][0], Button_Texture[Restart_Button][1]);
+
+  Button_Texture[PlayAgain_Button][0] = loadTextureFromText("Play Again", font80, black);
+  Button_Texture[PlayAgain_Button][1] = loadTextureFromText("Play Again", font80, white);
+  button[PlayAgain_Button].init(Button_Texture[PlayAgain_Button][0], Button_Texture[PlayAgain_Button][1]);
+
+  Button_Texture[BackToMenu_Button][0] = loadTextureFromText("Back to menu", font80, black);
+  Button_Texture[BackToMenu_Button][1] = loadTextureFromText("Back to menu", font80, white);
+  button[BackToMenu_Button].init(Button_Texture[BackToMenu_Button][0], Button_Texture[BackToMenu_Button][1]);
 
   ///Sounds
   SFX[Q1_sfx_ID] = loadSFX("res/audio/sfx/Q1.wav");
@@ -176,6 +204,8 @@ void Game::loadMedia() {
   SFX[E_sfx_ID] = loadSFX("res/audio/sfx/E.wav");
   SFX[R1_sfx_ID] = loadSFX("res/audio/sfx/R1_sfx.wav");
   SFX[R2_sfx_ID] = loadSFX("res/audio/sfx/R2_sfx.wav");
+
+  MUSIC[GameEnd_music_ID] = loadMusic("res/audio/music/winSound.wav");
 
   ///entity's initialization
   skillW_effect.init(skillW_ground, 128, 64, 1, 1);
@@ -276,6 +306,7 @@ void Game::closeMedia() {
   TTF_CloseFont(font32);
   TTF_CloseFont(font32_outline);
   TTF_CloseFont(font80);
+  TTF_CloseFont(font100);
 
   for (int id = 0; id < skill_ID_Total; id++) {
     SDL_DestroyTexture(skill_Hud[id]);
@@ -539,6 +570,15 @@ void Game::PlaySFX(int skill_ID) {
   }
 }
 
+void Game::PlayMusic(int music_ID) {
+  switch (music_ID) {
+    case (GameEnd_music_ID): {
+      Mix_PlayMusic(MUSIC[music_ID], 0);
+      break;
+    }
+  }
+}
+
 void Game::setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow) {
   if (isMaximizing == Human) {
     tmp_arrow.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - tmp_arrow.getWidth() / 2);
@@ -552,22 +592,22 @@ void Game::setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &t
   }
 }
 
-double Game::CalculateArrowAccuracy(bool isMaximizing, vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow) {
+double Game::CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> tmp_player, Entity tmp_arrow) {
   int player_id = isMaximizing;
   int enemy_id = isMaximizing ^ 1;
   
   Point arrow;
   if (player_id == Human)
-    arrow = rotatePointAroundAngle(tmp_arrow[player_id].getX() + tmp_arrow[player_id].getWidth() / 2, tmp_arrow[player_id].getY(), tmp_arrow[player_id].getRotPoint(), tmp_arrow[player_id].getAngle());
+    arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
   else
-    arrow = rotatePointAroundAngle(tmp_arrow[player_id].getX() + tmp_arrow[player_id].getWidth() / 2, tmp_arrow[player_id].getY() + tmp_arrow[player_id].getHeight(), tmp_arrow[player_id].getRotPoint(), tmp_arrow[player_id].getAngle());
+    arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
 
-  Point rot_point = Point(tmp_arrow[player_id].getRotPoint()->x, tmp_arrow[player_id].getRotPoint()->y);
+  Point rot_point = Point(tmp_arrow.getRotPoint()->x, tmp_arrow.getRotPoint()->y);
   Vector vec;
   if (player_id == Human)
-    vec = Vector(sin(PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180), -cos(PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180));
+    vec = Vector(sin(PI / 2 + tmp_arrow.getAngle() * PI / 180), -cos(PI / 2 + tmp_arrow.getAngle() * PI / 180));
   else
-    vec = Vector(sin(-PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180), -cos(-PI / 2 + tmp_arrow[player_id].getAngle() * PI / 180));
+    vec = Vector(sin(-PI / 2 + tmp_arrow.getAngle() * PI / 180), -cos(-PI / 2 + tmp_arrow.getAngle() * PI / 180));
   
   int Enemy_Y_Current;
   if (player_id == Human) 
@@ -603,14 +643,10 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
   vector<double> ArrowAccuracy(2);
   double Score = 0;
   for (int id = 0; id <= 1; id++) {
-    ArrowAccuracy[id] = CalculateArrowAccuracy(id, tmp_player, tmp_arrow);
+    ArrowAccuracy[id] = CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
     if (id == 0) {
       if (tmp_player[0].getSkillCooldown(skillQ_ID) == 0 || tmp_player[0].getSkillCooldown(skillQ_ID) == skill_Cooldown[skillQ_ID])
         Score += ArrowAccuracy[id];
-      // if (ArrowAccuracy[id] > 200) {
-      //   Score -= ArrowAccuracy[id];
-      //   Score -= abs(tmp_player[0].getX() - Enemy.getX());
-      // }
     }
     if (id == 1) {
       if (tmp_player[0].getSkillCooldown(skillQ_ID) > 0 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_Cooldown[skillQ_ID]) ///not checking frame when AI shoot bullet
@@ -619,18 +655,15 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
   }
 
   for (Bullet bul : tmp_bullets[0]) {
-    if (ArrowAccuracy[0] < 100) {
+    if (ArrowAccuracy[0] < 80) {
+      if (ArrowAccuracy[0] < 30)
+        Score -= 30;
       if (bul.getSkillId() == skillQ_ID)
-        Score -= 100;
+        Score -= 80;
       if (bul.getSkillId() == skillW_ID && tmp_player[0].getSkillCooldown(skillQ_ID) <= FPS / 2)
-        Score -= 150;
+        Score -= 100;
     }
   }
-
-  // if (tmp_bullets[0].empty() == 0) {
-  //   if (ArrowAccuracy[0] < 100)
-  //     Score -= 100;
-  // }
 
   return Score;
 }
@@ -963,7 +996,6 @@ void Game::handleEvents() {
   }
 
   ///utility
-  if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
   if (keystate[SDL_SCANCODE_F11]) new_key[KEY_PRESS_F11] = 1;
   if (keystate[SDL_SCANCODE_ESCAPE]) new_key[KEY_PRESS_ESC] = 1;
 
@@ -1001,18 +1033,13 @@ void Game::update() {
   //   }
   // }
   
-  // if (new_key[KEY_PRESS_ESC] && old_key[KEY_PRESS_ESC] == 0) {
-  //   if (fullscreen) {
-  //     SDL_SetWindowFullscreen(gWindow, SDL_WINDOW_SHOWN);
-  //     fullscreen = false;
-  //   }
-  // }
-
-  if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0) {
-    
+  if (new_key[KEY_PRESS_ESC] && old_key[KEY_PRESS_ESC] == 0) {
+    if (gameState == GamePlay) {
+      gameState = GamePause;
+    }
   }
 
-  if (gameState == GamePlay) {
+  if (gameState == GamePlay && timeDelay == 0) {
     ///player1
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
@@ -1142,7 +1169,9 @@ void Game::render_Player() {
     player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
     player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
     render(player_Arrow[1]);
-    player_Arrow[1].moveAngle();
+    if (timeDelay == 0) {
+      player_Arrow[1].moveAngle();
+    }
   }
 
   if (player[2].getHealth() > 0) {
@@ -1159,7 +1188,9 @@ void Game::render_Player() {
     player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
     player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
     render(player_Arrow[2]);
-    player_Arrow[2].moveAngle();
+    if (timeDelay == 0) {
+      player_Arrow[2].moveAngle();
+    }
   }
 }
 
@@ -1243,39 +1274,210 @@ void Game::render_MainMenu() {
   render(Background[MainMenu], 0, 0);
 
   if (button[VSAI_Button].isClicked(MouseX, MouseY, mouseClicked)) {
-    player[1].reset(Bot);
-    player[2].reset(Human);
+    player[1].setType(Bot);
+    player[2].setType(Human);
     resetGame();
     gameState = GamePlay;
   }
+  button[VSAI_Button].setX(SCREEN_WIDTH / 2 - button[VSAI_Button].getWidth() / 2);
+  button[VSAI_Button].setY(SCREEN_HEIGHT / 2 - button[VSAI_Button].getHeight() - 100);
   render(button[VSAI_Button]);
 
   if (button[VSPlayer_Button].isClicked(MouseX, MouseY, mouseClicked)) {
-    player[1].reset(Human);
-    player[2].reset(Human);
+    player[1].setType(Human);
+    player[2].setType(Human);
     resetGame();
     gameState = GamePlay;
   }
+  button[VSPlayer_Button].setX(SCREEN_WIDTH / 2 - button[VSPlayer_Button].getWidth() / 2);
+  button[VSPlayer_Button].setY(button[VSAI_Button].getY() + button[VSAI_Button].getHeight() + 10);
   render(button[VSPlayer_Button]);
 
   if (button[Help_Button].isClicked(MouseX, MouseY, mouseClicked))
     gameState = Help;
+  button[Help_Button].setX(SCREEN_WIDTH / 2 - button[Help_Button].getWidth() / 2);
+  button[Help_Button].setY(button[VSPlayer_Button].getY() + button[VSPlayer_Button].getHeight() + 10);
   render(button[Help_Button]);
 
   if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
     gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[Help_Button].getY() + button[Help_Button].getHeight() + 10);
   render(button[Exit_Button]);
 }
 
 void Game::render_GamePlay() {
+  if (timeDelay > 0) timeDelay--;
+
   if (player[1].isDead() || player[2].isDead()) {
-    gameState = MainMenu;
+    PlayMusic(GameEnd_music_ID);
+    if (player[1].isDead() && player[2].isDead()) {
+      gameState = GameDraw;
+    }
+    else if (player[1].getType() == Bot) {
+      if (player[1].isDead())
+        gameState = YouWin;
+      else
+        gameState = YouLose;
+    }
+    else {
+      if (player[1].isDead())
+        gameState = Player2Win;
+      else
+        gameState = Player1Win;
+    }
+    return;
   }
   else {
     render_GameBackground();
     render_Player();
     render_Bullet();
   }
+
+  if (3 * FPS < timeDelay && timeDelay <= 4 * FPS) {
+    renderText(300, SCREEN_HEIGHT / 2 - 50, "3", font100, red);
+    renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "3", font100, red);
+  }
+  if (2 * FPS < timeDelay && timeDelay <= 3 * FPS) {
+    renderText(300, SCREEN_HEIGHT / 2 - 50, "2", font100, red);
+    renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "2", font100, red);
+  }
+  if (1 * FPS < timeDelay && timeDelay <= 2 * FPS) {
+    renderText(300, SCREEN_HEIGHT / 2 - 50, "1", font100, red);
+    renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "1", font100, red);
+  }
+  if (0 < timeDelay && timeDelay < 1 * FPS) {
+    renderText(300, SCREEN_HEIGHT / 2 - 50, "Go", font100, green);
+    renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "Go", font100, green);
+  }
+}
+
+void Game::render_GamePause() {
+  render(Background[GamePause], 0, 0);
+
+  if (button[Continue_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetTimeDelay(4 * FPS);
+    gameState = GamePlay;
+  }
+  button[Continue_Button].setX(SCREEN_WIDTH / 2 - button[Continue_Button].getWidth() / 2);
+  button[Continue_Button].setY(SCREEN_HEIGHT / 2 - button[Continue_Button].getHeight() - 100);
+  render(button[Continue_Button]);
+
+  if (button[Restart_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetGame();
+    gameState = GamePlay;
+  }
+  button[Restart_Button].setX(SCREEN_WIDTH / 2 - button[Restart_Button].getWidth() / 2);
+  button[Restart_Button].setY(button[Continue_Button].getY() + button[Continue_Button].getHeight() + 10);
+  render(button[Restart_Button]);
+
+  if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameState = MainMenu;
+  button[BackToMenu_Button].setX(SCREEN_WIDTH / 2 - button[BackToMenu_Button].getWidth() / 2);
+  button[BackToMenu_Button].setY(button[Restart_Button].getY() + button[Restart_Button].getHeight() + 10);
+  render(button[BackToMenu_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[BackToMenu_Button].getY() + button[BackToMenu_Button].getHeight() + 10);
+  render(button[Exit_Button]);
+}
+
+void Game::render_YouWin() {
+  render(Background[YouWin], 0, 0);
+
+  if (button[PlayAgain_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetGame();
+    gameState = GamePlay;
+  }
+  button[PlayAgain_Button].setX(SCREEN_WIDTH / 2 - button[PlayAgain_Button].getWidth() / 2);
+  button[PlayAgain_Button].setY(SCREEN_HEIGHT / 2 - button[PlayAgain_Button].getHeight() - 50);
+  render(button[PlayAgain_Button]);
+
+  if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameState = MainMenu;
+  button[BackToMenu_Button].setX(SCREEN_WIDTH / 2 - button[BackToMenu_Button].getWidth() / 2);
+  button[BackToMenu_Button].setY(button[PlayAgain_Button].getY() + button[PlayAgain_Button].getHeight() + 10);
+  render(button[BackToMenu_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[BackToMenu_Button].getY() + button[BackToMenu_Button].getHeight() + 10);
+  render(button[Exit_Button]);
+}
+
+void Game::render_YouLose() {
+  render(Background[YouLose], 0, 0);
+
+  if (button[PlayAgain_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetGame();
+    gameState = GamePlay;
+  }
+  button[PlayAgain_Button].setX(SCREEN_WIDTH / 2 - button[PlayAgain_Button].getWidth() / 2);
+  button[PlayAgain_Button].setY(SCREEN_HEIGHT / 2 - button[PlayAgain_Button].getHeight() - 50);
+  render(button[PlayAgain_Button]);
+
+  if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameState = MainMenu;
+  button[BackToMenu_Button].setX(SCREEN_WIDTH / 2 - button[BackToMenu_Button].getWidth() / 2);
+  button[BackToMenu_Button].setY(button[PlayAgain_Button].getY() + button[PlayAgain_Button].getHeight() + 10);
+  render(button[BackToMenu_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[BackToMenu_Button].getY() + button[BackToMenu_Button].getHeight() + 10);
+  render(button[Exit_Button]);
+}
+
+void Game::render_Player1Win() {
+  render(Background[Player1Win], 0, 0);
+
+  if (button[PlayAgain_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetGame();
+    gameState = GamePlay;
+  }
+  button[PlayAgain_Button].setX(SCREEN_WIDTH / 2 - button[PlayAgain_Button].getWidth() / 2);
+  button[PlayAgain_Button].setY(SCREEN_HEIGHT / 2 - button[PlayAgain_Button].getHeight() - 50);
+  render(button[PlayAgain_Button]);
+
+  if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameState = MainMenu;
+  button[BackToMenu_Button].setX(SCREEN_WIDTH / 2 - button[BackToMenu_Button].getWidth() / 2);
+  button[BackToMenu_Button].setY(button[PlayAgain_Button].getY() + button[PlayAgain_Button].getHeight() + 10);
+  render(button[BackToMenu_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[BackToMenu_Button].getY() + button[BackToMenu_Button].getHeight() + 10);
+  render(button[Exit_Button]);
+}
+
+void Game::render_Player2Win() {
+  render(Background[Player2Win], 0, 0);
+
+  if (button[PlayAgain_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    resetGame();
+    gameState = GamePlay;
+  }
+  button[PlayAgain_Button].setX(SCREEN_WIDTH / 2 - button[PlayAgain_Button].getWidth() / 2);
+  button[PlayAgain_Button].setY(SCREEN_HEIGHT / 2 - button[PlayAgain_Button].getHeight() - 50);
+  render(button[PlayAgain_Button]);
+
+  if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameState = MainMenu;
+  button[BackToMenu_Button].setX(SCREEN_WIDTH / 2 - button[BackToMenu_Button].getWidth() / 2);
+  button[BackToMenu_Button].setY(button[PlayAgain_Button].getY() + button[PlayAgain_Button].getHeight() + 10);
+  render(button[BackToMenu_Button]);
+
+  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked))
+    gameRunning = false;
+  button[Exit_Button].setX(SCREEN_WIDTH / 2 - button[Exit_Button].getWidth() / 2);
+  button[Exit_Button].setY(button[BackToMenu_Button].getY() + button[BackToMenu_Button].getHeight() + 10);
+  render(button[Exit_Button]);
 }
 
 void Game::render_Help() {
@@ -1313,6 +1515,21 @@ void Game::render_Game() {
   }
   else if (gameState == GamePlay) {
     render_GamePlay();
+  }
+  else if (gameState == GamePause) {
+    render_GamePause();
+  }
+  else if (gameState == YouWin) {
+    render_YouWin();
+  }
+  else if (gameState == YouLose) {
+    render_YouLose();
+  }
+  else if (gameState == Player1Win) {
+    render_Player1Win();
+  }
+  else if (gameState == Player2Win) {
+    render_Player2Win();
   }
   else if (gameState == Help) {
     render_Help();
