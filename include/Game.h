@@ -54,7 +54,8 @@ public:
 
   void render_Skill_Hud_And_Cooldown();
 
-  void PlaySFX(int skill_ID);
+  void PlaySkillSFX(int skill_ID);
+  void PlaySFX(int sfx_ID);
   void PlayMusic(int music_ID);
 
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
@@ -73,6 +74,7 @@ public:
   void render_Player();
   void render_Bullet();
 
+  void render_GameEndButtons();
   void render_MainMenu();
   void render_GamePlay();
   void render_GamePause();
@@ -80,6 +82,7 @@ public:
   void render_YouLose();
   void render_Player1Win();
   void render_Player2Win();
+  void render_GameDraw();
   void render_Help();
   void render_Game();
 

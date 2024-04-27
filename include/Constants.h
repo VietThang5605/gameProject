@@ -55,8 +55,9 @@ enum sfx_ID {
   W_hit_sfx_ID,
   W_hit_crashed_sfx_ID,
   E_sfx_ID,
-  R1_sfx_ID,
-  R2_sfx_ID,
+  R_sfx_ID,
+  R_hit_sfx_ID,
+  Click_sfx_ID,
   sfx_ID_Total
 };
 
