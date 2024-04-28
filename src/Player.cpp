@@ -15,15 +15,14 @@ void Player::reset(int Player_Type) {
   y = startY;
   type = Player_Type;
   vulnerable = 0;
-  health = 20;
-  cntShot = 0;
-  velocity = 18;
-  velocityTeleport = 500;
+  health = PlayerStartHealth;
+  velocity = PlayerVelocity;
+  velocityTeleport = PlayerTeleportVelocity;
   castTimeCooldown = 0;
-  player_skill_Cooldown[skillQ_ID] = 1 * FPS;
-  player_skill_Cooldown[skillW_ID] = 3 * FPS;
-  player_skill_Cooldown[skillE_ID] = 3 * FPS;
-  player_skill_Cooldown[skillR_ID] = 15 * FPS;
+  player_skill_cooldown[skillQ_ID] = skill_cooldown_start[skillQ_ID];
+  player_skill_cooldown[skillW_ID] = skill_cooldown_start[skillW_ID];
+  player_skill_cooldown[skillE_ID] = skill_cooldown_start[skillE_ID];
+  player_skill_cooldown[skillR_ID] = skill_cooldown_start[skillR_ID];
 }
 
 void Player::setType(int Player_Type) {
@@ -35,7 +34,7 @@ void Player::setHealth(int delta) {
 }
 
 void Player::setSkillCooldown(int time, int skill_ID) {
-  player_skill_Cooldown[skill_ID] = time;
+  player_skill_cooldown[skill_ID] = time;
 }
 
 void Player::setVulnerable(int value) {
@@ -63,7 +62,7 @@ int Player::getHealth() {
 }
 
 int Player::getSkillCooldown(int skill_ID) {
-  return player_skill_Cooldown[skill_ID];
+  return player_skill_cooldown[skill_ID];
 }
 
 int Player::getVulnerable() {
@@ -92,8 +91,8 @@ void Player::updateCooldown() {
   if (damagedDelay > 0) damagedDelay--;
   
   for (int id = 0; id < skill_ID_Total; id++) {
-    if (player_skill_Cooldown[id] > 0)
-      player_skill_Cooldown[id]--;
+    if (player_skill_cooldown[id] > 0)
+      player_skill_cooldown[id]--;
   }
 }
 
@@ -107,7 +106,7 @@ void Player::moveLeft() {
   setFlip(SDL_FLIP_HORIZONTAL);
   setCurrentFrame(getCurrentFrame() + 1);
 
-  if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
+  if (player_skill_cooldown[skillE_ID] == skill_cooldown[skillE_ID])
     setX(getX() - velocityTeleport);
   else
     setX(getX() - velocity);
@@ -120,7 +119,7 @@ void Player::moveRight() {
   setFlip(SDL_FLIP_NONE);
   setCurrentFrame(getCurrentFrame() + 1);
 
-  if (player_skill_Cooldown[skillE_ID] == skill_Cooldown[skillE_ID])
+  if (player_skill_cooldown[skillE_ID] == skill_cooldown[skillE_ID])
     setX(getX() + velocityTeleport);
   else
     setX(getX() + velocity);

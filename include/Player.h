@@ -41,11 +41,10 @@ private:
   int type;
   int vulnerable;
   int health;
-  int cntShot;
   int velocity;
   int velocityTeleport;
   int castTimeCooldown;
-  int player_skill_Cooldown[4];
+  int player_skill_cooldown[4];
   int skillDelay;
   int damagedDelay;
 };

@@ -13,12 +13,16 @@ const int INT_INF = 1e9;
 const double PI = 3.14159265358979323846;
 const double DOUBLE_INF = 1e9;
 
-const double maxAngle = 70;
+const double maxAngle = 60;
 const double angleDelta = 3;
 const double angleDeltaMax = 6;
 const int increaseAngleDeltaCooldown = 5 * FPS;
 
 const int vulnerableTime = 2 * FPS;
+
+const int PlayerStartHealth = 20;
+const int PlayerVelocity = 18;
+const int PlayerTeleportVelocity = 540;
 
 enum skill_ID {
   skillQ_ID,
@@ -28,7 +32,14 @@ enum skill_ID {
   skill_ID_Total
 };
 
-const int skill_Cooldown[skill_ID_Total] = {
+const int skill_cooldown_start[skill_ID_Total] = {
+  1 * FPS,
+  3 * FPS,
+  3 * FPS,
+  15 * FPS,
+};
+
+const int skill_cooldown[skill_ID_Total] = {
   3 * FPS,
   6 * FPS,
   10 * FPS,
@@ -40,6 +51,13 @@ const int skill_castTime[skill_ID_Total] = {
   FPS / 4,
   FPS / 2,
   FPS
+};
+
+const int skill_damage[skill_ID_Total] = {
+  2,
+  2,
+  0,
+  6,
 };
 
 enum music_ID {
