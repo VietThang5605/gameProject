@@ -9,9 +9,8 @@ void PlayerArrow::reset() {
   angle = 0;
   delta = angleDelta;
   increaseCooldown = 0;
+  dir = 1;
 }
-
-
 
 void PlayerArrow::increaseAngleDelta() {
   if (increaseCooldown > 0) return;

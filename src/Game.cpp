@@ -43,20 +43,21 @@ TTF_Font* font100;
 Mix_Chunk* SFX[sfx_ID_Total] = { NULL };
 Mix_Music* MUSIC[music_ID_Total] = { NULL };
 
-SDL_Texture* waterTexture = NULL;
-SDL_Texture* grassTexture = NULL;
+enum GameTextureName {
+  waterTexture,
+  grassTexture,
+  ezrealTexture,
+  skillArrow,
+  skillQ,
+  skillW,
+  skillW_ground,
+  skillR,
+  GameTexture_Total
+};
 
-SDL_Texture* ezrealTexture = NULL;
-
+SDL_Texture* GameTexture[GameTexture_Total];
 SDL_Texture* skill_Hud[skill_ID_Total] = { NULL };
-SDL_Texture* skillArrow = NULL;
-SDL_Texture* skillQ = NULL;
-SDL_Texture* skillW = NULL;
-SDL_Texture* skillW_ground = NULL;
-SDL_Texture* skillR = NULL;
-
 SDL_Texture* Background[GameState_Total] = { NULL };
-
 SDL_Texture* Button_Texture[Button_Total][2] = { NULL };
 
 vector<Entity> waterBackground;
@@ -80,12 +81,12 @@ Game::Game() {
   fullscreen = false;
 };
 
-void Game::resetTimeDelay(int time) {
-  timeDelay = time;
+void Game::resetGameDelayTime(int time) {
+  gameDelayTime = time;
 }
 
 void Game::resetGame() {
-  resetTimeDelay(4 * FPS);
+  resetGameDelayTime(4 * FPS);
   player[1].reset(player[1].getType());
   player[2].reset(player[2].getType());
   for (int id = 1; id <= 2; id++) {
@@ -113,7 +114,6 @@ void Game::initSDL() {
     logError("Failted to create renderer.", SDL_GetError());
   
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  // SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "1");
   SDL_RenderSetLogicalSize(gRenderer, SCREEN_WIDTH, SCREEN_HEIGHT);
 
   if (IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) == 0)
@@ -124,35 +124,31 @@ void Game::initSDL() {
   
   if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
     logError("Failed to initialize SDL_mixer.", Mix_GetError());
-  
-  // Mix_Volume(-1, 50);
 }
 
 void Game::loadMedia() {
   ///Fonts
   font32 = loadFont("res/fonts/cocogoose.ttf", 32);
-  font32_outline = loadFont("res/fonts/cocogoose.ttf", 32);
-  TTF_SetFontOutline(font32_outline, 1);
-
+  font32_outline = loadFont("res/fonts/cocogoose.ttf", 32); TTF_SetFontOutline(font32_outline, 1);
   font80 = loadFont("res/fonts/DTM-Sans.ttf", 80);
   font100 = loadFont("res/fonts/DTM-Sans.ttf", 100);
 
   ///Textures
-  ezrealTexture = loadTexture("res/images/character/ezreal-Sheet.png");
-
   skill_Hud[skillQ_ID] = loadTexture("res/images/hud/ezreal_q.png");
   skill_Hud[skillW_ID] = loadTexture("res/images/hud/ezreal_w.png");
   skill_Hud[skillE_ID] = loadTexture("res/images/hud/ezreal_e.png");
   skill_Hud[skillR_ID] = loadTexture("res/images/hud/ezreal_r.png");
 
-  skillArrow = loadTexture("res/images/skill/skillArrow.png");
-  skillQ = loadTexture("res/images/skill/skillQ.png");
-  skillW = loadTexture("res/images/skill/skillW.png");
-  skillW_ground = loadTexture("res/images/skill/skillW_ground.png");
-  skillR = loadTexture("res/images/skill/skillR.png");
+  GameTexture[waterTexture] = loadTexture("res/images/background/Water.png");
+  GameTexture[grassTexture] = loadTexture("res/images/background/Grass.png");
+  GameTexture[ezrealTexture] = loadTexture("res/images/character/ezreal-Sheet.png");
 
-  waterTexture = loadTexture("res/images/background/Water.png");
-  grassTexture = loadTexture("res/images/background/Grass.png");
+  GameTexture[skillArrow] = loadTexture("res/images/skill/skillArrow.png");
+  GameTexture[skillQ] = loadTexture("res/images/skill/skillQ.png");
+  GameTexture[skillW] = loadTexture("res/images/skill/skillW.png");
+  GameTexture[skillW_ground] = loadTexture("res/images/skill/skillW_ground.png");
+  GameTexture[skillR] = loadTexture("res/images/skill/skillR.png");
+
   Background[MainMenu] = loadTexture("res/images/background/MainMenu_background.png");
   Background[Help] = loadTexture("res/images/background/Help_background.png");
   Background[GamePause] = loadTexture("res/images/background/GamePause_background.png");
@@ -220,26 +216,26 @@ void Game::loadMedia() {
   MUSIC[GameEnd_music_ID] = loadMusic("res/audio/music/winSound.wav");
 
   ///entity's initialization
-  skillW_effect.init(skillW_ground, 128, 64, 1, 1);
-  bullet[skillQ_ID].init(skillQ, 4 * 9, 16 * 9, 1, 1, skillQ_ID);
-  bullet[skillW_ID].init(skillW, 8 * 14, 8 * 14, 1, 1, skillW_ID);
-  bullet[skillR_ID].init(skillR, 224, 224, 1, 1, skillR_ID);
+  skillW_effect.init(GameTexture[skillW_ground], 128, 64, 1, 1);
+  bullet[skillQ_ID].init(GameTexture[skillQ], 4 * 9, 16 * 9, 1, 1, skillQ_ID);
+  bullet[skillW_ID].init(GameTexture[skillW], 8 * 14, 8 * 14, 1, 1, skillW_ID);
+  bullet[skillR_ID].init(GameTexture[skillR], 224, 224, 1, 1, skillR_ID);
 
   for (int j = 20; j < 45; j++)
     for (int i = 0; i < 32; i++) {
       Entity entity;
-      entity.init(waterTexture, 64, 16, 1, 1);
+      entity.init(GameTexture[waterTexture], 64, 16, 1, 1);
       entity.setX(i * 64);
       entity.setY(j * 16);
       waterBackground.push_back(entity);
     }
   
   ///player1's initialization
-  player[1].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
+  player[1].init(GameTexture[ezrealTexture], 54 * 3, 69 * 3, 8, 8);
   player[1].setStartXY(SCREEN_WIDTH / 2 - player[1].getWidth() / 2, 150);
   player[1].reset(Human);
 
-  player_Arrow[1].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
+  player_Arrow[1].init(GameTexture[skillArrow], 8 * 10, 16 * 10, 1, 1);
   player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
   player_Arrow[1].setAngle(0);
   player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
@@ -263,11 +259,11 @@ void Game::loadMedia() {
   player_skill_Hud[1][skillQ_ID].setY(120 - player_skill_Hud[1][skillQ_ID].getHeight());
   
   ///player2's initialization
-  player[2].init(ezrealTexture, 54 * 3, 69 * 3, 8, 8);
+  player[2].init(GameTexture[ezrealTexture], 54 * 3, 69 * 3, 8, 8);
   player[2].setStartXY(SCREEN_WIDTH / 2 - player[2].getWidth() / 2, 720);
   player[2].reset(Human);
 
-  player_Arrow[2].init(skillArrow, 8 * 10, 16 * 10, 1, 1);
+  player_Arrow[2].init(GameTexture[skillArrow], 8 * 10, 16 * 10, 1, 1);
   player_Arrow[2].setCenter(player_Arrow[2].getWidth() / 2, player_Arrow[2].getHeight());
   player_Arrow[2].setFlip(SDL_FLIP_VERTICAL);
   player_Arrow[2].setAngle(0);
@@ -293,15 +289,22 @@ void Game::loadMedia() {
 }
 
 void Game::closeMedia() {
-  SDL_DestroyTexture(waterTexture); waterTexture = NULL;
-  SDL_DestroyTexture(grassTexture); grassTexture = NULL;
-  SDL_DestroyTexture(ezrealTexture); ezrealTexture = NULL;
+  ///Fonts
+  TTF_CloseFont(font32);
+  TTF_CloseFont(font32_outline);
+  TTF_CloseFont(font80);
+  TTF_CloseFont(font100);
 
-  SDL_DestroyTexture(skillArrow); skillArrow = NULL;
-  SDL_DestroyTexture(skillQ); skillQ = NULL;
-  SDL_DestroyTexture(skillW); skillW = NULL;
-  SDL_DestroyTexture(skillW_ground); skillW_ground = NULL;
-  SDL_DestroyTexture(skillR); skillR = NULL;
+  ///Textures
+  for (int id = 0; id < skill_ID_Total; id++) {
+    SDL_DestroyTexture(skill_Hud[id]);
+    skill_Hud[id] = NULL;
+  }
+  
+  for (int id = 0; id < GameTexture_Total; id++) {
+    SDL_DestroyTexture(GameTexture[id]);
+    GameTexture[id] = NULL;
+  }
 
   for (int id = 0; id < GameState_Total; id++) {
     SDL_DestroyTexture(Background[id]);
@@ -315,19 +318,15 @@ void Game::closeMedia() {
     }
   }
 
-  TTF_CloseFont(font32);
-  TTF_CloseFont(font32_outline);
-  TTF_CloseFont(font80);
-  TTF_CloseFont(font100);
-
-  for (int id = 0; id < skill_ID_Total; id++) {
-    SDL_DestroyTexture(skill_Hud[id]);
-    skill_Hud[id] = NULL;
-  }
-
+  ///Sounds
   for (int id = 0; id < sfx_ID_Total; id++) {
     Mix_FreeChunk(SFX[id]);
     SFX[id] = NULL;
+  }
+
+  for (int id = 0; id < music_ID_Total; id++) {
+    Mix_FreeMusic(MUSIC[id]);
+    MUSIC[id] = NULL;
   }
 }
 
@@ -341,6 +340,7 @@ void Game::clear() {
 }
 
 void Game::cleanUp() {
+  closeMedia();
   SDL_DestroyRenderer(gRenderer);
   SDL_DestroyWindow(gWindow);
   SDL_Quit();
@@ -380,7 +380,7 @@ Mix_Chunk* Game::loadSFX(const char* p_filePath) {
   sound = Mix_LoadWAV(p_filePath);
 
   if (sound == NULL)
-    logError("Failed to load sound effct with path:", p_filePath);
+    logError("Failed to load sound effect.", Mix_GetError());
 
   return sound;
 }
@@ -395,9 +395,9 @@ Mix_Music* Game::loadMusic(const char* p_filePath) {
   return music;
 }
 
-TTF_Font* Game::loadFont(const char* p_filePath, int sz) {
+TTF_Font* Game::loadFont(const char* p_filePath, int Size) {
   TTF_Font* font = NULL;
-  font = TTF_OpenFont(p_filePath, sz);
+  font = TTF_OpenFont(p_filePath, Size);
 
   if (font == NULL)
     logError("Failed to load font.", TTF_GetError());
@@ -654,15 +654,6 @@ double Game::CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> t
     
   Point arrow_y_tmp((vec.x * arrow.x - vec.y * Enemy_Y_Current + vec.y * arrow.y) / vec.x, Enemy_Y_Current);
 
-  // if (arrow_y_tmp.x < ScreenLeftBoundary)
-  //   arrow_y_tmp.x = ScreenLeftBoundary;
-  // if (arrow_y_tmp.x > ScreenRightBoundary)
-  //   arrow_y_tmp.x = ScreenRightBoundary;
-
-  // SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 255);
-  // SDL_RenderDrawLine(gRenderer, (int)arrow_y_tmp.x, (int)arrow_y_tmp.y, (int) rot_point.x, (int)rot_point.y);
-  // SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
-
   return abs(arrow_y_tmp.x - (tmp_player[enemy_id].getX() + tmp_player[enemy_id].getWidth() / 2));
 }
 
@@ -686,7 +677,7 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
         Score += ArrowAccuracy[id];
     }
     if (id == 1) {
-      if (tmp_player[0].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) ///not checking frame when AI shoot bullet
+      if (tmp_player[0].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) ///not checking state when AI shoot bullet
         Score -= ArrowAccuracy[id];
     }
   }
@@ -694,7 +685,7 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
   for (Bullet bul : tmp_bullets[0]) {
     if (ArrowAccuracy[0] < 80) {
       if (bul.getSkillId() == skillQ_ID)
-        Score -= 150;
+        Score -= 200;
       if (bul.getSkillId() == skillR_ID) {
         if (tmp_player[1].getHealth() >= 5)
           Score -= 500;
@@ -702,7 +693,7 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
           Score -= 500;
       }
       if (tmp_player[1].getHealth() > 2 && bul.getSkillId() == skillW_ID && tmp_player[0].getSkillCooldown(skillQ_ID) <= FPS / 2)
-        Score -= 200;
+        Score -= 250;
     }
   }
 
@@ -719,17 +710,18 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
     Alpha = max(Alpha, bestScore);
   else
     Beta = min(Beta, bestScore);
+
   if (Beta <= Alpha)
     return bestScore;
 
   if (tmp_player[player_id].getCastTimeCooldown() > 0) {
     if (isMaximizing) {
       bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      Alpha = max(Alpha, bestScore);
+      // Alpha = max(Alpha, bestScore);
     }
     else { 
       bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      Beta = min(Beta, bestScore);
+      // Beta = min(Beta, bestScore);
     }
     return bestScore;
   }
@@ -834,14 +826,22 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           return bestScore;
         break;
       }
-      case (Use_E_Left): {
+      case (Use_E_Left): { ///Only AI
         if (player_id == Human)
           break;
         if (tmp_player[player_id].getSkillCooldown(skillE_ID) > 0)
           break;
         if (tmp_bullets[1].empty())
           break;
-        if (CalculateArrowAndBulletAccuracy(Human, tmp_player, tmp_bullets[1].front()) > 100)
+        bool ok = 0;
+        for (Bullet &bul : tmp_bullets[1])
+          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 150)
+              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+          {
+            ok = 1;
+            break;
+          }
+        if (ok == 0)
           break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
@@ -869,14 +869,22 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           return bestScore;
         break;
       }
-      case (Use_E_Right): {
+      case (Use_E_Right): { ///Only AI
         if (player_id == Human)
           break;
         if (tmp_player[player_id].getSkillCooldown(skillE_ID) > 0)
           break;
         if (tmp_bullets[1].empty())
           break;
-        if (CalculateArrowAndBulletAccuracy(Human, tmp_player, tmp_bullets[1].front()) > 100)
+        bool ok = 0;
+        for (Bullet &bul : tmp_bullets[1])
+          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+          {
+            ok = 1;
+            break;
+          }
+        if (ok == 0)
           break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
@@ -904,31 +912,31 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           return bestScore;
         break;
       }
-      // case (Use_R): {
-      //   if (tmp_player[player_id].getSkillCooldown(skillR_ID) > 0)
-      //     break;
-      // if (CalculateArrowAndBulletAccuracy(isMaximizing ^ 1, tmp_player, tmp_arrow[isMaximizing ^ 1]) > 300)
-      //     break;
+      case (Use_R): {
+        if (tmp_player[player_id].getSkillCooldown(skillR_ID) > 0)
+          break;
+      if (CalculateArrowAndBulletAccuracy(player_id, tmp_player, tmp_arrow[player_id]) > 300)
+          break;
         
-      //   tmp_bullets[player_id].push_back(makeBullet(skillR_ID, tmp_player[player_id], tmp_arrow[player_id]));
-      //   tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillR_ID]);
-      //   tmp_player[player_id].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
+        tmp_bullets[player_id].push_back(makeBullet(skillR_ID, tmp_player[player_id], tmp_arrow[player_id]));
+        tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillR_ID]);
+        tmp_player[player_id].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
         
-      //   if (isMaximizing) {
-      //     bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      //     Alpha = max(Alpha, bestScore);
-      //   }
-      //   else { 
-      //     bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      //     Beta = min(Beta, bestScore);
-      //   }
+        if (isMaximizing) {
+          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = max(Alpha, bestScore);
+        }
+        else { 
+          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = min(Beta, bestScore);
+        }
 
-      //   tmp_player[player_id].setCastTimeCooldown(0);
-      //   tmp_player[player_id].setSkillCooldown(0, skillR_ID);
-      //   tmp_bullets[player_id].pop_back();
+        tmp_player[player_id].setCastTimeCooldown(0);
+        tmp_player[player_id].setSkillCooldown(0, skillR_ID);
+        tmp_bullets[player_id].pop_back();
         
-      //   break;
-      // }
+        break;
+      }
     }
   }
 
@@ -1034,7 +1042,15 @@ void Game::ProcessingAIMove(int player_id) {
           break;
         if (tmp_bullets[1].empty())
           break;
-        if (CalculateArrowAndBulletAccuracy(Human, tmp_player, tmp_bullets[1].front()) > 100)
+        bool ok = 0;
+        for (Bullet &bul : tmp_bullets[1])
+          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+          {
+            ok = 1;
+            break;
+          }
+        if (ok == 0)
           break;
           
         tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
@@ -1062,9 +1078,17 @@ void Game::ProcessingAIMove(int player_id) {
           break;
         if (tmp_bullets[1].empty())
           break;
-        if (CalculateArrowAndBulletAccuracy(Human, tmp_player, tmp_bullets[1].front()) > 100)
+        bool ok = 0;
+        for (Bullet &bul : tmp_bullets[1])
+          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+          {
+            ok = 1;
+            break;
+          }
+        if (ok == 0)
           break;
-
+        
         tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[0].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
 
@@ -1088,7 +1112,7 @@ void Game::ProcessingAIMove(int player_id) {
       case (Use_R): {
         if (tmp_player[0].getSkillCooldown(skillR_ID) > 0)
           break;
-        if (CalculateArrowAndBulletAccuracy(Human, tmp_player, tmp_arrow[0]) > 300)
+        if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[0]) > 300)
           break;
         
         tmp_bullets[0].push_back(makeBullet(skillR_ID, tmp_player[0], tmp_arrow[0]));
@@ -1260,7 +1284,7 @@ void Game::update() {
     }
   }
 
-  if (gameState == GamePlay && timeDelay == 0) {
+  if (gameState == GamePlay && gameDelayTime == 0) {
     ///player1
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
@@ -1286,19 +1310,15 @@ void Game::update() {
           if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
             player_Arrow[1].increaseAngleDelta();
 
-          if (new_key[KEY_PRESS_LEFT]) {
+          if (new_key[KEY_PRESS_LEFT])
             player[1].moveLeft();
-          }
-          else if (old_key[KEY_PRESS_LEFT]) {
+          else if (old_key[KEY_PRESS_LEFT])
             player[1].setCurrentFrame(0);
-          }
 
-          if (new_key[KEY_PRESS_RIGHT]) {
+          if (new_key[KEY_PRESS_RIGHT])
             player[1].moveRight();
-          }
-          else if (old_key[KEY_PRESS_RIGHT]) {
+          else if (old_key[KEY_PRESS_RIGHT])
             player[1].setCurrentFrame(0);
-          }
         }
       }
     }
@@ -1329,19 +1349,15 @@ void Game::update() {
         if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
           player_Arrow[2].increaseAngleDelta();
 
-        if (new_key[KEY_PRESS_A]) {
+        if (new_key[KEY_PRESS_A])
           player[2].moveLeft();
-        }
-        else if (old_key[KEY_PRESS_A]) {
+        else if (old_key[KEY_PRESS_A])
           player[2].setCurrentFrame(0);
-        }
 
-        if (new_key[KEY_PRESS_D]) {
+        if (new_key[KEY_PRESS_D])
           player[2].moveRight();
-        }
-        else if (old_key[KEY_PRESS_D]) {
+        else if (old_key[KEY_PRESS_D])
           player[2].setCurrentFrame(0);
-        }
       }
     }
 
@@ -1366,11 +1382,11 @@ void Game::render_GameBackground() {
 
   for (int j = 0; j < 13; j++)
     for (int i = 0; i * 96 < SCREEN_WIDTH; i++)
-      render(grassTexture, i * 96, j * 32);
+      render(GameTexture[grassTexture], i * 96, j * 32);
   
   for (int j = 0; j < 13; j++)
     for (int i = 0; i * 96 < SCREEN_WIDTH; i++)
-      render(grassTexture, i * 96, SCREEN_HEIGHT - 32 - j * 32);
+      render(GameTexture[grassTexture], i * 96, SCREEN_HEIGHT - 32 - j * 32);
 }
 
 void Game::render_Player() {
@@ -1390,7 +1406,7 @@ void Game::render_Player() {
     player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
     player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
     render(player_Arrow[1]);
-    if (timeDelay == 0) {
+    if (gameDelayTime == 0) {
       player_Arrow[1].moveAngle();
     }
   }
@@ -1409,7 +1425,7 @@ void Game::render_Player() {
     player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
     player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
     render(player_Arrow[2]);
-    if (timeDelay == 0) {
+    if (gameDelayTime == 0) {
       player_Arrow[2].moveAngle();
     }
   }
@@ -1465,7 +1481,8 @@ void Game::render_Bullet() {
         else
           bullet.move();
       }
-      else if ((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200)) {
+      else if (((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200))
+                || ((bullet.getY() > SCREEN_HEIGHT + 200 || bullet.getY() < -200))) {
         player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
       }
       else {
@@ -1550,7 +1567,7 @@ void Game::render_MainMenu() {
 }
 
 void Game::render_GamePlay() {
-  if (timeDelay > 0) timeDelay--;
+  if (gameDelayTime > 0) gameDelayTime--;
 
   if (player[1].isDead() || player[2].isDead()) {
     PlayMusic(GameEnd_music_ID);
@@ -1577,19 +1594,19 @@ void Game::render_GamePlay() {
     render_Bullet();
   }
 
-  if (3 * FPS < timeDelay && timeDelay <= 4 * FPS) {
+  if (3 * FPS < gameDelayTime && gameDelayTime <= 4 * FPS) {
     renderText(300, SCREEN_HEIGHT / 2 - 50, "3", font100, red);
     renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "3", font100, red);
   }
-  if (2 * FPS < timeDelay && timeDelay <= 3 * FPS) {
+  if (2 * FPS < gameDelayTime && gameDelayTime <= 3 * FPS) {
     renderText(300, SCREEN_HEIGHT / 2 - 50, "2", font100, red);
     renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "2", font100, red);
   }
-  if (1 * FPS < timeDelay && timeDelay <= 2 * FPS) {
+  if (1 * FPS < gameDelayTime && gameDelayTime <= 2 * FPS) {
     renderText(300, SCREEN_HEIGHT / 2 - 50, "1", font100, red);
     renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "1", font100, red);
   }
-  if (0 < timeDelay && timeDelay < 1 * FPS) {
+  if (0 < gameDelayTime && gameDelayTime < 1 * FPS) {
     renderText(300, SCREEN_HEIGHT / 2 - 50, "Go", font100, green);
     renderText(SCREEN_WIDTH - 350, SCREEN_HEIGHT / 2 - 50, "Go", font100, green);
   }
@@ -1600,7 +1617,7 @@ void Game::render_GamePause() {
 
   if (button[Continue_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    resetTimeDelay(4 * FPS);
+    resetGameDelayTime(4 * FPS);
     gameState = GamePlay;
   }
   button[Continue_Button].setX(SCREEN_WIDTH / 2 - button[Continue_Button].getWidth() / 2);

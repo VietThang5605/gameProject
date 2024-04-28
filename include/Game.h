@@ -26,7 +26,7 @@ struct Game {
 public:
   Game();
 
-  void resetTimeDelay(int time);
+  void resetGameDelayTime(int time);
   void resetGame();
   
   void init();
@@ -43,7 +43,7 @@ public:
   SDL_Texture* loadTextureFromText(const char* p_text, TTF_Font* font, SDL_Color textColor);
   Mix_Chunk* loadSFX(const char* p_filePath);
   Mix_Music* loadMusic(const char* p_filePath);
-  TTF_Font* loadFont(const char* p_filePath, int sz);
+  TTF_Font* loadFont(const char* p_filePath, int Size);
 
   void render(SDL_Texture* p_tex, double x, double y, double w = 0, double h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
   void render(Entity &p_entity, double w = 0, double h = 0);
@@ -94,5 +94,5 @@ private:
   bool gameRunning;
   bool fullscreen;
   int gameState;
-  int timeDelay;
+  int gameDelayTime;
 };

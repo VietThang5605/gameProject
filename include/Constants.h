@@ -20,7 +20,7 @@ const int increaseAngleDeltaCooldown = 5 * FPS;
 
 const int vulnerableTime = 2 * FPS;
 
-const int PlayerStartHealth = 20;
+const int PlayerStartHealth = 30;
 const int PlayerVelocity = 18;
 const int PlayerTeleportVelocity = 540;
 

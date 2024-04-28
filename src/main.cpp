@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
 #endif
 
   std::cout << maxFrameTicks << '\n';
-  game->closeMedia();
   game->cleanUp();
   return 0;
 }
