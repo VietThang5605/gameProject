@@ -13,11 +13,17 @@ Entity::Entity() {
 Entity::~Entity() {}
 
 void Entity::init(SDL_Texture* p_tex, int width, int height, int frames, int lines) {
+  int w, h;
+  SDL_QueryTexture(p_tex, NULL, NULL, &w, &h);
+  if (width == 0 && height == 0) {
+    width = w;
+    height = h;
+  }
   texture = p_tex;
   this->width = width;
   this->height = height;
-  int w, h;
-  SDL_QueryTexture(p_tex, NULL, NULL, &w, &h);
+  if (frames == 0 || lines == 0)
+    return;
   w /= lines;
   h /= (frames + lines - 1) / lines;
   SDL_Rect clip;

@@ -41,11 +41,13 @@ public:
 
   SDL_Texture* loadTexture(const char* p_filePath);
   SDL_Texture* loadTextureFromText(const char* p_text, TTF_Font* font, SDL_Color textColor);
+  SDL_Texture* loadTextureFromText(string& p_text, TTF_Font* font, SDL_Color textColor);
   Mix_Chunk* loadSFX(const char* p_filePath);
   Mix_Music* loadMusic(const char* p_filePath);
   TTF_Font* loadFont(const char* p_filePath, int Size);
 
   void render(SDL_Texture* p_tex, double x, double y, double w = 0, double h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
+  void renderCenter(SDL_Texture* p_tex, double x, double y, double w = 0, double h = 0, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
   void render(Entity &p_entity, double w = 0, double h = 0);
   void renderText(double p_x, double p_y, const char* p_text, TTF_Font* font, SDL_Color textColor);
   void renderText(double p_x, double p_y, string& p_text, TTF_Font* font, SDL_Color textColor);
@@ -75,6 +77,7 @@ public:
   void render_Bullet();
 
   void render_GameEndButtons();
+  void render_Credit();
   void render_MainMenu();
   void render_GamePlay();
   void render_GamePause();

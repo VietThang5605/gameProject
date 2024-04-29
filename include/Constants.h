@@ -66,6 +66,9 @@ enum music_ID {
 };
 
 enum sfx_ID {
+  Click_sfx_ID,
+  Count_down_sfx_ID,
+  Count_down_start_sfx_id,
   Q1_sfx_ID,
   Q2_sfx_ID,
   Q_hit_sfx_ID,
@@ -75,7 +78,6 @@ enum sfx_ID {
   E_sfx_ID,
   R_sfx_ID,
   R_hit_sfx_ID,
-  Click_sfx_ID,
   sfx_ID_Total
 };
 
