@@ -11,9 +11,10 @@ INCLUDE_PATHS = -I include -I include/SDL2
 LIBRARY_PATHS = -L lib
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
+# -Wall shows all warnings
 # -w suppresses all warnings
 # -Wl,-subsystem,windows gets rid of the console window
-COMPILER_FLAGS = -w
+COMPILER_FLAGS = -Wall
 
 #LINKER_FLAGS specifies the libraries we're linking against
 LINKER_FLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer

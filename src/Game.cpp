@@ -121,6 +121,7 @@ void Game::resetGameDelayTime(int time) {
 
 void Game::resetGame() {
   resetGameDelayTime(3 * FPS);
+  gameEndDelayTime = 2 * FPS;
   player[1].reset(player[1].getType());
   player[2].reset(player[2].getType());
   for (int id = 1; id <= 2; id++) {
@@ -656,7 +657,8 @@ void Game::renderTextCenter(double p_x, double p_y, string& p_text, TTF_Font* fo
 void Game::render_Skill_Hud_And_Cooldown() {
   {
     render(player_health_Hud[1][HealthBar_Hud_ID]);
-    render(player_health_Hud[1][HealthColor_Hud_ID], 1.0 * player_health_Hud[1][HealthColor_Hud_ID].getWidth() / PlayerStartHealth * player[1].getHealth(), player_health_Hud[1][HealthColor_Hud_ID].getHeight());
+    if (player[1].getHealth() > 0)
+      render(player_health_Hud[1][HealthColor_Hud_ID], 1.0 * player_health_Hud[1][HealthColor_Hud_ID].getWidth() / PlayerStartHealth * player[1].getHealth(), player_health_Hud[1][HealthColor_Hud_ID].getHeight());
     string health;
     if (player[1].getHealth() > 0)
       health = "Health: " + IntToString(player[1].getHealth());
@@ -664,11 +666,12 @@ void Game::render_Skill_Hud_And_Cooldown() {
       health = "Health: !!";
     SDL_Texture* player_health_texture = NULL;
     player_health_texture = loadTextureFromText(health, Font[font50], white);
-    renderCenter(player_health_texture, player_health_Hud[1][HealthBar_Hud_ID].getX() + player_health_Hud[1][HealthBar_Hud_ID].getWidth() / 2, player_health_Hud[1][HealthBar_Hud_ID].getY() + player_health_Hud[1][HealthBar_Hud_ID].getHeight() / 2);      
+    renderCenter(player_health_texture, player_health_Hud[1][HealthBar_Hud_ID].getX() + player_health_Hud[1][HealthBar_Hud_ID].getWidth() / 2, player_health_Hud[1][HealthBar_Hud_ID].getY() + player_health_Hud[1][HealthBar_Hud_ID].getHeight() / 2);
     SDL_DestroyTexture(player_health_texture);
 
     render(player_health_Hud[2][HealthBar_Hud_ID]);
-    render(player_health_Hud[2][HealthColor_Hud_ID], 1.0 * player_health_Hud[2][HealthColor_Hud_ID].getWidth() / PlayerStartHealth * player[2].getHealth(), player_health_Hud[2][HealthColor_Hud_ID].getHeight());
+    if (player[2].getHealth() > 0)
+      render(player_health_Hud[2][HealthColor_Hud_ID], 1.0 * player_health_Hud[2][HealthColor_Hud_ID].getWidth() / PlayerStartHealth * player[2].getHealth(), player_health_Hud[2][HealthColor_Hud_ID].getHeight());
     if (player[2].getHealth() > 0)
       health = "Health: " + IntToString(player[2].getHealth());
     else
@@ -779,12 +782,17 @@ double Game::CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> t
   int enemy_id = isMaximizing ^ 1;
   
   Point arrow;
-  if (player_id == Human)
-    arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
-  else
-    arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
+  if (player_id == Human) {
+    arrow.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
+    arrow.y = tmp_arrow.getY() + tmp_arrow.getHeight();
+    // arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
+  }
+  else {
+    arrow.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
+    arrow.y =  tmp_arrow.getY();
+    // arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
+  }
 
-  Point rot_point = Point(tmp_arrow.getRotPoint()->x, tmp_arrow.getRotPoint()->y);
   Vector vec;
   if (player_id == Human)
     vec = Vector(sin(PI / 2 + tmp_arrow.getAngle() * PI / 180), -cos(PI / 2 + tmp_arrow.getAngle() * PI / 180));
@@ -818,29 +826,46 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
   for (int id = 0; id <= 1; id++) {
     ArrowAccuracy[id] = CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
     if (id == 0) {
-      if (tmp_player[0].getSkillCooldown(skillQ_ID) == 0 || tmp_player[0].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID])
-        Score += ArrowAccuracy[id];
+      if (tmp_bullets[1].empty())
+        if (tmp_player[0].getSkillCooldown(skillQ_ID) == 0 || tmp_player[0].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID])
+          Score += ArrowAccuracy[id];
     }
     if (id == 1) {
-      if (tmp_player[0].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) ///not checking state when AI shoot bullet
-        Score -= ArrowAccuracy[id];
+      if (tmp_bullets[1].empty())
+        if (tmp_player[0].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) {
+          //not checking state when AI shoot bullet
+            Score -= ArrowAccuracy[id];
+        } 
     }
   }
+  
+  bool ok = 0;
+  for (Bullet &bul : tmp_bullets[1])
+    if (bul.getSkillId() != skillW_ID) {
+      ok = 1;
+      break;
+    }
+  if (ok && tmp_bullets[1].empty() == 0) {
+    for (Bullet bul : tmp_bullets[1])
+      Score -= CalculateArrowAndBulletAccuracy(Human, tmp_player, bul);
+  }
+  
 
-  for (Bullet bul : tmp_bullets[0]) {
-    if (ArrowAccuracy[0] < 80) {
-      if (bul.getSkillId() == skillQ_ID)
-        Score -= 200;
-      if (bul.getSkillId() == skillR_ID) {
-        if (tmp_player[1].getHealth() >= 5)
-          Score -= 500;
-        else if (tmp_player[1].getHealth() > 2 && tmp_player[1].getSkillCooldown(skillQ_ID) > skill_castTime[skillR_ID] && tmp_player[1].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID])
-          Score -= 500;
+  if (tmp_bullets[1].empty())
+    for (Bullet &bul : tmp_bullets[0]) {
+      if (ArrowAccuracy[0] < 80) {
+        if (bul.getSkillId() == skillQ_ID)
+          Score -= 200;
+        if (bul.getSkillId() == skillR_ID) {
+          if (tmp_player[1].getHealth() >= 5)
+            Score -= 500;
+          else if (tmp_player[1].getHealth() > 2 && tmp_player[1].getSkillCooldown(skillQ_ID) > skill_castTime[skillR_ID] && tmp_player[1].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID])
+            Score -= 500;
+        }
+        if (tmp_player[1].getHealth() > 2 && bul.getSkillId() == skillW_ID && tmp_player[0].getSkillCooldown(skillQ_ID) <= FPS / 2)
+          Score -= 250;
       }
-      if (tmp_player[1].getHealth() > 2 && bul.getSkillId() == skillW_ID && tmp_player[0].getSkillCooldown(skillQ_ID) <= FPS / 2)
-        Score -= 250;
     }
-  }
 
   return Score;
 }
@@ -851,6 +876,7 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
   int player_id = isMaximizing;
 
   double bestScore = HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
+  
   if (isMaximizing)
     Alpha = max(Alpha, bestScore);
   else
@@ -926,6 +952,8 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         break;
       }
       case (Use_Q): {
+        if (player_id == Human)
+          break;
         if (tmp_player[player_id].getSkillCooldown(skillQ_ID) > 0)
           break;
     
@@ -949,6 +977,8 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         break;
       }
       case (Use_W): {
+        if (player_id == Human)
+          break;
         if (tmp_player[player_id].getSkillCooldown(skillW_ID) > 0)
           break;
 
@@ -979,14 +1009,28 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         if (tmp_bullets[1].empty())
           break;
         bool ok = 0;
-        for (Bullet &bul : tmp_bullets[1])
-          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 150)
-              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-          {
+        for (Bullet bul : tmp_bullets[1]) {
+          if (bul.getSkillId() == skillW_ID)
+            continue;
+          bul.move();
+          Rectangle BotRec(tmp_player[0]);
+          Rectangle BulRec(bul);
+          if (isColliding(BotRec, BulRec)) {
             ok = 1;
             break;
           }
+        }
         if (ok == 0)
+          break;
+        // bool ok = 0;
+        // for (Bullet &bul : tmp_bullets[1])
+        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+        //   {
+        //     ok = 1;
+        //     break;
+        //   }
+        // if (ok == 0)
           break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
@@ -1022,15 +1066,29 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         if (tmp_bullets[1].empty())
           break;
         bool ok = 0;
-        for (Bullet &bul : tmp_bullets[1])
-          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-          {
+        for (Bullet bul : tmp_bullets[1]) {
+          if (bul.getSkillId() == skillW_ID)
+            continue;
+          bul.move();
+          Rectangle BotRec(tmp_player[0]);
+          Rectangle BulRec(bul);
+          if (isColliding(BotRec, BulRec)) {
             ok = 1;
             break;
           }
+        }
         if (ok == 0)
           break;
+        // bool ok = 0;
+        // for (Bullet &bul : tmp_bullets[1])
+        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+        //   {
+        //     ok = 1;
+        //     break;
+        //   }
+        // if (ok == 0)
+        //   break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
@@ -1089,8 +1147,10 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
 }
 
 void Game::ProcessingAIMove(int player_id) {
-  if (player[player_id].isDead() || player[3  - player_id].isDead())
+  if (player[player_id].isDead() || player[3  - player_id].isDead()) {
+    player[player_id].setCurrentFrame(0);
     return;
+  }
 
   if (player[player_id].getCastTimeCooldown() > 0)
     return;
@@ -1107,12 +1167,10 @@ void Game::ProcessingAIMove(int player_id) {
   tmp_bullets[0] = player_bullets[player_id];
   tmp_bullets[1] = player_bullets[3 - player_id];
 
-  Player* AI = &tmp_player[0];
-
   double bestScore = DOUBLE_INF;
   int bestMove = -1;
-  int depth = 4;
-
+  int depth = 5;
+  
   for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) {
     switch (move_type) {
       case (Do_Nothing): {
@@ -1188,15 +1246,29 @@ void Game::ProcessingAIMove(int player_id) {
         if (tmp_bullets[1].empty())
           break;
         bool ok = 0;
-        for (Bullet &bul : tmp_bullets[1])
-          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-          {
+        for (Bullet bul : tmp_bullets[1]) {
+          if (bul.getSkillId() == skillW_ID)
+            continue;
+          bul.move();
+          Rectangle BotRec(tmp_player[0]);
+          Rectangle BulRec(bul);
+          if (isColliding(BotRec, BulRec)) {
             ok = 1;
             break;
           }
+        }
         if (ok == 0)
           break;
+        // ok = 0;
+        // for (Bullet &bul : tmp_bullets[1])
+        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+        //   {
+        //     ok = 1;
+        //     break;
+        //   }
+        // if (ok == 0)
+        //   break;
           
         tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[0].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
@@ -1224,15 +1296,29 @@ void Game::ProcessingAIMove(int player_id) {
         if (tmp_bullets[1].empty())
           break;
         bool ok = 0;
-        for (Bullet &bul : tmp_bullets[1])
-          if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-              || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-          {
+        for (Bullet bul : tmp_bullets[1]) {
+          if (bul.getSkillId() == skillW_ID)
+            continue;
+          bul.move();
+          Rectangle BotRec(tmp_player[0]);
+          Rectangle BulRec(bul);
+          if (isColliding(BotRec, BulRec)) {
             ok = 1;
             break;
           }
+        }
         if (ok == 0)
           break;
+        // ok = 0;
+        // for (Bullet &bul : tmp_bullets[1])
+        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
+        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
+        //   {
+        //     ok = 1;
+        //     break;
+        //   }
+        // if (ok == 0)
+        //   break;
         
         tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[0].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
@@ -1444,7 +1530,7 @@ void Game::update() {
             ProcessingSkill(1, skillW_ID);
           
           if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
-              && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0 && player[1].getSkillCooldown(skillE_ID) == 0) 
+              && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0) 
           {
             ProcessingSkill(1, skillE_ID);
           }
@@ -1483,7 +1569,7 @@ void Game::update() {
           ProcessingSkill(2, skillW_ID);
 
         if ((new_key[KEY_PRESS_A] || new_key[KEY_PRESS_D])
-            && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0 && player[2].getSkillCooldown(skillE_ID) == 0) 
+            && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0) 
         {
           ProcessingSkill(2, skillE_ID);
         }
@@ -1547,10 +1633,10 @@ void Game::render_Player() {
 
     render(player[1]);
 
-    player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
-    player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
-    player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
     if (gameDelayTime == 0) {
+      player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
+      player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
+      player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
       render(player_Arrow[1]);
       player_Arrow[1].moveAngle();
     }
@@ -1566,10 +1652,10 @@ void Game::render_Player() {
     
     render(player[2]);
 
-    player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
-    player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
-    player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
     if (gameDelayTime == 0) {
+      player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
+      player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
+      player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
       render(player_Arrow[2]);
       player_Arrow[2].moveAngle();
     }
@@ -1579,8 +1665,18 @@ void Game::render_Player() {
 void Game::render_Bullet() {
   for (int id = 1; id <= 2; id++) {
     for (Bullet &bullet : player_bullets[id]) {
+      if (gameDelayTime > 0) {
+        render(bullet);
+        continue;
+      }
+      
       Player &Enemy = player[3 - id];
-      Rectangle Agent(Enemy);
+      Player tmpEnemy = Enemy; //Fix temporary hitbox error
+      tmpEnemy.setWidth(tmpEnemy.getWidth() - 30);
+      if (tmpEnemy.getFlip() == SDL_FLIP_HORIZONTAL)
+        tmpEnemy.setX(tmpEnemy.getX() + 30);
+        
+      Rectangle Agent(tmpEnemy);
       Rectangle Shot(bullet);
 
       if (bullet.getSkillId() == skillR_ID) {
@@ -1735,30 +1831,30 @@ void Game::render_MainMenu() {
 
 void Game::render_GamePlay() {
   if (player[1].isDead() || player[2].isDead()) {
-    PlayMusic(GameEnd_music_ID);
-    if (player[1].isDead() && player[2].isDead()) {
-      gameState = GameDraw;
-    }
-    else if (player[1].getType() == Bot) {
-      if (player[1].isDead())
-        gameState = YouWin;
-      else
-        gameState = YouLose;
-    }
+    if (gameEndDelayTime > 0) gameEndDelayTime--;
     else {
-      if (player[1].isDead())
-        gameState = Player2Win;
-      else
-        gameState = Player1Win;
+      PlayMusic(GameEnd_music_ID);
+      if (player[1].isDead() && player[2].isDead()) {
+        gameState = GameDraw;
+      }
+      else if (player[1].getType() == Bot) {
+        if (player[1].isDead())
+          gameState = YouWin;
+        else
+          gameState = YouLose;
+      }
+      else {
+        if (player[1].isDead())
+          gameState = Player2Win;
+        else
+          gameState = Player1Win;
+      }
+      return;
     }
-    return;
   }
-  else {
-    render_GameBackground();
-    render_Player();
-    render_Bullet();
-  }
-
+  render_GameBackground();
+  render_Player();
+  render_Bullet();
   if (2 * FPS < gameDelayTime && gameDelayTime <= 3 * FPS) {
     if (gameDelayTime == 3 * FPS)
       PlaySFX(Count_down_sfx_ID);

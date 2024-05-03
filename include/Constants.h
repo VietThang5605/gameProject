@@ -40,6 +40,7 @@ const int skill_cooldown_start[skill_ID_Total] = {
 };
 
 const int skill_cooldown[skill_ID_Total] = {
+  // 0,
   3 * FPS,
   6 * FPS,
   10 * FPS,

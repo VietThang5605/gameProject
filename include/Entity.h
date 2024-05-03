@@ -20,6 +20,8 @@ public:
   void move();
   void setX(double p_x);
   void setY(double p_y);
+  void setWidth(int width);
+  void setHeight(int height);
   void setCurrentFrame(int frame);
   void setFlip(SDL_RendererFlip p_flip);
   void setAngle(double angle);

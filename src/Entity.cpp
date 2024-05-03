@@ -41,6 +41,14 @@ void Entity::setY(double p_y) {
   y = p_y;
 }
 
+void Entity::setWidth(int width) {
+  this->width = width;
+}
+
+void Entity::setHeight(int height) {
+  this->height = height;
+}
+
 void Entity::setCurrentFrame(int frame) {
   currentFrame = (frame + (int)clips.size()) % (int)clips.size();
 }

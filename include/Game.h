@@ -98,4 +98,5 @@ private:
   bool fullscreen;
   int gameState;
   int gameDelayTime;
+  int gameEndDelayTime;
 };
