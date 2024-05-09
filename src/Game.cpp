@@ -139,7 +139,8 @@ void Game::initSDL() {
   if (SDL_Init(SDL_INIT_EVERYTHING & ~(SDL_INIT_TIMER | SDL_INIT_HAPTIC))!= 0)
     logError("Failed to initialize SDL.", SDL_GetError());
 
-  gWindow = SDL_CreateWindow("Ezreal Mirror Shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  // gWindow = SDL_CreateWindow("Ezreal Mirror Shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  gWindow = SDL_CreateWindow("Ezreal Mirror Shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
   // gWindow = SDL_CreateWindow("Ezreal mirror shooting", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN_DESKTOP);
   if (gWindow == NULL)
     logError("Failed to create window.", SDL_GetError());
@@ -263,18 +264,18 @@ void Game::loadMedia() {
   SFX[R_sfx_ID] = loadSFX("res/audio/sfx/R.wav");
   SFX[R_hit_sfx_ID] = loadSFX("res/audio/sfx/R_hit.wav");
 
-  Mix_VolumeChunk(SFX[Click_sfx_ID], 100);
-  Mix_VolumeChunk(SFX[Count_down_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[Count_down_start_sfx_id], 80);
-  Mix_VolumeChunk(SFX[Q1_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[Q2_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[W_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[E_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[R_sfx_ID], 100);
-  Mix_VolumeChunk(SFX[Q_hit_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[W_hit_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[W_hit_crashed_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[R_hit_sfx_ID], 80);
+  Mix_VolumeChunk(SFX[Click_sfx_ID], 80);
+  Mix_VolumeChunk(SFX[Count_down_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Count_down_start_sfx_id], 60);
+  Mix_VolumeChunk(SFX[Q1_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Q2_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[W_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[E_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[R_sfx_ID], 80);
+  Mix_VolumeChunk(SFX[Q_hit_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[W_hit_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[W_hit_crashed_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[R_hit_sfx_ID], 60);
 
   MUSIC[GameEnd_music_ID] = loadMusic("res/audio/music/winSound.wav");
 
@@ -302,7 +303,7 @@ void Game::loadMedia() {
   player_Arrow[1].setCenter(player_Arrow[1].getWidth() / 2, 0);
   player_Arrow[1].setAngle(0);
   player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
-  player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
+  player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + ArrowDistanceToPlayer);
   player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
 
   player_health_Hud[1][HealthBar_Hud_ID].init(health_Hud[HealthBar_Hud_ID], 474, 96, 1, 1);
@@ -339,7 +340,7 @@ void Game::loadMedia() {
   player_Arrow[2].setFlip(SDL_FLIP_VERTICAL);
   player_Arrow[2].setAngle(0);
   player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
-  player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
+  player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - ArrowDistanceToPlayer);
   player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
 
   player_health_Hud[2][HealthBar_Hud_ID].init(health_Hud[HealthBar_Hud_ID], 474, 96, 1, 1);
@@ -764,15 +765,26 @@ void Game::PlayMusic(int music_ID) {
   }
 }
 
+bool Game::isPlayerCollidingBullet(Player p_player, Bullet p_bullet) {
+  p_player.setWidth(p_player.getWidth() - 30);
+  if (p_player.getFlip() == SDL_FLIP_HORIZONTAL)
+    p_player.setX(p_player.getX() + 30);
+
+  Rectangle playerRec(p_player);
+  Rectangle bulletRec(p_bullet);
+
+  return isColliding(playerRec, bulletRec);
+}
+
 void Game::setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow) {
   if (isMaximizing == Human) {
     tmp_arrow.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - tmp_arrow.getWidth() / 2);
-    tmp_arrow.setY(tmp_player.getY() - tmp_arrow.getHeight() - 10);
+    tmp_arrow.setY(tmp_player.getY() - tmp_arrow.getHeight() - ArrowDistanceToPlayer);
     tmp_arrow.setRotPoint(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight());
   }
   else {
     tmp_arrow.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - tmp_arrow.getWidth() / 2);
-    tmp_arrow.setY(tmp_player.getY() + tmp_player.getHeight() + 10);
+    tmp_arrow.setY(tmp_player.getY() + tmp_player.getHeight() + ArrowDistanceToPlayer);
     tmp_arrow.setRotPoint(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY());
   }
 }
@@ -781,16 +793,14 @@ double Game::CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> t
   int player_id = isMaximizing;
   int enemy_id = isMaximizing ^ 1;
   
-  Point arrow;
+  Point arrow_Root;
   if (player_id == Human) {
-    arrow.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
-    arrow.y = tmp_arrow.getY() + tmp_arrow.getHeight();
-    // arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
+    arrow_Root.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
+    arrow_Root.y = tmp_arrow.getY() + tmp_arrow.getHeight();
   }
   else {
-    arrow.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
-    arrow.y =  tmp_arrow.getY();
-    // arrow = rotatePointAroundAngle(tmp_arrow.getX() + tmp_arrow.getWidth() / 2, tmp_arrow.getY() + tmp_arrow.getHeight(), tmp_arrow.getRotPoint(), tmp_arrow.getAngle());
+    arrow_Root.x = tmp_arrow.getX() + tmp_arrow.getWidth() / 2;
+    arrow_Root.y =  tmp_arrow.getY();
   }
 
   Vector vec;
@@ -805,12 +815,12 @@ double Game::CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> t
   else
     Enemy_Y_Current = tmp_player[enemy_id].getY();
     
-  Point arrow_y_tmp((vec.x * arrow.x - vec.y * Enemy_Y_Current + vec.y * arrow.y) / vec.x, Enemy_Y_Current);
+  Point arrow_Root_At_Enemy_Y_current((vec.x * arrow_Root.x - vec.y * Enemy_Y_Current + vec.y * arrow_Root.y) / vec.x, Enemy_Y_Current);
 
-  return abs(arrow_y_tmp.x - (tmp_player[enemy_id].getX() + tmp_player[enemy_id].getWidth() / 2));
+  return abs(arrow_Root_At_Enemy_Y_current.x - (tmp_player[enemy_id].getX() + tmp_player[enemy_id].getWidth() / 2));
 }
 
-Bullet Game::makeBullet(int skill_ID, Player tmp_player, PlayerArrow tmp_arrow) {
+Bullet Game::makeBullet(int skill_ID, Player &tmp_player, PlayerArrow &tmp_arrow) {
   Bullet bul = bullet[skill_ID];
   bul.setX(tmp_player.getX() + tmp_player.getWidth() / 2 - bul.getWidth() / 2);
   bul.setY(tmp_player.getY() + tmp_player.getHeight());
@@ -821,51 +831,72 @@ Bullet Game::makeBullet(int skill_ID, Player tmp_player, PlayerArrow tmp_arrow) 
 }
 
 double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets) {
-  vector<double> ArrowAccuracy(2);
   double Score = 0;
-  for (int id = 0; id <= 1; id++) {
-    ArrowAccuracy[id] = CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
-    if (id == 0) {
-      if (tmp_bullets[1].empty())
-        if (tmp_player[0].getSkillCooldown(skillQ_ID) == 0 || tmp_player[0].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID])
-          Score += ArrowAccuracy[id];
-    }
-    if (id == 1) {
-      if (tmp_bullets[1].empty())
-        if (tmp_player[0].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[0].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) {
-          //not checking state when AI shoot bullet
-            Score -= ArrowAccuracy[id];
-        } 
-    }
-  }
-  
-  bool ok = 0;
-  for (Bullet &bul : tmp_bullets[1])
+
+  bool Human_HasDamagedBullet = 0;
+  for (Bullet bul : tmp_bullets[Human])
     if (bul.getSkillId() != skillW_ID) {
-      ok = 1;
+      Human_HasDamagedBullet = 1;
       break;
     }
-  if (ok && tmp_bullets[1].empty() == 0) {
-    for (Bullet bul : tmp_bullets[1])
-      Score -= CalculateArrowAndBulletAccuracy(Human, tmp_player, bul);
-  }
-  
-
-  if (tmp_bullets[1].empty())
-    for (Bullet &bul : tmp_bullets[0]) {
-      if (ArrowAccuracy[0] < 80) {
-        if (bul.getSkillId() == skillQ_ID)
-          Score -= 200;
-        if (bul.getSkillId() == skillR_ID) {
-          if (tmp_player[1].getHealth() >= 5)
-            Score -= 500;
-          else if (tmp_player[1].getHealth() > 2 && tmp_player[1].getSkillCooldown(skillQ_ID) > skill_castTime[skillR_ID] && tmp_player[1].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID])
-            Score -= 500;
+  if (Human_HasDamagedBullet) {
+    for (Bullet bul : tmp_bullets[Human]) {
+      if (bul.getSkillId() == skillR_ID) {
+        bool collision = 0;
+        while (bul.isOnScreen()) {
+          if (isPlayerCollidingBullet(tmp_player[Bot], bul)) {
+            collision = 1;
+            break;
+          }
+          bul.move();
         }
-        if (tmp_player[1].getHealth() > 2 && bul.getSkillId() == skillW_ID && tmp_player[0].getSkillCooldown(skillQ_ID) <= FPS / 2)
-          Score -= 250;
+        if (collision) {
+          Score += ShootedBySkillR_Value;
+          if (bul.getAngle() <= 0)
+            Score -= (tmp_player[Bot].getX() - PlayerScreenLeftBoundary);
+          else
+            Score -= (PlayerScreenRightBoundary - tmp_player[Bot].getX());
+        }
+        else
+          Score -= CalculateArrowAndBulletAccuracy(Human, tmp_player, bul);
+        continue;
       }
+      else
+        Score -= CalculateArrowAndBulletAccuracy(Human, tmp_player, bul);
     }
+  }
+
+  if (Human_HasDamagedBullet == 0) {
+    for (Bullet bul : tmp_bullets[Bot]) {
+      if (bul.getSkillId() == skillQ_ID)
+        Score -= ShootSkillQ_Value;
+      if (bul.getSkillId() == skillR_ID) {
+        if (tmp_player[Human].getHealth() >= skill_damage[skillR_ID])
+          Score -= ShootSkillR_Value;
+        else if (tmp_player[Human].getSkillCooldown(skillQ_ID) > skill_castTime[skillR_ID] && tmp_player[Human].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID])
+          Score -= ShootSkillR_Value;
+      }
+      if (tmp_player[Human].getHealth() > 2 && bul.getSkillId() == skillW_ID && tmp_player[Bot].getSkillCooldown(skillQ_ID) <= FPS / 2)
+        Score -= ShootSkillW_Value;
+    }
+  }
+
+  for (int id = 0; id < Player_Type_Total; id++) {
+    if (id == Bot) {
+      if (Human_HasDamagedBullet == 0)
+        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) <= FPS / 2 || tmp_player[Bot].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID]) {
+          //checking state when AI shoot bullet
+          Score += CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
+        }
+    }
+    if (id == Human) {
+      if (tmp_bullets[Human].empty())
+        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[Bot].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) {
+          //not checking state when AI shoot bullet
+          Score -= CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
+        }
+    }
+  }
 
   return Score;
 }
@@ -874,9 +905,9 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
   if (depth == 0) return HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
 
   int player_id = isMaximizing;
+  int enemy_id = isMaximizing ^ 1;
 
   double bestScore = HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
-  
   if (isMaximizing)
     Alpha = max(Alpha, bestScore);
   else
@@ -888,11 +919,9 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
   if (tmp_player[player_id].getCastTimeCooldown() > 0) {
     if (isMaximizing) {
       bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      // Alpha = max(Alpha, bestScore);
     }
-    else { 
+    else {
       bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-      // Beta = min(Beta, bestScore);
     }
     return bestScore;
   }
@@ -908,7 +937,6 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Beta = min(Beta, bestScore);
         }
-
         if (Beta <= Alpha)
           return bestScore;
         break;
@@ -927,7 +955,6 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         }
         tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
-
         if (Beta <= Alpha)
           return bestScore;
         break;
@@ -946,15 +973,16 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         }
         tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
-
         if (Beta <= Alpha)
           return bestScore;
         break;
       }
-      case (Use_Q): {
+      case (Use_Q): { ///Only AI
         if (player_id == Human)
           break;
         if (tmp_player[player_id].getSkillCooldown(skillQ_ID) > 0)
+          break;
+        if (CalculateArrowAndBulletAccuracy(player_id, tmp_player, tmp_arrow[player_id]) > Distance_To_Shoot[skillQ_ID])
           break;
     
         tmp_bullets[player_id].push_back(makeBullet(skillQ_ID, tmp_player[player_id], tmp_arrow[player_id]));
@@ -971,15 +999,16 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillQ_ID);
         tmp_bullets[player_id].pop_back();
-
         if (Beta <= Alpha)
           return bestScore;
         break;
       }
-      case (Use_W): {
+      case (Use_W): { ///Only AI
         if (player_id == Human)
           break;
         if (tmp_player[player_id].getSkillCooldown(skillW_ID) > 0)
+          break;
+        if (CalculateArrowAndBulletAccuracy(player_id, tmp_player, tmp_arrow[player_id]) > Distance_To_Shoot[skillW_ID])
           break;
 
         tmp_bullets[player_id].push_back(makeBullet(skillW_ID, tmp_player[player_id], tmp_arrow[player_id]));
@@ -1006,40 +1035,26 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           break;
         if (tmp_player[player_id].getSkillCooldown(skillE_ID) > 0)
           break;
-        if (tmp_bullets[1].empty())
+        if (tmp_bullets[enemy_id].empty())
           break;
         bool ok = 0;
-        for (Bullet bul : tmp_bullets[1]) {
+        for (Bullet bul : tmp_bullets[enemy_id]) {
           if (bul.getSkillId() == skillW_ID)
             continue;
           bul.move();
-          Rectangle BotRec(tmp_player[0]);
-          Rectangle BulRec(bul);
-          if (isColliding(BotRec, BulRec)) {
+          if (isPlayerCollidingBullet(tmp_player[player_id], bul)) {
             ok = 1;
             break;
           }
         }
         if (ok == 0)
           break;
-        // bool ok = 0;
-        // for (Bullet &bul : tmp_bullets[1])
-        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-        //   {
-        //     ok = 1;
-        //     break;
-        //   }
-        // if (ok == 0)
-          break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
-
         int x = tmp_player[player_id].getX(), y = tmp_player[player_id].getY();
         tmp_player[player_id].moveLeft();
-        setArrowToPlayer(0, tmp_player[player_id], tmp_arrow[player_id]);
-
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         if (isMaximizing) {
           bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Alpha = max(Alpha, bestScore);
@@ -1048,12 +1063,10 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Beta = min(Beta, bestScore);
         }
-
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillE_ID);
         tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
-        setArrowToPlayer(0, tmp_player[player_id], tmp_arrow[player_id]);
-
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         if (Beta <= Alpha)
           return bestScore;
         break;
@@ -1063,40 +1076,26 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           break;
         if (tmp_player[player_id].getSkillCooldown(skillE_ID) > 0)
           break;
-        if (tmp_bullets[1].empty())
+        if (tmp_bullets[enemy_id].empty())
           break;
         bool ok = 0;
-        for (Bullet bul : tmp_bullets[1]) {
+        for (Bullet bul : tmp_bullets[enemy_id]) {
           if (bul.getSkillId() == skillW_ID)
             continue;
           bul.move();
-          Rectangle BotRec(tmp_player[0]);
-          Rectangle BulRec(bul);
-          if (isColliding(BotRec, BulRec)) {
+          if (isPlayerCollidingBullet(tmp_player[player_id], bul)) {
             ok = 1;
             break;
           }
         }
         if (ok == 0)
           break;
-        // bool ok = 0;
-        // for (Bullet &bul : tmp_bullets[1])
-        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-        //   {
-        //     ok = 1;
-        //     break;
-        //   }
-        // if (ok == 0)
-        //   break;
 
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillE_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
-
         int x = tmp_player[player_id].getX(), y = tmp_player[player_id].getY();
         tmp_player[player_id].moveRight();
-        setArrowToPlayer(0, tmp_player[player_id], tmp_arrow[player_id]);
-
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         if (isMaximizing) {
           bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Alpha = max(Alpha, bestScore);
@@ -1105,26 +1104,25 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Beta = min(Beta, bestScore);
         }
-
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillE_ID);
         tmp_player[player_id].setX(x); tmp_player[player_id].setY(y);
-        setArrowToPlayer(0, tmp_player[player_id], tmp_arrow[player_id]);
-
+        setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         if (Beta <= Alpha)
           return bestScore;
         break;
       }
-      case (Use_R): {
+      case (Use_R): { ///Only AI
+        if (player_id == Human)
+          break;
         if (tmp_player[player_id].getSkillCooldown(skillR_ID) > 0)
           break;
-      if (CalculateArrowAndBulletAccuracy(player_id, tmp_player, tmp_arrow[player_id]) > 300)
+        if (CalculateArrowAndBulletAccuracy(player_id, tmp_player, tmp_arrow[player_id]) > Distance_To_Shoot[skillR_ID])
           break;
         
         tmp_bullets[player_id].push_back(makeBullet(skillR_ID, tmp_player[player_id], tmp_arrow[player_id]));
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillR_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
-        
         if (isMaximizing) {
           bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Alpha = max(Alpha, bestScore);
@@ -1133,11 +1131,11 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
           bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
           Beta = min(Beta, bestScore);
         }
-
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillR_ID);
         tmp_bullets[player_id].pop_back();
-        
+        if (Beta <= Alpha)
+          return bestScore;
         break;
       }
     }
@@ -1156,20 +1154,20 @@ void Game::ProcessingAIMove(int player_id) {
     return;
 
   vector<Player> tmp_player(2);
-  tmp_player[0] = player[player_id];
-  tmp_player[1] = player[3 - player_id];
+  tmp_player[Bot] = player[player_id];
+  tmp_player[Human] = player[3 - player_id];
 
   vector<PlayerArrow> tmp_arrow(2);
-  tmp_arrow[0] = player_Arrow[player_id];
-  tmp_arrow[1] = player_Arrow[3 - player_id];
+  tmp_arrow[Bot] = player_Arrow[player_id];
+  tmp_arrow[Human] = player_Arrow[3 - player_id];
 
   vector<vector<Bullet>> tmp_bullets(3);
-  tmp_bullets[0] = player_bullets[player_id];
-  tmp_bullets[1] = player_bullets[3 - player_id];
+  tmp_bullets[Bot] = player_bullets[player_id];
+  tmp_bullets[Human] = player_bullets[3 - player_id];
 
   double bestScore = DOUBLE_INF;
   int bestMove = -1;
-  int depth = 5;
+  int depth = 7;
   
   for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) {
     switch (move_type) {
@@ -1182,182 +1180,156 @@ void Game::ProcessingAIMove(int player_id) {
         break;
       }
       case (Move_Left): {
-        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
-        tmp_player[0].moveLeft();
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
-
+        int x = tmp_player[Bot].getX(), y = tmp_player[Bot].getY();
+        tmp_player[Bot].moveLeft();
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-        tmp_player[0].setX(x); tmp_player[0].setY(y);
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        tmp_player[Bot].setX(x); tmp_player[Bot].setY(y);
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         break;
       }
       case (Move_Right): {
-        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
-        tmp_player[0].moveRight();
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        int x = tmp_player[Bot].getX(), y = tmp_player[Bot].getY();
+        tmp_player[Bot].moveRight();
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-        tmp_player[0].setX(x); tmp_player[0].setY(y);
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
+        tmp_player[Bot].setX(x); tmp_player[Bot].setY(y);
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         break;
       }
       case (Use_Q): {
-        if (tmp_player[0].getSkillCooldown(skillQ_ID) > 0)
+        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) > 0)
           break;
-        tmp_bullets[0].push_back(makeBullet(skillQ_ID, tmp_player[0], tmp_arrow[0]));
-        tmp_player[0].setCastTimeCooldown(skill_castTime[skillQ_ID]);
-        tmp_player[0].setSkillCooldown(skill_cooldown[skillQ_ID], skillQ_ID);
+        if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[Bot]) > Distance_To_Shoot[skillQ_ID])
+          break;
+        
+        tmp_bullets[Bot].push_back(makeBullet(skillQ_ID, tmp_player[Bot], tmp_arrow[Bot]));
+        tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillQ_ID]);
+        tmp_player[Bot].setSkillCooldown(skill_cooldown[skillQ_ID], skillQ_ID);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-        tmp_player[0].setCastTimeCooldown(0);
-        tmp_player[0].setSkillCooldown(0, skillQ_ID);
-        tmp_bullets[0].pop_back();
+        tmp_player[Bot].setCastTimeCooldown(0);
+        tmp_player[Bot].setSkillCooldown(0, skillQ_ID);
+        tmp_bullets[Bot].pop_back();
         break;
       }
       case (Use_W): {
-        if (tmp_player[0].getSkillCooldown(skillW_ID) > 0)
+        if (tmp_player[Bot].getSkillCooldown(skillW_ID) > 0)
           break;
-        tmp_bullets[0].push_back(makeBullet(skillW_ID, tmp_player[0], tmp_arrow[0]));
-        tmp_player[0].setCastTimeCooldown(skill_castTime[skillW_ID]);
-        tmp_player[0].setSkillCooldown(skill_cooldown[skillW_ID], skillW_ID);
+        if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[Bot]) > Distance_To_Shoot[skillW_ID])
+          break;
+        
+        tmp_bullets[Bot].push_back(makeBullet(skillW_ID, tmp_player[Bot], tmp_arrow[Bot]));
+        tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillW_ID]);
+        tmp_player[Bot].setSkillCooldown(skill_cooldown[skillW_ID], skillW_ID);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-        tmp_player[0].setCastTimeCooldown(0);
-        tmp_player[0].setSkillCooldown(0, skillW_ID);
-        tmp_bullets[0].pop_back();
+        tmp_player[Bot].setCastTimeCooldown(0);
+        tmp_player[Bot].setSkillCooldown(0, skillW_ID);
+        tmp_bullets[Bot].pop_back();
         break;
       }
       case (Use_E_Left): {
-        if (tmp_player[0].getSkillCooldown(skillE_ID) > 0)
+        if (tmp_player[Bot].getSkillCooldown(skillE_ID) > 0)
           break;
-        if (tmp_bullets[1].empty())
+        if (tmp_bullets[Human].empty())
           break;
         bool ok = 0;
-        for (Bullet bul : tmp_bullets[1]) {
+        for (Bullet bul : tmp_bullets[Human]) {
           if (bul.getSkillId() == skillW_ID)
             continue;
           bul.move();
-          Rectangle BotRec(tmp_player[0]);
+          Rectangle BotRec(tmp_player[Bot]);
           Rectangle BulRec(bul);
-          if (isColliding(BotRec, BulRec)) {
+          if (isPlayerCollidingBullet(tmp_player[Bot], bul)) {
             ok = 1;
             break;
           }
         }
         if (ok == 0)
           break;
-        // ok = 0;
-        // for (Bullet &bul : tmp_bullets[1])
-        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-        //   {
-        //     ok = 1;
-        //     break;
-        //   }
-        // if (ok == 0)
-        //   break;
           
-        tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
-        tmp_player[0].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
-
-        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
-        tmp_player[0].moveLeft();
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
-
+        tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillE_ID]);
+        tmp_player[Bot].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
+        int x = tmp_player[Bot].getX(), y = tmp_player[Bot].getY();
+        tmp_player[Bot].moveLeft();
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-
-        tmp_player[0].setCastTimeCooldown(0);
-        tmp_player[0].setSkillCooldown(0, skillE_ID);
-        tmp_player[0].setX(x); tmp_player[0].setY(y);
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
-
+        tmp_player[Bot].setCastTimeCooldown(0);
+        tmp_player[Bot].setSkillCooldown(0, skillE_ID);
+        tmp_player[Bot].setX(x); tmp_player[Bot].setY(y);
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         break;
       }
       case (Use_E_Right): {
-        if (tmp_player[0].getSkillCooldown(skillE_ID) > 0)
+        if (tmp_player[Bot].getSkillCooldown(skillE_ID) > 0)
           break;
-        if (tmp_bullets[1].empty())
+        if (tmp_bullets[Human].empty())
           break;
         bool ok = 0;
-        for (Bullet bul : tmp_bullets[1]) {
+        for (Bullet bul : tmp_bullets[Human]) {
           if (bul.getSkillId() == skillW_ID)
             continue;
           bul.move();
-          Rectangle BotRec(tmp_player[0]);
-          Rectangle BulRec(bul);
-          if (isColliding(BotRec, BulRec)) {
+          if (isPlayerCollidingBullet(tmp_player[Bot], bul)) {
             ok = 1;
             break;
           }
         }
         if (ok == 0)
           break;
-        // ok = 0;
-        // for (Bullet &bul : tmp_bullets[1])
-        //   if ((bul.getSkillId() == skillQ_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 100)
-        //       || (bul.getSkillId() == skillR_ID && CalculateArrowAndBulletAccuracy(Human, tmp_player, bul) < 300))
-        //   {
-        //     ok = 1;
-        //     break;
-        //   }
-        // if (ok == 0)
-        //   break;
         
-        tmp_player[0].setCastTimeCooldown(skill_castTime[skillE_ID]);
-        tmp_player[0].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
-
-        int x = tmp_player[0].getX(), y = tmp_player[0].getY();
-        tmp_player[0].moveRight();
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
-
+        tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillE_ID]);
+        tmp_player[Bot].setSkillCooldown(skill_cooldown[skillE_ID], skillE_ID);
+        int x = tmp_player[Bot].getX(), y = tmp_player[Bot].getY();
+        tmp_player[Bot].moveRight();
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-
-        tmp_player[0].setCastTimeCooldown(0);
-        tmp_player[0].setSkillCooldown(0, skillE_ID);
-        tmp_player[0].setX(x); tmp_player[0].setY(y);
-        setArrowToPlayer(0, tmp_player[0], tmp_arrow[0]);
-
+        tmp_player[Bot].setCastTimeCooldown(0);
+        tmp_player[Bot].setSkillCooldown(0, skillE_ID);
+        tmp_player[Bot].setX(x); tmp_player[Bot].setY(y);
+        setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         break;
       }
       case (Use_R): {
-        if (tmp_player[0].getSkillCooldown(skillR_ID) > 0)
+        if (tmp_player[Bot].getSkillCooldown(skillR_ID) > 0)
           break;
-        if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[0]) > 300)
+        if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[Bot]) > Distance_To_Shoot[skillR_ID])
           break;
         
-        tmp_bullets[0].push_back(makeBullet(skillR_ID, tmp_player[0], tmp_arrow[0]));
-        tmp_player[0].setCastTimeCooldown(skill_castTime[skillR_ID]);
-        tmp_player[0].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
+        tmp_bullets[Bot].push_back(makeBullet(skillR_ID, tmp_player[Bot], tmp_arrow[Bot]));
+        tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillR_ID]);
+        tmp_player[Bot].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
         double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
         if (score < bestScore) {
           bestScore = score;
           bestMove = move_type;
         }
-        tmp_player[0].setCastTimeCooldown(0);
-        tmp_player[0].setSkillCooldown(0, skillR_ID);
-        tmp_bullets[0].pop_back();
-        
+        tmp_player[Bot].setCastTimeCooldown(0);
+        tmp_player[Bot].setSkillCooldown(0, skillR_ID);
+        tmp_bullets[Bot].pop_back();
         break;
       }
     }
@@ -1635,7 +1607,7 @@ void Game::render_Player() {
 
     if (gameDelayTime == 0) {
       player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
-      player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + 10);
+      player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + ArrowDistanceToPlayer);
       player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
       render(player_Arrow[1]);
       player_Arrow[1].moveAngle();
@@ -1654,7 +1626,7 @@ void Game::render_Player() {
 
     if (gameDelayTime == 0) {
       player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
-      player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - 10);
+      player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - ArrowDistanceToPlayer);
       player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
       render(player_Arrow[2]);
       player_Arrow[2].moveAngle();
@@ -1666,18 +1638,17 @@ void Game::render_Bullet() {
   for (int id = 1; id <= 2; id++) {
     for (Bullet &bullet : player_bullets[id]) {
       if (gameDelayTime > 0) {
-        render(bullet);
+        if (bullet.getSkillId() == skillR_ID) {
+          if (player[id].getSkillDelay() == 0)
+            render(bullet);
+        }
+        else
+          render(bullet);
         continue;
       }
       
+      int enemy_id = 3 - id;
       Player &Enemy = player[3 - id];
-      Player tmpEnemy = Enemy; //Fix temporary hitbox error
-      tmpEnemy.setWidth(tmpEnemy.getWidth() - 30);
-      if (tmpEnemy.getFlip() == SDL_FLIP_HORIZONTAL)
-        tmpEnemy.setX(tmpEnemy.getX() + 30);
-        
-      Rectangle Agent(tmpEnemy);
-      Rectangle Shot(bullet);
 
       if (bullet.getSkillId() == skillR_ID) {
         if (player[id].getSkillDelay() == 0)
@@ -1686,7 +1657,7 @@ void Game::render_Bullet() {
       else
         render(bullet);
       
-      if (Enemy.isDead() == 0 && isColliding(Agent, Shot)) {
+      if (Enemy.isDead() == 0 && isPlayerCollidingBullet(player[enemy_id], bullet)) {
         switch (bullet.getSkillId()) {
           case (skillQ_ID): {
             PlaySFX(Q_hit_sfx_ID);
@@ -1722,8 +1693,7 @@ void Game::render_Bullet() {
         else
           bullet.move();
       }
-      else if (((bullet.getX() > SCREEN_WIDTH || bullet.getX() < 0) && (bullet.getY() > SCREEN_HEIGHT || bullet.getY() < -200))
-                || ((bullet.getY() > SCREEN_HEIGHT + 200 || bullet.getY() < -200))) {
+      else if (!bullet.isOnScreen()) {
         player_bullets[id].erase(player_bullets[id].begin() + (&bullet - &player_bullets[id][0]));
       }
       else {

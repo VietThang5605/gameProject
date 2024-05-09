@@ -32,7 +32,6 @@ void gameLoop() {
 
 int main(int argc, char* argv[]) {
   game->init();
-  std::cout << "Hello world\n";
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop(gameLoop, 0, 1);
@@ -47,12 +46,10 @@ int main(int argc, char* argv[]) {
       maxFrameTicks = frameTicks;
     if (frameTicks < frameDelay)
       SDL_Delay(frameDelay - frameTicks);
-    
-    // SDL_Delay(100);
   }
 #endif
 
-  std::cout << maxFrameTicks << '\n';
   game->cleanUp();
+  delete game;
   return 0;
 }

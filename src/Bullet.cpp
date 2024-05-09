@@ -3,6 +3,7 @@
 Bullet::Bullet() {
   velocityX = 45;
   velocityY = 45;
+  rotPoint.x = rotPoint.y = -INT_INF;
 }
 
 void Bullet::init(SDL_Texture* p_tex, double width, double height, int frames, int lines, int skill_ID) {
@@ -34,6 +35,10 @@ void Bullet::move() {
     setRotPoint(getX() + getWidth() / 2, getY());
   else
     setRotPoint(getX() + getWidth() / 2, getY() + getHeight());
+}
+
+bool Bullet::isOnScreen() {
+  return !(((getX() > SCREEN_WIDTH || getX() < 0) && (getY() > SCREEN_HEIGHT || getY() < -200)) || ((getY() > SCREEN_HEIGHT + 200 || getY() < -200)));
 }
 
 int Bullet::getSkillId() {

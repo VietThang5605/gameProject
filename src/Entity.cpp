@@ -7,10 +7,8 @@ Entity::Entity() {
   texture = NULL;
   flip = SDL_FLIP_NONE;
   center = NULL;
-  rotPoint = NULL;
+  rotPoint.x = rotPoint.y = -INT_INF;
 }
-
-Entity::~Entity() {}
 
 void Entity::init(SDL_Texture* p_tex, int width, int height, int frames, int lines) {
   int w, h;
@@ -68,10 +66,10 @@ void Entity::setCenter(double x, double y) {
 }
 
 void Entity::setRotPoint(double x, double y) {
-  if (rotPoint == NULL) rotPoint = new Point(x, y);
+  if (rotPoint.x == -INT_INF) rotPoint = Point(x, y);
   else {
-    rotPoint->setX(x);
-    rotPoint->setY(y);
+    rotPoint.setX(x);
+    rotPoint.setY(y);
   }
 }
 
@@ -99,7 +97,7 @@ double Entity::getAngle() {
   return angle;
 }
 
-Point* Entity::getRotPoint() {
+Point Entity::getRotPoint() {
   return rotPoint;
 }
 

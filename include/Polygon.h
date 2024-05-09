@@ -13,12 +13,11 @@
 #include "Entity.h"
 #include "Constants.h"
 
-using std::cout;
 using std::vector;
 
 class Rectangle {
 public:
-  Rectangle(double x, double y, double w, double h, double angle = 0, Point* rotPoint = NULL);
+  Rectangle(double x, double y, double w, double h, double angle, Point rotPoint);
   Rectangle(Entity &p_entity);
 
   vector<Point> vertices;

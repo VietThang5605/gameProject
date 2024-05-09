@@ -22,6 +22,7 @@ public:
   double getVelocityY();
 
   void move();
+  bool isOnScreen();
   int getSkillId();
 private:
   double velocityX;

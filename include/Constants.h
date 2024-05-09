@@ -1,17 +1,58 @@
 #pragma once
 
+/// General
 const int FPS = 40;
 const int frameDelay = 1000 / FPS;
 
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
-const int ScreenLeftBoundary = 50;
-const int ScreenRightBoundary = SCREEN_WIDTH - 200;
 
 const int INT_INF = 1e9;
 
 const double PI = 3.14159265358979323846;
 const double DOUBLE_INF = 1e9;
+
+/// Button
+enum ButtonName {
+  VSAI_Button,
+  VSPlayer_Button,
+  Help_Button,
+  Exit_Button,
+  Continue_Button,
+  Restart_Button,
+  PlayAgain_Button,
+  BackToMenu_Button,
+  Button_Total
+};
+
+/// SFX and Music
+enum music_ID {
+  GameEnd_music_ID,
+  music_ID_Total,
+};
+
+enum sfx_ID {
+  Click_sfx_ID,
+  Count_down_sfx_ID,
+  Count_down_start_sfx_id,
+  Q1_sfx_ID,
+  Q2_sfx_ID,
+  Q_hit_sfx_ID,
+  W_sfx_ID,
+  W_hit_sfx_ID,
+  W_hit_crashed_sfx_ID,
+  E_sfx_ID,
+  R_sfx_ID,
+  R_hit_sfx_ID,
+  sfx_ID_Total
+};
+
+///PlayerArrow
+const int ArrowDistanceToPlayer = 10;
+
+/// Player
+const int PlayerScreenLeftBoundary = 50;
+const int PlayerScreenRightBoundary = SCREEN_WIDTH - 200;
 
 const double maxAngle = 60;
 const double angleDelta = 3;
@@ -40,7 +81,6 @@ const int skill_cooldown_start[skill_ID_Total] = {
 };
 
 const int skill_cooldown[skill_ID_Total] = {
-  // 0,
   3 * FPS,
   6 * FPS,
   10 * FPS,
@@ -61,39 +101,7 @@ const int skill_damage[skill_ID_Total] = {
   6,
 };
 
-enum music_ID {
-  GameEnd_music_ID,
-  music_ID_Total,
-};
-
-enum sfx_ID {
-  Click_sfx_ID,
-  Count_down_sfx_ID,
-  Count_down_start_sfx_id,
-  Q1_sfx_ID,
-  Q2_sfx_ID,
-  Q_hit_sfx_ID,
-  W_sfx_ID,
-  W_hit_sfx_ID,
-  W_hit_crashed_sfx_ID,
-  E_sfx_ID,
-  R_sfx_ID,
-  R_hit_sfx_ID,
-  sfx_ID_Total
-};
-
-enum ButtonName {
-  VSAI_Button,
-  VSPlayer_Button,
-  Help_Button,
-  Exit_Button,
-  Continue_Button,
-  Restart_Button,
-  PlayAgain_Button,
-  BackToMenu_Button,
-  Button_Total
-};
-
+/// AI
 enum Player_Type {
   Bot,
   Human,
@@ -105,4 +113,18 @@ enum AI_Move_Type {
   Move_Left, Move_Right,
   Use_Q, Use_W, Use_E_Left, Use_E_Right, Use_R,
   AI_Move_Type_Total
+};
+
+const int Distance_To_Shoot[skill_ID_Total] = {
+  70,
+  70,
+  0,
+  200
+};
+
+enum HeuristicValue {
+  ShootSkillQ_Value = 200,
+  ShootSkillW_Value = 250,
+  ShootSkillR_Value = 500,
+  ShootedBySkillR_Value = 1000,
 };

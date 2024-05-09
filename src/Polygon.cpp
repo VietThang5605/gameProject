@@ -1,14 +1,14 @@
 #include "Polygon.h"
 
 ///Rectangle
-Rectangle::Rectangle(double x, double y, double w, double h, double angle, Point* center) {
+Rectangle::Rectangle(double x, double y, double w, double h, double angle, Point center) {
   coords = Point(x, y);
   vertices.push_back(Point(x, y));
   vertices.push_back(Point(x, y + h));
   vertices.push_back(Point(x + w, y + h));
   vertices.push_back(Point(x + w, y));
-  if (center != NULL)
-    rotPoint = *center;
+  if (center.x != -INT_INF)
+    rotPoint = center;
   else
     rotPoint = Point(x + w / 2, y + h / 2);
   if (angle != 0) {

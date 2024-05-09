@@ -11,6 +11,7 @@
 class PlayerArrow : public Entity {
 public:
   PlayerArrow();
+  
   void reset();
   void increaseAngleDelta();
   void moveAngle();

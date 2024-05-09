@@ -110,7 +110,7 @@ void Player::moveLeft() {
     setX(getX() - velocityTeleport);
   else
     setX(getX() - velocity);
-  if (getX() < ScreenLeftBoundary) setX(ScreenLeftBoundary);
+  if (getX() < PlayerScreenLeftBoundary) setX(PlayerScreenLeftBoundary);
 }
 
 void Player::moveRight() {
@@ -123,5 +123,5 @@ void Player::moveRight() {
     setX(getX() + velocityTeleport);
   else
     setX(getX() + velocity);
-  if (getX() > ScreenRightBoundary) setX(ScreenRightBoundary);
+  if (getX() > PlayerScreenRightBoundary) setX(PlayerScreenRightBoundary);
 }

@@ -14,7 +14,6 @@ using std::vector;
 class Entity {
 public:
   Entity();
-  ~Entity();
 
   void init(SDL_Texture* p_tex, int width, int height, int frames, int lines);
   void move();
@@ -34,7 +33,7 @@ public:
   int getHeight();
   int getCurrentFrame();
   double getAngle();
-  Point* getRotPoint();
+  Point getRotPoint();
   SDL_Texture* getTexture();
   SDL_Rect* getCurrentClip();
   SDL_RendererFlip getFlip();
@@ -49,5 +48,5 @@ protected:
   SDL_RendererFlip flip;
   SDL_Point* center;
   vector<SDL_Rect> clips;
-  Point* rotPoint;
+  Point rotPoint;
 };

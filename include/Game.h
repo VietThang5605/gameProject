@@ -60,12 +60,13 @@ public:
   void PlaySFX(int sfx_ID);
   void PlayMusic(int music_ID);
 
+  bool isPlayerCollidingBullet(Player p_player, Bullet p_bullet);
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);
-  Bullet makeBullet(int skill_ID, Player tmp_player, PlayerArrow tmp_arrow);
+  Bullet makeBullet(int skill_ID, Player &tmp_player, PlayerArrow &tmp_arrow);
   double CalculateArrowAndBulletAccuracy(bool isMaximizing, vector<Player> tmp_player, Entity tmp_arrow);
-
   double HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> tmp_arrow, vector<vector<Bullet>> tmp_bullets);
   double Minimax(int depth, bool isMaximizing, double Alpha, double Beta, vector<Player> &tmp_player, vector<PlayerArrow> &tmp_arrow, vector<vector<Bullet>> &tmp_bullets);
+  
   void ProcessingAIMove(int player_id);
   void ProcessingSkill(int player_id, int skill_ID);
 
