@@ -213,7 +213,7 @@ void Game::loadMedia() {
   CreditEntity[Sub_Credit].setX(CreditEntity[Main_Credit].getX() + CreditEntity[Main_Credit].getWidth() / 2 - CreditEntity[Sub_Credit].getWidth() / 2);
   CreditEntity[Sub_Credit].setY(CreditEntity[Main_Credit].getY() + CreditEntity[Main_Credit].getHeight());
 
-  GameIcon[Github_Icon] = loadTexture("res/images/icon/GitHub_Icon.png");
+  GameIcon[Github_Icon] = loadTexture("res/images/icon/Github_Icon.png");
   Icon[Github_Icon].init(GameIcon[Github_Icon], 128, 128, 1, 1);
   Icon[Github_Icon].setX(CreditEntity[Main_Credit].getX() - Icon[Github_Icon].getWidth());
   Icon[Github_Icon].setY(CreditEntity[Main_Credit].getY() + CreditEntity[Main_Credit].getHeight() / 2 - Icon[Github_Icon].getHeight() / 2);
