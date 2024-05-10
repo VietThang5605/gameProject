@@ -14,9 +14,9 @@
 
 ## Screenshots
 <img width="1440" alt="MainMenu" src="https://github.com/VietThang5605/gameProject/assets/67374734/35462a99-5ce2-4c55-9174-c448c407804a">
-<img width="503" alt="GamePlay1 - Copy" src="https://github.com/VietThang5605/gameProject/assets/67374734/f6fed64d-8dff-4fe7-a6df-97f3aae743fb">
-<img width="503" alt="GamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/29e902fa-00ba-4d2d-ac31-698bb234f3f7">
-<img width="503" alt="VideoGamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/1aef822c-bef3-4de3-90e0-e6c55720320b">
-<img width="503" alt="VideoGamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/f867b6f7-023e-48dc-9bea-04e461d18fe0">
+<img width="300" alt="GamePlay1 - Copy" src="https://github.com/VietThang5605/gameProject/assets/67374734/f6fed64d-8dff-4fe7-a6df-97f3aae743fb">
+<img width="300" alt="GamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/29e902fa-00ba-4d2d-ac31-698bb234f3f7">
+<img width="300" alt="VideoGamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/1aef822c-bef3-4de3-90e0-e6c55720320b">
+<img width="300" alt="VideoGamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/f867b6f7-023e-48dc-9bea-04e461d18fe0">
 
 
