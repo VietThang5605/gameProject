@@ -24,11 +24,8 @@ public:
   vector<Vector> axis;
   double angle;
   Point rotPoint;
-  Point coords;
 };
 
 bool isColliding(Rectangle &poly1, Rectangle &poly2);
 
 void removeRepeat(vector<Vector> &v);
-
-Point rotatePointAroundAngle(double x, double y, Point* rot_point, double angle);

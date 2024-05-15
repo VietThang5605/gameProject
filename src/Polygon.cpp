@@ -2,7 +2,6 @@
 
 ///Rectangle
 Rectangle::Rectangle(double x, double y, double w, double h, double angle, Point center) {
-  coords = Point(x, y);
   vertices.push_back(Point(x, y));
   vertices.push_back(Point(x, y + h));
   vertices.push_back(Point(x + w, y + h));
@@ -72,13 +71,4 @@ void removeRepeat(vector<Vector> &v) {
       if (v[i].isCollinear(v[j]))
         v.erase(v.begin() + j);
   }
-}
-
-Point rotatePointAroundAngle(double x, double y, Point* rot_point, double angle) {
-  double radAngle = angle * PI / 180;
-  double cosAngle = cos(radAngle);
-  double sinAngle = sin(radAngle);
-  x = rot_point->x + (x - rot_point->x) * cosAngle - (y - rot_point->y) * sinAngle;
-  y = rot_point->y + (y - rot_point->y) * cosAngle + (x - rot_point->x) * sinAngle;
-  return Point(x, y);
 }

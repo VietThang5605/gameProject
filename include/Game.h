@@ -12,7 +12,7 @@
 
 #include "Entity.h"
 #include "Constants.h"
-#include "Functions.h"
+#include "Utilities.h"
 #include "Player.h"
 #include "PlayerArrow.h"
 #include "Bullet.h"

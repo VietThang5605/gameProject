@@ -12,7 +12,7 @@
 #include <math.h>
 
 #include "Game.h"
-#include "Functions.h"
+#include "Utilities.h"
 #include "Constants.h"
 
 Game *game = new Game();

@@ -29,3 +29,5 @@ public:
 
   double x, y;
 };
+
+Point rotatePointAroundAngle(double x, double y, Point* rot_point, double angle);

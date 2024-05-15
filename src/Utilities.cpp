@@ -1,4 +1,4 @@
-#include "Functions.h"
+#include "Utilities.h"
 
 void logError(const char* msg, const char* error) {
   std::cerr << msg << ' ' << error << std::endl;

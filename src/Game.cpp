@@ -883,17 +883,39 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
   for (int id = 0; id < Player_Type_Total; id++) {
     if (id == Bot) {
       if (Human_HasDamagedBullet == 0)
-        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) <= FPS / 2 || tmp_player[Bot].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID]) {
+        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) <= FPS / 2 
+          || tmp_player[Bot].getSkillCooldown(skillQ_ID) == skill_cooldown[skillQ_ID]) 
+        {
           //checking state when AI shoot bullet
           Score += CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
         }
     }
     if (id == Human) {
-      if (tmp_bullets[Human].empty())
-        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) > FPS / 2 && tmp_player[Bot].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) {
+      if (tmp_bullets[Human].empty()) {
+        if (tmp_player[Bot].getSkillCooldown(skillQ_ID) > FPS / 2 
+          && tmp_player[Bot].getSkillCooldown(skillQ_ID) < skill_cooldown[skillQ_ID]) {
           //not checking state when AI shoot bullet
           Score -= CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
+          // if (tmp_player[Human].getSkillCooldown(skillQ_ID) <= FPS / 2) { ///
+          //   if (tmp_player[Bot].getX() - PlayerScreenLeftBoundary <= 200) {
+          //     Score += DOUBLE_INF - (tmp_player[Bot].getX() - PlayerScreenLeftBoundary);
+          //   }
+          //   else if (PlayerScreenRightBoundary - tmp_player[Bot].getX() <= 200) {
+          //     Score += DOUBLE_INF - (PlayerScreenRightBoundary - tmp_player[Bot].getX());
+          //   }
+          //   else
+          //     Score -= CalculateArrowAndBulletAccuracy(id, tmp_player, tmp_arrow[id]);
+          // }
         }
+      }
+      // else {
+      //   if (tmp_player[Bot].getX() - PlayerScreenLeftBoundary <= 200) {
+      //     Score += DOUBLE_INF - (tmp_player[Bot].getX() - PlayerScreenLeftBoundary);
+      //   }
+      //   else if (PlayerScreenRightBoundary - tmp_player[Bot].getX() <= 200) {
+      //     Score += DOUBLE_INF - (PlayerScreenRightBoundary - tmp_player[Bot].getX());
+      //   }
+      // }
     }
   }
 
