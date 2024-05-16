@@ -12,16 +12,26 @@ const int INT_INF = 1e9;
 const double PI = 3.14159265358979323846;
 const double DOUBLE_INF = 1e9;
 
+///Utilites
+enum TimeConvertType {
+  Skill_TimeConvertType,
+  Countdown_TimeConvertType,
+  TimeConvertType_Total
+};
+
 /// Button
 enum ButtonName {
-  VSAI_Button,
-  VSPlayer_Button,
+  VSAI_Button, VSPlayer_Button,
   Help_Button,
   Exit_Button,
   Continue_Button,
   Restart_Button,
   PlayAgain_Button,
   BackToMenu_Button,
+  Normal_Button,
+  Hard_Button,
+  Impossible_Button,
+  Back_Button,
   Button_Total
 };
 
@@ -102,6 +112,13 @@ const int skill_damage[skill_ID_Total] = {
 };
 
 /// AI
+enum AIGameMode {
+  AIGameMode_Normal,
+  AIGameMode_Hard,
+  AIGameMode_Impossible,
+  AIGameMode_Total,
+};
+
 enum Player_Type {
   Bot,
   Human,
@@ -115,16 +132,26 @@ enum AI_Move_Type {
   AI_Move_Type_Total
 };
 
-const int Distance_To_Shoot[skill_ID_Total] = {
-  70,
-  70,
-  0,
-  200
-};
-
 enum HeuristicValue {
   ShootSkillQ_Value = 200,
   ShootSkillW_Value = 250,
   ShootSkillR_Value = 500,
-  ShootedBySkillR_Value = 1000,
+  ShootedBySkillQ_Value = 3000,
+  ShootedBySkillR_Value = 5000,
+};
+
+enum HeuristicValueID {
+  Distance_To_Screen_Bound,
+  HeuristicValueID_Total
+};
+
+const int Distance_To_Shoot[skill_ID_Total][AIGameMode_Total] = {
+  {60, 70, 70}, ///skillQ
+  {60, 70, 70}, ///skillW
+  {0, 0, 0}, ///skillE
+  {250, 200, 200} ///skillR
+};
+
+const int HeuristicValueByMode[HeuristicValueID_Total][AIGameMode_Total] = {
+  {-INT_INF, 300, 400} ///Distance_To_Screen_Bound
 };

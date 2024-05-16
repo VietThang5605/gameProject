@@ -8,13 +8,15 @@
 #include <iostream>
 #include <string.h>
 
+#include "Constants.h"
+
 using std::string;
 
 void logError(const char* msg, const char* error);
 
 string IntToString(int x);
 
-string TimeToString(double x);
+string TimeToString(int Timer, int ConvertType);
 
 template<class T> T max(T a, T b) {
   if (a > b) {
