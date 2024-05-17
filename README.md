@@ -5,8 +5,8 @@
 <img width="1440" alt="MainMenu" src="https://github.com/VietThang5605/gameProject/assets/67374734/35462a99-5ce2-4c55-9174-c448c407804a">
 <img width="400" alt="GamePlay1 - Copy" src="https://github.com/VietThang5605/gameProject/assets/67374734/f6fed64d-8dff-4fe7-a6df-97f3aae743fb">
 <img width="400" alt="GamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/29e902fa-00ba-4d2d-ac31-698bb234f3f7">
-<img width="400" alt="VideoGamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/5eaf2f01-ae5f-486d-b9f0-5d9847099929">
-<img width="400" alt="VideoGamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/601737a0-c7a7-45ab-a9ad-49dd4cda2181">
+<img width="400" alt="VideoGamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/b17af260-3a02-42ff-9aca-91bc0b0677c2">
+<img width="400" alt="VideoGamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/46d5223b-7dfa-4521-b407-02a38c1b8339">
 
 ## Thông tin cá nhân
 - Họ và tên: Nguyễn Việt Thắng
@@ -21,6 +21,7 @@
   ### Các kỹ thuật cơ bản:
   - Xử lý thao tác sử dụng các phím kỹ năng và chuột của người chơi.
   - Sử dụng đồ họa, hiệu ứng âm thanh, text.
+  - Có thể kéo thả để tùy chỉnh kích thước cửa sổ.
   - Tạo Menu và các phím chức năng.
   - Sử dụng các kiến thức về toán học để điều chỉnh vận tốc và hướng đi của các kỹ năng.
 
@@ -31,9 +32,9 @@
   - Sử dụng Emscripten complier để biên dịch sang WebAssembly để có thể chơi trên web.
 
 ## Kết luận
-  - Đây là project đầu tiên của em nên vẫn còn rất nhiều sai sót. Qua dụ án này, em đã được biết thêm các kiến thức về 
-  lập trình hướng đối tượng, cách quản lý file trong project, rèn luyện phong cách lập trình rõ ràng, dễ hiểu. Đồng thời được 
-  thử sức tự tạo một mô hình AI trong trò chơi đối kháng.
+  - Đây là project đầu tiên của em nên vẫn còn rất nhiều sai sót. Qua dự án này, em đã được biết thêm các kiến thức về 
+  lập trình hướng đối tượng, cách quản lý file trong project, rèn luyện tư duy và phong cách lập trình rõ ràng, dễ hiểu. 
+  Đồng thời được thử sức tự tạo một mô hình AI trong trò chơi đối kháng.
 
 ## Nguồn tài liệu nghiên cứu và tham khảo
   ### Collision
@@ -67,4 +68,4 @@
 
   ### Images
   - [Ezreal (by serklaz)](https://www.deviantart.com/serklaz/art/Ezreal-League-of-Legends-Pixel-art-PixeLoL-548352903)
-  - [Background tilesets (Cup Nooble)](https://cupnooble.itch.io/sprout-lands-asset-pack)
+  - [Background tilesets (by Cup Nooble)](https://cupnooble.itch.io/sprout-lands-asset-pack)

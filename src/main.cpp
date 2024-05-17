@@ -16,7 +16,6 @@
 #include "Constants.h"
 
 Game *game = new Game();
-int maxFrameTicks = 0;
 
 void gameLoop() {
   int startTicks = SDL_GetTicks64();
@@ -24,8 +23,6 @@ void gameLoop() {
   game->gameLoop();
 
   int frameTicks = SDL_GetTicks64() - startTicks;
-  if (frameTicks > maxFrameTicks)
-      maxFrameTicks = frameTicks;
   if (frameTicks < frameDelay)
     SDL_Delay(frameDelay - frameTicks);
 }
@@ -42,8 +39,6 @@ int main(int argc, char* argv[]) {
     game->gameLoop();
 
     int frameTicks = SDL_GetTicks64() - startTicks;
-    if (frameTicks > maxFrameTicks)
-      maxFrameTicks = frameTicks;
     if (frameTicks < frameDelay)
       SDL_Delay(frameDelay - frameTicks);
   }

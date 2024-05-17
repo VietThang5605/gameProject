@@ -31,3 +31,19 @@ template<class T> T min(T a, T b) {
   }
   return b;
 }
+
+template<class T> bool maximize(T &a, T b) {
+  if (a < b) {
+    a = b;
+    return true;
+  }
+  return false;
+}
+
+template<class T> bool minimize(T &a, T b) {
+  if (a > b) {
+    a = b;
+    return true;
+  }
+  return false;
+}

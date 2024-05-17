@@ -1245,11 +1245,8 @@ void Game::ProcessingAIMove(int player_id) {
   for (int move_type = 0; move_type < AI_Move_Type_Total; move_type++) {
     switch (move_type) {
       case (Do_Nothing): {
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         break;
       }
       case (Move_Left): {
@@ -1257,11 +1254,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[Bot].moveLeft();
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         SDL_RendererFlip lastFlip = tmp_player[Bot].getFlip();
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setX(lastX); tmp_player[Bot].setY(lastY);
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         tmp_player[Bot].setFlip(lastFlip);
@@ -1272,11 +1266,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[Bot].moveRight();
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         SDL_RendererFlip lastFlip = tmp_player[Bot].getFlip();
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setX(lastX); tmp_player[Bot].setY(lastY);
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         tmp_player[Bot].setFlip(lastFlip);
@@ -1291,11 +1282,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_bullets[Bot].push_back(makeBullet(skillQ_ID, tmp_player[Bot], tmp_arrow[Bot]));
         tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillQ_ID]);
         tmp_player[Bot].setSkillCooldown(skill_cooldown[skillQ_ID], skillQ_ID);
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setCastTimeCooldown(0);
         tmp_player[Bot].setSkillCooldown(0, skillQ_ID);
         tmp_bullets[Bot].pop_back();
@@ -1310,11 +1298,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_bullets[Bot].push_back(makeBullet(skillW_ID, tmp_player[Bot], tmp_arrow[Bot]));
         tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillW_ID]);
         tmp_player[Bot].setSkillCooldown(skill_cooldown[skillW_ID], skillW_ID);
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setCastTimeCooldown(0);
         tmp_player[Bot].setSkillCooldown(0, skillW_ID);
         tmp_bullets[Bot].pop_back();
@@ -1346,11 +1331,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[Bot].moveLeft();
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         SDL_RendererFlip lastFlip = tmp_player[Bot].getFlip();
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setCastTimeCooldown(0);
         tmp_player[Bot].setSkillCooldown(0, skillE_ID);
         tmp_player[Bot].setX(lastX); tmp_player[Bot].setY(lastY);
@@ -1382,11 +1364,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_player[Bot].moveRight();
         setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
         SDL_RendererFlip lastFlip = tmp_player[Bot].getFlip();
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setCastTimeCooldown(0);
         tmp_player[Bot].setSkillCooldown(0, skillE_ID);
         tmp_player[Bot].setX(lastX); tmp_player[Bot].setY(lastY);
@@ -1407,11 +1386,8 @@ void Game::ProcessingAIMove(int player_id) {
         tmp_bullets[Bot].push_back(makeBullet(skillR_ID, tmp_player[Bot], tmp_arrow[Bot]));
         tmp_player[Bot].setCastTimeCooldown(skill_castTime[skillR_ID]);
         tmp_player[Bot].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
-        double score = Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets);
-        if (score < bestScore) {
-          bestScore = score;
+        if (minimize(bestScore, Minimax(depth, 1, -DOUBLE_INF, DOUBLE_INF, tmp_player, tmp_arrow, tmp_bullets)))
           bestMove = move_type;
-        }
         tmp_player[Bot].setCastTimeCooldown(0);
         tmp_player[Bot].setSkillCooldown(0, skillR_ID);
         tmp_bullets[Bot].pop_back();
