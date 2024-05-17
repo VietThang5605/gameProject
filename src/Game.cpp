@@ -917,7 +917,7 @@ double Game::HeuristicEvaluation(vector<Player> tmp_player, vector<PlayerArrow> 
           Score -= ShootSkillR_Value;
         }
       }
-      if (tmp_player[Human].getHealth() > 2 && bul.getSkillId() == skillW_ID
+      if (tmp_player[Human].getHealth() > skill_damage[skillQ_ID] && bul.getSkillId() == skillW_ID
         && tmp_player[Bot].getSkillCooldown(skillQ_ID) <= FPS / 2)
       {
         Score -= ShootSkillW_Value;
