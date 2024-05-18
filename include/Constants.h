@@ -32,6 +32,7 @@ enum ButtonName {
   Hard_Button,
   Impossible_Button,
   Back_Button,
+  Next_Button,
   Button_Total
 };
 
@@ -80,6 +81,8 @@ enum skill_ID {
   skillW_ID,
   skillE_ID,
   skillR_ID,
+  skillHourglass_ID,
+  skillGhost_ID,
   skill_ID_Total
 };
 
@@ -88,6 +91,8 @@ const int skill_cooldown_start[skill_ID_Total] = {
   3 * FPS,
   3 * FPS,
   15 * FPS,
+  30 * FPS,
+  30 * FPS,
 };
 
 const int skill_cooldown[skill_ID_Total] = {
@@ -95,13 +100,17 @@ const int skill_cooldown[skill_ID_Total] = {
   6 * FPS,
   10 * FPS,
   30 * FPS,
+  1,
+  1
 };
 
 const int skill_castTime[skill_ID_Total] = {
   FPS / 4,
   FPS / 4,
   FPS / 2,
-  FPS
+  FPS,
+  2 * FPS,
+  0
 };
 
 const int skill_damage[skill_ID_Total] = {
@@ -109,6 +118,8 @@ const int skill_damage[skill_ID_Total] = {
   2,
   0,
   6,
+  0,
+  0
 };
 
 /// AI

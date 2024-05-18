@@ -44,7 +44,7 @@ private:
   int velocity;
   int velocityTeleport;
   int castTimeCooldown;
-  int player_skill_cooldown[4];
+  int player_skill_cooldown[skill_ID_Total];
   int skillDelay;
   int damagedDelay;
 };

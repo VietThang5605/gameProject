@@ -19,10 +19,8 @@ void Player::reset(int Player_Type) {
   velocity = PlayerVelocity;
   velocityTeleport = PlayerTeleportVelocity;
   castTimeCooldown = 0;
-  player_skill_cooldown[skillQ_ID] = skill_cooldown_start[skillQ_ID];
-  player_skill_cooldown[skillW_ID] = skill_cooldown_start[skillW_ID];
-  player_skill_cooldown[skillE_ID] = skill_cooldown_start[skillE_ID];
-  player_skill_cooldown[skillR_ID] = skill_cooldown_start[skillR_ID];
+  for (int id = 0; id < skill_ID_Total; id++)
+    player_skill_cooldown[id] = skill_cooldown_start[id];
 }
 
 void Player::setType(int Player_Type) {

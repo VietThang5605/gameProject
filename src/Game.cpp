@@ -5,7 +5,7 @@ enum GameState {
   MainMenu,
   GamePlay,
   GamePause,
-  Help,
+  Help_gameState_start, Help1, Help2, Help3, Help4, Help_gameState_end,
   YouWin, YouLose, Player1Win, Player2Win, GameDraw,
   SelectAIMode,
   GameState_Total
@@ -13,11 +13,11 @@ enum GameState {
 
 enum KeyPress {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT,
-  KEY_PRESS_J, KEY_PRESS_K, KEY_PRESS_L, KEY_PRESS_I, KEY_PRESS_O,
-  KEY_PRESS_KP_1, KEY_PRESS_KP_2, KEY_PRESS_KP_3, KEY_PRESS_KP_4, KEY_PRESS_KP_6,
+  KEY_PRESS_U, KEY_PRESS_I, KEY_PRESS_O, KEY_PRESS_P, KEY_PRESS_7,
 
   KEY_PRESS_A, KEY_PRESS_D,
-  KEY_PRESS_C, KEY_PRESS_V, KEY_PRESS_B, KEY_PRESS_F, KEY_PRESS_G,
+  KEY_PRESS_E, KEY_PRESS_R, KEY_PRESS_T, KEY_PRESS_Y, KEY_PRESS_3,
+
   KEY_PRESS_ESC, KEY_PRESS_F11, KEY_PRESS_ENTER,
   KEY_PRESS_TOTAL
 };
@@ -178,6 +178,9 @@ void Game::loadMedia() {
   skill_Hud[skillW_ID] = loadTexture("res/images/hud/ezreal_w.png");
   skill_Hud[skillE_ID] = loadTexture("res/images/hud/ezreal_e.png");
   skill_Hud[skillR_ID] = loadTexture("res/images/hud/ezreal_r.png");
+  skill_Hud[skillR_ID] = loadTexture("res/images/hud/ezreal_r.png");
+  skill_Hud[skillGhost_ID] = loadTexture("res/images/hud/Ghost_Spell.png");
+  skill_Hud[skillHourglass_ID] = loadTexture("res/images/hud/Zhonya's_Hourglass.png");
 
   GameTexture[waterTexture] = loadTexture("res/images/background/Water.png");
   GameTexture[grassTexture] = loadTexture("res/images/background/Grass.png");
@@ -195,7 +198,10 @@ void Game::loadMedia() {
 
   Background[Credit] = loadTexture("res/images/background/Grass_background.png");
   Background[MainMenu] = loadTexture("res/images/background/MainMenu_background.png");
-  Background[Help] = loadTexture("res/images/background/Help_background.png");
+  Background[Help1] = loadTexture("res/images/background/Help1_background.png");
+  Background[Help2] = loadTexture("res/images/background/Help2_background.png");
+  Background[Help3] = loadTexture("res/images/background/Help3_background.png");
+  Background[Help4] = loadTexture("res/images/background/Help4_background.png");
   Background[GamePause] = loadTexture("res/images/background/GamePause_background.png");
   Background[YouWin] = loadTexture("res/images/background/YouWin_background.png");
   Background[YouLose] = loadTexture("res/images/background/YouLose_background.png");
@@ -266,6 +272,10 @@ void Game::loadMedia() {
   Button_Texture[Back_Button][0] = loadTextureFromText("Back", Font[font80], black);
   Button_Texture[Back_Button][1] = loadTextureFromText("Back", Font[font80], white);
   button[Back_Button].init(Button_Texture[Back_Button][0], Button_Texture[Back_Button][1]);
+
+  Button_Texture[Next_Button][0] = loadTextureFromText("Next", Font[font80], black);
+  Button_Texture[Next_Button][1] = loadTextureFromText("Next", Font[font80], white);
+  button[Next_Button].init(Button_Texture[Next_Button][0], Button_Texture[Next_Button][1]);
 
   ///Sounds
   SFX[Click_sfx_ID] = loadSFX("res/audio/sfx/Click.wav");
@@ -347,6 +357,14 @@ void Game::loadMedia() {
   player_skill_Hud[1][skillQ_ID].setX(player_skill_Hud[1][skillW_ID].getX() - player_skill_Hud[1][skillQ_ID].getWidth() - 30);
   player_skill_Hud[1][skillQ_ID].setY(120 - player_skill_Hud[1][skillQ_ID].getHeight());
 
+  player_skill_Hud[1][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillHourglass_ID].setX(player_skill_Hud[1][skillQ_ID].getX() - player_skill_Hud[1][skillHourglass_ID].getWidth() - 30);
+  player_skill_Hud[1][skillHourglass_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
+
+  player_skill_Hud[1][skillGhost_ID].init(skill_Hud[skillGhost_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillGhost_ID].setX(player_skill_Hud[1][skillHourglass_ID].getX() - player_skill_Hud[1][skillGhost_ID].getWidth() - 30);
+  player_skill_Hud[1][skillGhost_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
+
   ///player2's initialization
   player[2].init(GameTexture[ezrealTexture], 54 * 3, 69 * 3, 8, 8);
   player[2].setStartXY(SCREEN_WIDTH / 2 - player[2].getWidth() / 2, 720);
@@ -383,6 +401,14 @@ void Game::loadMedia() {
   player_skill_Hud[2][skillR_ID].init(skill_Hud[skillR_ID], 96, 96, 1, 1);
   player_skill_Hud[2][skillR_ID].setX(player_skill_Hud[2][skillE_ID].getX() + player_skill_Hud[2][skillE_ID].getWidth() + 30);
   player_skill_Hud[2][skillR_ID].setY(SCREEN_HEIGHT - 120);
+
+  player_skill_Hud[2][skillGhost_ID].init(skill_Hud[skillGhost_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillGhost_ID].setX(player_skill_Hud[2][skillR_ID].getX() + player_skill_Hud[2][skillR_ID].getWidth() + 30);
+  player_skill_Hud[2][skillGhost_ID].setY(SCREEN_HEIGHT - 120);
+
+  player_skill_Hud[2][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
+  player_skill_Hud[2][skillHourglass_ID].setX(player_skill_Hud[2][skillGhost_ID].getX() + player_skill_Hud[2][skillGhost_ID].getWidth() + 30);
+  player_skill_Hud[2][skillHourglass_ID].setY(SCREEN_HEIGHT - 120);
 }
 
 void Game::closeMedia() {
@@ -1482,22 +1508,22 @@ void Game::handleEvents() {
   if (player[1].getType() == Human) {
     if (keystate[SDL_SCANCODE_LEFT]) new_key[KEY_PRESS_LEFT] = 1;
     if (keystate[SDL_SCANCODE_RIGHT]) new_key[KEY_PRESS_RIGHT] = 1;
-    if (keystate[SDL_SCANCODE_J]) new_key[KEY_PRESS_J] = 1;
-    if (keystate[SDL_SCANCODE_K]) new_key[KEY_PRESS_K] = 1;
-    if (keystate[SDL_SCANCODE_L]) new_key[KEY_PRESS_L] = 1;
+    if (keystate[SDL_SCANCODE_U]) new_key[KEY_PRESS_U] = 1;
     if (keystate[SDL_SCANCODE_I]) new_key[KEY_PRESS_I] = 1;
     if (keystate[SDL_SCANCODE_O]) new_key[KEY_PRESS_O] = 1;
+    if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
+    if (keystate[SDL_SCANCODE_7]) new_key[KEY_PRESS_7] = 1;
   }
 
   ///player2
   if (player[2].getType() == Human) {
     if (keystate[SDL_SCANCODE_A]) new_key[KEY_PRESS_A] = 1;
     if (keystate[SDL_SCANCODE_D]) new_key[KEY_PRESS_D] = 1;
-    if (keystate[SDL_SCANCODE_C]) new_key[KEY_PRESS_C] = 1;
-    if (keystate[SDL_SCANCODE_V]) new_key[KEY_PRESS_V] = 1;
-    if (keystate[SDL_SCANCODE_B]) new_key[KEY_PRESS_B] = 1;
-    if (keystate[SDL_SCANCODE_F]) new_key[KEY_PRESS_F] = 1;
-    if (keystate[SDL_SCANCODE_G]) new_key[KEY_PRESS_G] = 1;
+    if (keystate[SDL_SCANCODE_E]) new_key[KEY_PRESS_E] = 1;
+    if (keystate[SDL_SCANCODE_R]) new_key[KEY_PRESS_R] = 1;
+    if (keystate[SDL_SCANCODE_T]) new_key[KEY_PRESS_T] = 1;
+    if (keystate[SDL_SCANCODE_Y]) new_key[KEY_PRESS_Y] = 1;
+    if (keystate[SDL_SCANCODE_3]) new_key[KEY_PRESS_3] = 1;
   }
 
   if (new_key[KEY_PRESS_LEFT] && new_key[KEY_PRESS_RIGHT]) {
@@ -1557,22 +1583,22 @@ void Game::update() {
       if (player[1].getType() == Bot) ProcessingAIMove(1);
       else {
         if (player[1].getCastTimeCooldown() == 0) {
-          if (new_key[KEY_PRESS_J] && old_key[KEY_PRESS_J] == 0)
+          if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
             ProcessingSkill(1, skillQ_ID);
 
-          if (new_key[KEY_PRESS_K] && old_key[KEY_PRESS_K] == 0)
+          if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
             ProcessingSkill(1, skillW_ID);
 
           if ((new_key[KEY_PRESS_LEFT] || new_key[KEY_PRESS_RIGHT])
-              && new_key[KEY_PRESS_L] && old_key[KEY_PRESS_L] == 0)
+              && new_key[KEY_PRESS_O] && old_key[KEY_PRESS_O] == 0)
           {
             ProcessingSkill(1, skillE_ID);
           }
 
-          if (new_key[KEY_PRESS_O] && old_key[KEY_PRESS_O] == 0)
+          if (new_key[KEY_PRESS_P] && old_key[KEY_PRESS_P] == 0)
             ProcessingSkill(1, skillR_ID);
 
-          if (new_key[KEY_PRESS_I] && old_key[KEY_PRESS_I] == 0)
+          if (new_key[KEY_PRESS_7] && old_key[KEY_PRESS_7] == 0)
             player_Arrow[1].increaseAngleDelta();
 
           if (new_key[KEY_PRESS_LEFT])
@@ -1596,22 +1622,22 @@ void Game::update() {
       player[2].updatePlayerEffects();
       player[2].updateCooldown();
       if (player[2].getCastTimeCooldown() == 0) {
-        if (new_key[KEY_PRESS_C] && old_key[KEY_PRESS_C] == 0)
+        if (new_key[KEY_PRESS_E] && old_key[KEY_PRESS_E] == 0)
           ProcessingSkill(2, skillQ_ID);
 
-        if (new_key[KEY_PRESS_V] && old_key[KEY_PRESS_V] == 0)
+        if (new_key[KEY_PRESS_R] && old_key[KEY_PRESS_R] == 0)
           ProcessingSkill(2, skillW_ID);
 
         if ((new_key[KEY_PRESS_A] || new_key[KEY_PRESS_D])
-            && new_key[KEY_PRESS_B] && old_key[KEY_PRESS_B] == 0)
+            && new_key[KEY_PRESS_T] && old_key[KEY_PRESS_T] == 0)
         {
           ProcessingSkill(2, skillE_ID);
         }
 
-        if (new_key[KEY_PRESS_G] && old_key[KEY_PRESS_G] == 0)
+        if (new_key[KEY_PRESS_Y] && old_key[KEY_PRESS_Y] == 0)
           ProcessingSkill(2, skillR_ID);
 
-        if (new_key[KEY_PRESS_F] && old_key[KEY_PRESS_F] == 0)
+        if (new_key[KEY_PRESS_3] && old_key[KEY_PRESS_3] == 0)
           player_Arrow[2].increaseAngleDelta();
 
         if (new_key[KEY_PRESS_A])
@@ -1846,7 +1872,7 @@ void Game::render_MainMenu() {
 
   if (button[Help_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    gameState = Help;
+    gameState = Help1;
   }
   button[Help_Button].setX(SCREEN_WIDTH / 2 - button[Help_Button].getWidth() / 2);
   button[Help_Button].setY(button[VSPlayer_Button].getY() + button[VSPlayer_Button].getHeight() + 10);
@@ -2025,69 +2051,93 @@ void Game::render_GameDraw() {
 }
 
 void Game::render_Help() {
-  render(Background[Help], 0, 0);
+  render(Background[gameState], 0, 0);
 
-  if (button[Help_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+  if (button[Back_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    if (gameState == Help) gameState = MainMenu;
-    else
-      gameState = Help;
+    switch (gameState) {
+      case (Help1): {
+        gameState = MainMenu;
+        break;
+      }
+      case (Help2): {
+        gameState = Help1;
+        break;
+      }
+      case (Help3): {
+        gameState = Help2;
+        break;
+      }
+      case (Help4): {
+        gameState = Help3;
+        break;
+      }
+    }
   }
-  render(button[Help_Button]);
+  button[Back_Button].setX(SCREEN_WIDTH / 2 - button[Back_Button].getWidth() / 2 - 200);
+  button[Back_Button].setY(SCREEN_HEIGHT - 200);
+  render(button[Back_Button]);
 
-  if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+  std::cout << (gameState == Help3) << ' ' << (gameState == Help4) << '\n';
+ if (button[Next_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    gameRunning = false;
+    switch (gameState) {
+      case (Help1): {
+        gameState = Help2;
+        break;
+      }
+      case (Help2): {
+        gameState = Help3;
+        break;
+      }
+      case (Help3): {
+        gameState = Help4;
+        break;
+      }
+      case (Help4): {
+        gameState = MainMenu;
+        break;
+      }
+    }
   }
-  render(button[Exit_Button]);
+  button[Next_Button].setX(SCREEN_WIDTH / 2 - button[Next_Button].getWidth() / 2 + 200);
+  button[Next_Button].setY(SCREEN_HEIGHT - 200);
+  render(button[Next_Button]);
 }
 
 void Game::render_Game() {
-  switch (gameState) {
-    case (Credit): {
+  if (gameState == Credit) {
       render_Credit();
-      break;
-    }
-    case (MainMenu): {
-      render_MainMenu();
-      break;
-    }
-    case (SelectAIMode): {
-      render_SelectAIMode();
-      break;
-    }
-    case (GamePlay): {
-      render_GamePlay();
-      break;
-    }
-    case (GamePause): {
-      render_GamePause();
-      break;
-    }
-    case (YouWin): {
-      render_YouWin();
-      break;
-    }
-    case (YouLose): {
-      render_YouLose();
-      break;
-    }
-    case (Player1Win): {
-      render_Player1Win();
-      break;
-    }
-    case (Player2Win): {
-      render_Player2Win();
-      break;
-    }
-    case (GameDraw): {
-      render_GameDraw();
-      break;
-    }
-    case (Help): {
-      render_Help();
-      break;
-    }
+  }
+  else if (gameState == MainMenu) {
+    render_MainMenu();
+  }
+  else if (gameState == SelectAIMode) {
+    render_SelectAIMode();
+  }
+  else if (gameState == GamePlay) {
+    render_GamePlay();
+  }
+  else if (gameState == GamePause) {
+    render_GamePause();
+  }
+  else if (gameState == YouWin) {
+    render_YouWin();
+  }
+  else if (gameState == YouLose) {
+    render_YouLose();
+  }
+  else if (gameState == Player1Win) {
+    render_Player1Win();
+  }
+  else if (gameState == Player2Win) {
+    render_Player2Win();
+  }
+  else if (gameState == GameDraw) {
+    render_GameDraw();
+  }
+  else if (Help_gameState_start < gameState && gameState < Help_gameState_end) {
+    render_Help();
   }
 }
 
