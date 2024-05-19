@@ -21,6 +21,8 @@ void Player::reset(int Player_Type) {
   castTimeCooldown = 0;
   for (int id = 0; id < skill_ID_Total; id++)
     player_skill_cooldown[id] = skill_cooldown_start[id];
+  SummonerSpellID = SummonerSpellStartID;
+  ItemID = ItemStartID;
 }
 
 void Player::setType(int Player_Type) {

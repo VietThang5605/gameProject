@@ -81,6 +81,7 @@ public:
   void render_Credit();
   void render_MainMenu();
   void render_SelectAIMode();
+  void render_SelectMode();
   void render_GamePlay();
   void render_GamePause();
   void render_YouWin();
@@ -103,4 +104,5 @@ private:
   int gameEndDelayTime;
   int gameTimer;
   int gameAIMode;
+  int gameMode;
 };

@@ -8,6 +8,7 @@ enum GameState {
   Help_gameState_start, Help1, Help2, Help3, Help4, Help_gameState_end,
   YouWin, YouLose, Player1Win, Player2Win, GameDraw,
   SelectAIMode,
+  SelectMode,
   GameState_Total
 };
 
@@ -208,7 +209,8 @@ void Game::loadMedia() {
   Background[Player1Win] = loadTexture("res/images/background/Player1Win_background.png");
   Background[Player2Win] = loadTexture("res/images/background/Player2Win_background.png");
   Background[GameDraw] = loadTexture("res/images/background/GameDraw_background.png");
-  Background[SelectAIMode] = loadTexture("res/images/background/SelectAIMode_background.png");
+  Background[SelectAIMode] = loadTexture("res/images/background/MainMenu_background.png");
+  Background[SelectMode] = loadTexture("res/images/background/MainMenu_background.png");
 
   GameCredit[Main_Credit] = loadTextureFromText("Github.com/VietThang5605", Font[font40], black);
   CreditEntity[Main_Credit].init(GameCredit[Main_Credit], 0, 0, 0, 0);
@@ -276,6 +278,14 @@ void Game::loadMedia() {
   Button_Texture[Next_Button][0] = loadTextureFromText("Next", Font[font80], black);
   Button_Texture[Next_Button][1] = loadTextureFromText("Next", Font[font80], white);
   button[Next_Button].init(Button_Texture[Next_Button][0], Button_Texture[Next_Button][1]);
+
+  Button_Texture[Classic_Button][0] = loadTextureFromText("Classic", Font[font80], black);
+  Button_Texture[Classic_Button][1] = loadTextureFromText("Classic", Font[font80], white);
+  button[Classic_Button].init(Button_Texture[Classic_Button][0], Button_Texture[Classic_Button][1]);
+
+  Button_Texture[Special_Button][0] = loadTextureFromText("Special", Font[font80], black);
+  Button_Texture[Special_Button][1] = loadTextureFromText("Special", Font[font80], white);
+  button[Special_Button].init(Button_Texture[Special_Button][0], Button_Texture[Special_Button][1]);
 
   ///Sounds
   SFX[Click_sfx_ID] = loadSFX("res/audio/sfx/Click.wav");
@@ -726,8 +736,9 @@ void Game::render_Skill_Hud_And_Cooldown() {
   }
   for (int id = 1; id <= 2; id++)
     for (int skill_id = 0; skill_id < skill_ID_Total; skill_id++) {
+      if (skill_id > skillR_ID && gameMode != Special_Mode)
+        continue;
       render(player_skill_Hud[id][skill_id]);
-
       if (player[id].getSkillCooldown(skill_id) > 0) {
         std::string text = TimeToString(player[id].getSkillCooldown(skill_id), Skill_TimeConvertType);
         renderTextCenter(player_skill_Hud[id][skill_id].getX() + player_skill_Hud[id][skill_id].getWidth() / 2,
@@ -1464,7 +1475,7 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
   if (player[player_id].getCastTimeCooldown() > 0)
     return;
 
-  if (player[player_id].getSkillCooldown(skill_ID) > 0)
+  if (player[player_id].getSkillCooldown(skill_ID) != 0)
     return;
 
   player[player_id].setCastTimeCooldown(skill_castTime[skill_ID]);
@@ -1476,7 +1487,7 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
 
       break;
     }
-    default: {
+    case (skillQ_ID): case (skillW_ID): case (skillR_ID): {
       Bullet tmp = bullet[skill_ID];
       if (player_id == 1) {
         tmp.setX(player[1].getX() + player[1].getWidth() / 2 - tmp.getWidth() / 2);
@@ -1852,7 +1863,6 @@ void Game::render_MainMenu() {
     PlaySFX(Click_sfx_ID);
     player[1].setType(Bot);
     player[2].setType(Human);
-    resetGame();
     gameState = SelectAIMode;
   }
   button[VSAI_Button].setX(SCREEN_WIDTH / 2 - button[VSAI_Button].getWidth() / 2);
@@ -1863,8 +1873,7 @@ void Game::render_MainMenu() {
     PlaySFX(Click_sfx_ID);
     player[1].setType(Human);
     player[2].setType(Human);
-    resetGame();
-    gameState = GamePlay;
+    gameState = SelectMode;
   }
   button[VSPlayer_Button].setX(SCREEN_WIDTH / 2 - button[VSPlayer_Button].getWidth() / 2);
   button[VSPlayer_Button].setY(button[VSAI_Button].getY() + button[VSAI_Button].getHeight() + 10);
@@ -1892,11 +1901,8 @@ void Game::render_SelectAIMode() {
 
   if (button[Normal_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    player[1].setType(Bot);
-    player[2].setType(Human);
-    resetGame();
     gameAIMode = AIGameMode_Normal;
-    gameState = GamePlay;
+    gameState = SelectMode;
   }
   button[Normal_Button].setX(SCREEN_WIDTH / 2 - button[Normal_Button].getWidth() / 2);
   button[Normal_Button].setY(SCREEN_HEIGHT / 2 - button[Normal_Button].getHeight() - 100);
@@ -1904,11 +1910,8 @@ void Game::render_SelectAIMode() {
 
   if (button[Hard_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    player[1].setType(Bot);
-    player[2].setType(Human);
-    resetGame();
     gameAIMode = AIGameMode_Hard;
-    gameState = GamePlay;
+    gameState = SelectMode;
   }
   button[Hard_Button].setX(SCREEN_WIDTH / 2 - button[Hard_Button].getWidth() / 2);
   button[Hard_Button].setY(button[Normal_Button].getY() + button[Normal_Button].getHeight() + 10);
@@ -1916,11 +1919,8 @@ void Game::render_SelectAIMode() {
 
   if (button[Impossible_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    player[1].setType(Bot);
-    player[2].setType(Human);
-    resetGame();
     gameAIMode = AIGameMode_Impossible;
-    gameState = GamePlay;
+    gameState = SelectMode;
   }
   button[Impossible_Button].setX(SCREEN_WIDTH / 2 - button[Impossible_Button].getWidth() / 2);
   button[Impossible_Button].setY(button[Hard_Button].getY() + button[Hard_Button].getHeight() + 10);
@@ -1932,6 +1932,38 @@ void Game::render_SelectAIMode() {
   }
   button[Back_Button].setX(SCREEN_WIDTH / 2 - button[Back_Button].getWidth() / 2);
   button[Back_Button].setY(button[Impossible_Button].getY() + button[Impossible_Button].getHeight() + 10);
+  render(button[Back_Button]);
+}
+
+void Game::render_SelectMode() {
+  render(Background[SelectMode], 0, 0);
+
+  if (button[Classic_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    resetGame();
+    gameMode = Classic_Mode;
+    gameState = GamePlay;
+  }
+  button[Classic_Button].setX(SCREEN_WIDTH / 2 - button[Classic_Button].getWidth() / 2);
+  button[Classic_Button].setY(SCREEN_HEIGHT / 2 - button[Classic_Button].getHeight() - 100);
+  render(button[Classic_Button]);
+
+  if (button[Special_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    resetGame();
+    gameMode = Special_Mode;
+    gameState = GamePlay;
+  }
+  button[Special_Button].setX(SCREEN_WIDTH / 2 - button[Special_Button].getWidth() / 2);
+  button[Special_Button].setY(button[Classic_Button].getY() + button[Classic_Button].getHeight() + 10);
+  render(button[Special_Button]);
+
+  if (button[Back_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    gameState = SelectAIMode;
+  }
+  button[Back_Button].setX(SCREEN_WIDTH / 2 - button[Back_Button].getWidth() / 2);
+  button[Back_Button].setY(button[Special_Button].getY() + button[Special_Button].getHeight() + 10);
   render(button[Back_Button]);
 }
 
@@ -2078,7 +2110,6 @@ void Game::render_Help() {
   button[Back_Button].setY(SCREEN_HEIGHT - 200);
   render(button[Back_Button]);
 
-  std::cout << (gameState == Help3) << ' ' << (gameState == Help4) << '\n';
  if (button[Next_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
     switch (gameState) {
@@ -2114,6 +2145,9 @@ void Game::render_Game() {
   }
   else if (gameState == SelectAIMode) {
     render_SelectAIMode();
+  }
+  else if (gameState == SelectMode) {
+    render_SelectMode();
   }
   else if (gameState == GamePlay) {
     render_GamePlay();

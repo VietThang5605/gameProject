@@ -46,7 +46,7 @@ protected:
   double angle;
   SDL_Texture* texture;
   SDL_RendererFlip flip;
-  SDL_Point* center;
+  SDL_Point center;
   vector<SDL_Rect> clips;
   Point rotPoint;
 };

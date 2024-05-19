@@ -47,4 +47,6 @@ private:
   int player_skill_cooldown[skill_ID_Total];
   int skillDelay;
   int damagedDelay;
+  int SummonerSpellID;
+  int ItemID;
 };

@@ -6,7 +6,8 @@ Entity::Entity() {
   currentFrame = 0;
   texture = NULL;
   flip = SDL_FLIP_NONE;
-  center = NULL;
+  // center = NULL;
+  center.x = center.y = 0;
   rotPoint.x = rotPoint.y = -INT_INF;
 }
 
@@ -60,9 +61,9 @@ void Entity::setAngle(double p_angle) {
 }
 
 void Entity::setCenter(double x, double y) {
-  center = new SDL_Point();
-  center->x = x;
-  center->y = y;
+  // center = new SDL_Point();
+  center.x = x;
+  center.y = y;
 }
 
 void Entity::setRotPoint(double x, double y) {
@@ -114,7 +115,7 @@ SDL_RendererFlip Entity::getFlip() {
 }
 
 SDL_Point* Entity::getCenter() {
-  return center;
+  return &center;
 }
 
 void Entity::move() {

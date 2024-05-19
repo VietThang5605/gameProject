@@ -12,6 +12,12 @@ const int INT_INF = 1e9;
 const double PI = 3.14159265358979323846;
 const double DOUBLE_INF = 1e9;
 
+enum GameMode {
+  Classic_Mode,
+  Special_Mode,
+  GameMode_Total
+};
+
 ///Utilites
 enum TimeConvertType {
   Skill_TimeConvertType,
@@ -24,15 +30,11 @@ enum ButtonName {
   VSAI_Button, VSPlayer_Button,
   Help_Button,
   Exit_Button,
-  Continue_Button,
-  Restart_Button,
-  PlayAgain_Button,
+  Continue_Button, Restart_Button, PlayAgain_Button,
   BackToMenu_Button,
-  Normal_Button,
-  Hard_Button,
-  Impossible_Button,
-  Back_Button,
-  Next_Button,
+  Normal_Button, Hard_Button, Impossible_Button,
+  Back_Button, Next_Button,
+  Classic_Button, Special_Button,
   Button_Total
 };
 
@@ -75,6 +77,9 @@ const int vulnerableTime = 2 * FPS;
 const int PlayerStartHealth = 30;
 const int PlayerVelocity = 18;
 const int PlayerTeleportVelocity = 540;
+
+const int SummonerSpellStartID = -INT_INF;
+const int ItemStartID = -INT_INF;
 
 enum skill_ID {
   skillQ_ID,
