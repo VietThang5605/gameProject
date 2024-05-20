@@ -46,17 +46,13 @@ enum music_ID {
 
 enum sfx_ID {
   Click_sfx_ID,
-  Count_down_sfx_ID,
-  Count_down_start_sfx_id,
-  Q1_sfx_ID,
-  Q2_sfx_ID,
-  Q_hit_sfx_ID,
-  W_sfx_ID,
-  W_hit_sfx_ID,
-  W_hit_crashed_sfx_ID,
+  Count_down_sfx_ID, Count_down_start_sfx_id,
+  Q1_sfx_ID, Q2_sfx_ID, Q_hit_sfx_ID,
+  W_sfx_ID, W_hit_sfx_ID, W_hit_crashed_sfx_ID,
   E_sfx_ID,
-  R_sfx_ID,
-  R_hit_sfx_ID,
+  R_sfx_ID, R_hit_sfx_ID,
+  Ghost_start_sfx_ID, Ghost_end_sfx_ID,
+  Hourglass_start_sfx_ID, Hourglass_end_sfx_ID,
   sfx_ID_Total
 };
 
@@ -78,54 +74,47 @@ const int PlayerStartHealth = 30;
 const int PlayerVelocity = 18;
 const int PlayerTeleportVelocity = 540;
 
-const int SummonerSpellStartID = -INT_INF;
-const int ItemStartID = -INT_INF;
+const int PlayerBonusVelocity = 6;
 
 enum skill_ID {
-  skillQ_ID,
-  skillW_ID,
-  skillE_ID,
-  skillR_ID,
-  skillHourglass_ID,
+  skillQ_ID, skillW_ID, skillE_ID, skillR_ID,
   skillGhost_ID,
+  skillHourglass_ID,
   skill_ID_Total
 };
 
 const int skill_cooldown_start[skill_ID_Total] = {
-  1 * FPS,
-  3 * FPS,
-  3 * FPS,
-  15 * FPS,
-  30 * FPS,
+  1 * FPS, 3 * FPS, 3 * FPS, 15 * FPS,
+  10 * FPS,
   30 * FPS,
 };
 
 const int skill_cooldown[skill_ID_Total] = {
-  3 * FPS,
-  6 * FPS,
-  10 * FPS,
+  3 * FPS, 6 * FPS, 10 * FPS, 30 * FPS,
   30 * FPS,
-  1,
-  1
+  50 * FPS
 };
 
 const int skill_castTime[skill_ID_Total] = {
-  FPS / 4,
-  FPS / 4,
-  FPS / 2,
-  FPS,
-  2 * FPS,
-  0
+  FPS / 4, FPS / 4, FPS / 2, FPS,
+  0,
+  2 * FPS
 };
 
 const int skill_damage[skill_ID_Total] = {
-  2,
-  2,
-  0,
-  6,
+  2, 2, 0, 6,
   0,
   0
 };
+
+const int skill_effectTime[skill_ID_Total] = {
+  0, 0, 0, 0,
+  5 * FPS,
+  2 * FPS
+};
+
+const int SummonerSpellStartID = skillGhost_ID;
+const int ItemStartID = skillHourglass_ID;
 
 /// AI
 enum AIGameMode {

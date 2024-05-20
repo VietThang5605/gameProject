@@ -59,6 +59,7 @@ public:
   void PlaySkillSFX(int skill_ID);
   void PlaySFX(int sfx_ID);
   void PlayMusic(int music_ID);
+  void PlayPlayerSFX();
 
   bool isPlayerCollidingBullet(Player p_player, Bullet p_bullet);
   void setArrowToPlayer(bool isMaximizing, Player tmp_player, PlayerArrow &tmp_arrow);

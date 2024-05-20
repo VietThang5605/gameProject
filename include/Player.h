@@ -22,6 +22,9 @@ public:
   void setCastTimeCooldown(int value);
   void setSkillDelay(int value);
   void setDamagedDelay(int value);
+  void resetSummonerSpellID();
+  void resetItemID();
+  void setEffectTime(int time, int skill_ID);
 
   int getType();
   int getHealth();
@@ -30,6 +33,10 @@ public:
   int getCastTimeCooldown();
   int getSkillDelay();
   int getDamagedDelay();
+  int getSummonerSpellID();
+  int getItemID();
+  int getEffectTime(int skill_ID);
+  bool isInvulnerable();
 
   bool isDead();
   void updateCooldown();
@@ -45,8 +52,11 @@ private:
   int velocityTeleport;
   int castTimeCooldown;
   int player_skill_cooldown[skill_ID_Total];
+  int player_effect_time[skill_ID_Total];
   int skillDelay;
   int damagedDelay;
   int SummonerSpellID;
   int ItemID;
+  int bonusVelocity;
+  bool invulnerable;
 };

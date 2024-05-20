@@ -14,10 +14,10 @@ enum GameState {
 
 enum KeyPress {
   KEY_PRESS_LEFT, KEY_PRESS_RIGHT,
-  KEY_PRESS_U, KEY_PRESS_I, KEY_PRESS_O, KEY_PRESS_P, KEY_PRESS_7,
+  KEY_PRESS_U, KEY_PRESS_I, KEY_PRESS_O, KEY_PRESS_P, KEY_PRESS_7, KEY_PRESS_8, KEY_PRESS_9,
 
   KEY_PRESS_A, KEY_PRESS_D,
-  KEY_PRESS_E, KEY_PRESS_R, KEY_PRESS_T, KEY_PRESS_Y, KEY_PRESS_3,
+  KEY_PRESS_E, KEY_PRESS_R, KEY_PRESS_T, KEY_PRESS_Y, KEY_PRESS_3, KEY_PRESS_4, KEY_PRESS_5,
 
   KEY_PRESS_ESC, KEY_PRESS_F11, KEY_PRESS_ENTER,
   KEY_PRESS_TOTAL
@@ -51,7 +51,7 @@ Mix_Music* MUSIC[music_ID_Total] = { NULL };
 enum GameTextureName {
   waterTexture,
   grassTexture,
-  ezrealTexture,
+  ezrealTexture, ezrealHourglassTexture,
   skillArrow,
   skillQ,
   skillW,
@@ -186,6 +186,7 @@ void Game::loadMedia() {
   GameTexture[waterTexture] = loadTexture("res/images/background/Water.png");
   GameTexture[grassTexture] = loadTexture("res/images/background/Grass.png");
   GameTexture[ezrealTexture] = loadTexture("res/images/character/ezreal-Sheet.png");
+  GameTexture[ezrealHourglassTexture] = loadTexture("res/images/character/ezreal-Sheet-Hourglass.png");
 
   GameTexture[skillArrow] = loadTexture("res/images/skill/skillArrow.png");
   GameTexture[skillQ] = loadTexture("res/images/skill/skillQ.png");
@@ -300,6 +301,10 @@ void Game::loadMedia() {
   SFX[E_sfx_ID] = loadSFX("res/audio/sfx/E.wav");
   SFX[R_sfx_ID] = loadSFX("res/audio/sfx/R.wav");
   SFX[R_hit_sfx_ID] = loadSFX("res/audio/sfx/R_hit.wav");
+  SFX[Ghost_start_sfx_ID] = loadSFX("res/audio/sfx/Ghost_start.wav");
+  SFX[Ghost_end_sfx_ID] = loadSFX("res/audio/sfx/Ghost_end.wav");
+  SFX[Hourglass_start_sfx_ID] = loadSFX("res/audio/sfx/Hourglass_start.wav");
+  SFX[Hourglass_end_sfx_ID] = loadSFX("res/audio/sfx/Hourglass_end.wav");
 
   Mix_VolumeChunk(SFX[Click_sfx_ID], 80);
   Mix_VolumeChunk(SFX[Count_down_sfx_ID], 60);
@@ -313,6 +318,10 @@ void Game::loadMedia() {
   Mix_VolumeChunk(SFX[W_hit_sfx_ID], 60);
   Mix_VolumeChunk(SFX[W_hit_crashed_sfx_ID], 60);
   Mix_VolumeChunk(SFX[R_hit_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Ghost_start_sfx_ID], 50);
+  Mix_VolumeChunk(SFX[Ghost_end_sfx_ID], 100);
+  Mix_VolumeChunk(SFX[Ghost_start_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Ghost_end_sfx_ID], 100);
 
   MUSIC[GameEnd_music_ID] = loadMusic("res/audio/music/winSound.wav");
 
@@ -367,13 +376,13 @@ void Game::loadMedia() {
   player_skill_Hud[1][skillQ_ID].setX(player_skill_Hud[1][skillW_ID].getX() - player_skill_Hud[1][skillQ_ID].getWidth() - 30);
   player_skill_Hud[1][skillQ_ID].setY(120 - player_skill_Hud[1][skillQ_ID].getHeight());
 
-  player_skill_Hud[1][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
-  player_skill_Hud[1][skillHourglass_ID].setX(player_skill_Hud[1][skillQ_ID].getX() - player_skill_Hud[1][skillHourglass_ID].getWidth() - 30);
-  player_skill_Hud[1][skillHourglass_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
-
   player_skill_Hud[1][skillGhost_ID].init(skill_Hud[skillGhost_ID], 96, 96, 1, 1);
-  player_skill_Hud[1][skillGhost_ID].setX(player_skill_Hud[1][skillHourglass_ID].getX() - player_skill_Hud[1][skillGhost_ID].getWidth() - 30);
-  player_skill_Hud[1][skillGhost_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
+  player_skill_Hud[1][skillGhost_ID].setX(player_skill_Hud[1][skillQ_ID].getX() - player_skill_Hud[1][skillGhost_ID].getWidth() - 30);
+  player_skill_Hud[1][skillGhost_ID].setY(120 - player_skill_Hud[1][skillGhost_ID].getHeight());
+
+  player_skill_Hud[1][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
+  player_skill_Hud[1][skillHourglass_ID].setX(player_skill_Hud[1][skillGhost_ID].getX() - player_skill_Hud[1][skillHourglass_ID].getWidth() - 30);
+  player_skill_Hud[1][skillHourglass_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
 
   ///player2's initialization
   player[2].init(GameTexture[ezrealTexture], 54 * 3, 69 * 3, 8, 8);
@@ -738,6 +747,7 @@ void Game::render_Skill_Hud_And_Cooldown() {
     for (int skill_id = 0; skill_id < skill_ID_Total; skill_id++) {
       if (skill_id > skillR_ID && gameMode != Special_Mode)
         continue;
+      
       render(player_skill_Hud[id][skill_id]);
       if (player[id].getSkillCooldown(skill_id) > 0) {
         std::string text = TimeToString(player[id].getSkillCooldown(skill_id), Skill_TimeConvertType);
@@ -774,6 +784,14 @@ void Game::PlaySkillSFX(int skill_ID) {
       Mix_PlayChannel(-1, SFX[R_sfx_ID], 0);
       break;
     }
+    case (skillGhost_ID): {
+      Mix_PlayChannel(-1, SFX[Ghost_start_sfx_ID], 0);
+      break;
+    }
+    case (skillHourglass_ID): {
+      Mix_PlayChannel(-1, SFX[Hourglass_start_sfx_ID], 0);
+      break;
+    }
   }
 }
 
@@ -807,6 +825,14 @@ void Game::PlaySFX(int sfx_ID) {
       Mix_PlayChannel(-1, SFX[R_hit_sfx_ID], 0);
       break;
     }
+    case (Ghost_end_sfx_ID): {
+      Mix_PlayChannel(-1, SFX[Ghost_end_sfx_ID], 0);
+      break;
+    }
+    case (Hourglass_end_sfx_ID): {
+      Mix_PlayChannel(-1, SFX[Hourglass_end_sfx_ID], 0);
+      break;
+    }
   }
 }
 
@@ -819,7 +845,28 @@ void Game::PlayMusic(int music_ID) {
   }
 }
 
+void Game::PlayPlayerSFX() {
+  for (int player_id = 1; player_id <= 2; player_id++) {
+    for (int skill_id = skillR_ID + 1; skill_id < skill_ID_Total; skill_id++) {
+      if (player[player_id].getEffectTime(skill_id) != 1)
+        continue;
+      switch (skill_id) {
+        case (skillGhost_ID): {
+          PlaySFX(Ghost_end_sfx_ID);
+          break;
+        }
+        case (skillHourglass_ID): {
+          PlaySFX(Hourglass_end_sfx_ID);
+          break;
+        }
+      }
+    }
+  }
+}
+
 bool Game::isPlayerCollidingBullet(Player p_player, Bullet p_bullet) {
+  if (p_player.isInvulnerable())
+    return false;
   p_player.setWidth(p_player.getWidth() - 30);
   if (p_player.getFlip() == SDL_FLIP_HORIZONTAL)
     p_player.setX(p_player.getX() + 30);
@@ -1472,7 +1519,12 @@ void Game::ProcessingAIMove(int player_id) {
 }
 
 void Game::ProcessingSkill(int player_id, int skill_ID) {
-  if (player[player_id].getCastTimeCooldown() > 0)
+  if (player[player_id].getCastTimeCooldown() > 0) {
+    if (skill_ID != skillHourglass_ID)
+      return;
+  }
+  
+  if (skill_ID < 0)
     return;
 
   if (player[player_id].getSkillCooldown(skill_ID) != 0)
@@ -1480,6 +1532,9 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
 
   player[player_id].setCastTimeCooldown(skill_castTime[skill_ID]);
   player[player_id].setSkillCooldown(skill_cooldown[skill_ID], skill_ID);
+  if (skill_ID > skillR_ID) {
+    player[player_id].setEffectTime(skill_effectTime[skill_ID], skill_ID);
+  }
   PlaySkillSFX(skill_ID);
 
   switch (skill_ID) {
@@ -1503,13 +1558,21 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
         tmp.setCenter(tmp.getWidth() / 2, tmp.getHeight());
         tmp.setRotPoint(tmp.getX() + tmp.getWidth() / 2, tmp.getY() + tmp.getHeight()); ///reset after each frame in void move();
         tmp.setFlip(SDL_FLIP_VERTICAL);
-
         tmp.setVelocityX(-tmp.getVelocityX());
         tmp.setVelocityY(-tmp.getVelocityY());
       }
       player_bullets[player_id].push_back(tmp);
       if (skill_ID == skillR_ID)
         player[player_id].setSkillDelay(FPS);
+      break;
+    }
+    case (skillGhost_ID): {
+      player[player_id].resetSummonerSpellID();
+      break;
+    }
+    case (skillHourglass_ID): {
+      player[player_id].resetItemID();
+      break;
     }
   }
 }
@@ -1524,6 +1587,8 @@ void Game::handleEvents() {
     if (keystate[SDL_SCANCODE_O]) new_key[KEY_PRESS_O] = 1;
     if (keystate[SDL_SCANCODE_P]) new_key[KEY_PRESS_P] = 1;
     if (keystate[SDL_SCANCODE_7]) new_key[KEY_PRESS_7] = 1;
+    if (keystate[SDL_SCANCODE_8]) new_key[KEY_PRESS_8] = 1;
+    if (keystate[SDL_SCANCODE_9]) new_key[KEY_PRESS_9] = 1;
   }
 
   ///player2
@@ -1535,6 +1600,8 @@ void Game::handleEvents() {
     if (keystate[SDL_SCANCODE_T]) new_key[KEY_PRESS_T] = 1;
     if (keystate[SDL_SCANCODE_Y]) new_key[KEY_PRESS_Y] = 1;
     if (keystate[SDL_SCANCODE_3]) new_key[KEY_PRESS_3] = 1;
+    if (keystate[SDL_SCANCODE_4]) new_key[KEY_PRESS_4] = 1;
+    if (keystate[SDL_SCANCODE_5]) new_key[KEY_PRESS_5] = 1;
   }
 
   if (new_key[KEY_PRESS_LEFT] && new_key[KEY_PRESS_RIGHT]) {
@@ -1591,9 +1658,23 @@ void Game::update() {
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
       player[1].updateCooldown();
+      if (gameMode == Special_Mode) {
+        if (player[1].getItemID() == skillHourglass_ID) {
+          if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
+              ProcessingSkill(1, player[1].getItemID());
+        }
+      }
       if (player[1].getType() == Bot) ProcessingAIMove(1);
       else {
         if (player[1].getCastTimeCooldown() == 0) {
+          if (gameMode == Special_Mode) {
+            if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
+              ProcessingSkill(1, player[1].getItemID());
+
+            if (new_key[KEY_PRESS_8] && old_key[KEY_PRESS_8] == 0)
+              ProcessingSkill(1, player[1].getSummonerSpellID());
+          }
+
           if (new_key[KEY_PRESS_U] && old_key[KEY_PRESS_U] == 0)
             ProcessingSkill(1, skillQ_ID);
 
@@ -1625,14 +1706,28 @@ void Game::update() {
       }
     }
 
-    if (player[1].getCastTimeCooldown() > 0)
+    if (player[1].getCastTimeCooldown() > 0 && player[1].getEffectTime(skillHourglass_ID) == 0)
       player[1].setCurrentFrame(0);
 
     ///player2
     if (player[2].isDead() == 0) {
       player[2].updatePlayerEffects();
       player[2].updateCooldown();
+      if (gameMode == Special_Mode) {
+        if (player[2].getItemID() == skillHourglass_ID) {
+          if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
+              ProcessingSkill(2, player[2].getItemID());
+        }
+      }
       if (player[2].getCastTimeCooldown() == 0) {
+        if (gameMode == Special_Mode) {
+          if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
+            ProcessingSkill(2, player[2].getItemID());
+
+          if (new_key[KEY_PRESS_4] && old_key[KEY_PRESS_4] == 0)
+            ProcessingSkill(2, player[2].getSummonerSpellID());
+        }
+        
         if (new_key[KEY_PRESS_E] && old_key[KEY_PRESS_E] == 0)
           ProcessingSkill(2, skillQ_ID);
 
@@ -1663,7 +1758,7 @@ void Game::update() {
       }
     }
 
-    if (player[2].getCastTimeCooldown() > 0)
+    if (player[2].getCastTimeCooldown() > 0 && player[2].getEffectTime(skillHourglass_ID) == 0)
       player[2].setCurrentFrame(0);
   }
 
@@ -1693,6 +1788,7 @@ void Game::render_GameBackground() {
 
 void Game::render_Player() {
   render_Skill_Hud_And_Cooldown();
+  PlayPlayerSFX();
 
   if (player[1].getHealth() > 0) {
     if (player[1].getVulnerable() > 0) {
@@ -1701,7 +1797,10 @@ void Game::render_Player() {
       effect.setY(player[1].getY() + player[1].getHeight() - effect.getHeight() / 2);
       render(effect);
     }
-
+    if (player[1].isInvulnerable())
+      player[1].setTexture(GameTexture[ezrealHourglassTexture]);
+    else
+      player[1].setTexture(GameTexture[ezrealTexture]);
     render(player[1]);
 
     if (gameDelayTime == 0) {
@@ -1720,7 +1819,10 @@ void Game::render_Player() {
       effect.setY(player[2].getY() + player[2].getHeight() - effect.getHeight() / 2);
       render(effect);
     }
-
+    if (player[2].isInvulnerable())
+      player[2].setTexture(GameTexture[ezrealHourglassTexture]);
+    else
+      player[2].setTexture(GameTexture[ezrealTexture]);
     render(player[2]);
 
     if (gameDelayTime == 0) {

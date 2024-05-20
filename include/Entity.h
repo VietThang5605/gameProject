@@ -26,6 +26,7 @@ public:
   void setAngle(double angle);
   void setCenter(double x, double y);
   void setRotPoint(double x, double y);
+  void setTexture(SDL_Texture* p_tex);
   
   double getX();
   double getY();

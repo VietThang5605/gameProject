@@ -21,6 +21,8 @@ void Player::reset(int Player_Type) {
   castTimeCooldown = 0;
   for (int id = 0; id < skill_ID_Total; id++)
     player_skill_cooldown[id] = skill_cooldown_start[id];
+  for (int id = 0; id < skill_ID_Total; id++)
+    player_effect_time[id] = 0;
   SummonerSpellID = SummonerSpellStartID;
   ItemID = ItemStartID;
 }
@@ -53,6 +55,18 @@ void Player::setDamagedDelay(int value) {
   damagedDelay = value;
 }
 
+void Player::resetSummonerSpellID() {
+  SummonerSpellID = SummonerSpellStartID;
+}
+
+void Player::resetItemID() {
+  ItemID = ItemStartID;
+}
+
+void Player::setEffectTime(int time, int skill_ID) {
+  player_effect_time[skill_ID] = time;
+}
+
 int Player::getType() {
   return type;
 }
@@ -81,6 +95,22 @@ int Player::getDamagedDelay() {
   return damagedDelay;
 }
 
+int Player::getSummonerSpellID() {
+  return SummonerSpellID;
+}
+
+int Player::getItemID() {
+  return ItemID;
+}
+
+int Player::getEffectTime(int skill_ID) {
+  return player_effect_time[skill_ID];
+}
+
+bool Player::isInvulnerable() {
+  return invulnerable;
+}
+
 bool Player::isDead() {
   return getHealth() <= 0;
 }
@@ -98,6 +128,23 @@ void Player::updateCooldown() {
 
 void Player::updatePlayerEffects() {
   if (vulnerable > 0) vulnerable--;
+  bonusVelocity = 0;
+  invulnerable = false;
+  for (int id = 0; id < skill_ID_Total; id++) {
+    if (player_effect_time[id] == 0)
+      continue;
+    player_effect_time[id]--;
+    switch (id) {
+      case (skillGhost_ID): {
+        bonusVelocity = PlayerBonusVelocity;
+        break;
+      }
+      case (skillHourglass_ID): {
+        invulnerable = true;
+        break;
+      }
+    }
+  }
 }
 
 void Player::moveLeft() {
@@ -109,7 +156,7 @@ void Player::moveLeft() {
   if (player_skill_cooldown[skillE_ID] == skill_cooldown[skillE_ID])
     setX(getX() - velocityTeleport);
   else
-    setX(getX() - velocity);
+    setX(getX() - (velocity + bonusVelocity));
   if (getX() < PlayerScreenLeftBoundary) setX(PlayerScreenLeftBoundary);
 }
 
@@ -122,6 +169,6 @@ void Player::moveRight() {
   if (player_skill_cooldown[skillE_ID] == skill_cooldown[skillE_ID])
     setX(getX() + velocityTeleport);
   else
-    setX(getX() + velocity);
+    setX(getX() + (velocity + bonusVelocity));
   if (getX() > PlayerScreenRightBoundary) setX(PlayerScreenRightBoundary);
 }

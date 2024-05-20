@@ -74,6 +74,10 @@ void Entity::setRotPoint(double x, double y) {
   }
 }
 
+void Entity::setTexture(SDL_Texture* p_tex) {
+  texture = p_tex;
+}
+
 double Entity::getX() {
   return x;
 }
