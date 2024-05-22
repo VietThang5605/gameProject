@@ -7,8 +7,7 @@ enum GameState {
   GamePause,
   Help_gameState_start, Help1, Help2, Help3, Help4, Help_gameState_end,
   YouWin, YouLose, Player1Win, Player2Win, GameDraw,
-  SelectAIMode,
-  SelectMode,
+  SelectAIMode, SelectMode, SelectItemMode,
   GameState_Total
 };
 
@@ -30,6 +29,8 @@ const Uint8* keystate = SDL_GetKeyboardState(NULL);
 
 int MouseX, MouseY;
 bool mouseClicked;
+
+mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
 
 SDL_Color white = {255, 255, 255};
 SDL_Color black = {0, 0, 0};
@@ -123,6 +124,8 @@ void Game::resetGameDelayTime(int time) {
 
 void Game::resetGame() {
   resetGameDelayTime(3 * FPS);
+  UsingItemTime = UsingItemTime_Start;
+  TimeBeforeRandomItem = TimeBeforeRandomItem_Start;
   gameEndDelayTime = 2 * FPS;
   gameTimer = 3 * 60 * FPS;
   player[1].reset(player[1].getType());
@@ -180,8 +183,13 @@ void Game::loadMedia() {
   skill_Hud[skillE_ID] = loadTexture("res/images/hud/ezreal_e.png");
   skill_Hud[skillR_ID] = loadTexture("res/images/hud/ezreal_r.png");
   skill_Hud[skillR_ID] = loadTexture("res/images/hud/ezreal_r.png");
-  skill_Hud[skillGhost_ID] = loadTexture("res/images/hud/Ghost_Spell.png");
+  skill_Hud[skillGhost_ID] = loadTexture("res/images/hud/Ghost.png");
   skill_Hud[skillHourglass_ID] = loadTexture("res/images/hud/Zhonya's_Hourglass.png");
+  skill_Hud[skillFlash_ID] = loadTexture("res/images/hud/Flash.png");
+  skill_Hud[skillHeal_ID] = loadTexture("res/images/hud/Heal.png");
+  skill_Hud[skillVoltaic_Cyclosword_ID] = loadTexture("res/images/hud/Voltaic_Cyclosword.png");
+  // skill_Hud[skillThe_Golden_Spatula_ID] = loadTexture("res/images/hud/The_Golden_Spatula.png");
+  skill_Hud[skillMystery_Box_ID] = loadTexture("res/images/hud/Mystery_Box.png");
 
   GameTexture[waterTexture] = loadTexture("res/images/background/Water.png");
   GameTexture[grassTexture] = loadTexture("res/images/background/Grass.png");
@@ -212,6 +220,7 @@ void Game::loadMedia() {
   Background[GameDraw] = loadTexture("res/images/background/GameDraw_background.png");
   Background[SelectAIMode] = loadTexture("res/images/background/MainMenu_background.png");
   Background[SelectMode] = loadTexture("res/images/background/MainMenu_background.png");
+  Background[SelectItemMode] = loadTexture("res/images/background/MainMenu_background.png");
 
   GameCredit[Main_Credit] = loadTextureFromText("Github.com/VietThang5605", Font[font40], black);
   CreditEntity[Main_Credit].init(GameCredit[Main_Credit], 0, 0, 0, 0);
@@ -288,6 +297,14 @@ void Game::loadMedia() {
   Button_Texture[Special_Button][1] = loadTextureFromText("Special", Font[font80], white);
   button[Special_Button].init(Button_Texture[Special_Button][0], Button_Texture[Special_Button][1]);
 
+  Button_Texture[Gacha_Button][0] = loadTextureFromText("Gacha", Font[font80], black);
+  Button_Texture[Gacha_Button][1] = loadTextureFromText("Gacha", Font[font80], white);
+  button[Gacha_Button].init(Button_Texture[Gacha_Button][0], Button_Texture[Gacha_Button][1]);
+
+  Button_Texture[All_Random_Button][0] = loadTextureFromText("All Random", Font[font80], black);
+  Button_Texture[All_Random_Button][1] = loadTextureFromText("All Random", Font[font80], white);
+  button[All_Random_Button].init(Button_Texture[All_Random_Button][0], Button_Texture[All_Random_Button][1]);
+
   ///Sounds
   SFX[Click_sfx_ID] = loadSFX("res/audio/sfx/Click.wav");
   SFX[Count_down_sfx_ID] = loadSFX("res/audio/sfx/Count_down.wav");
@@ -305,6 +322,10 @@ void Game::loadMedia() {
   SFX[Ghost_end_sfx_ID] = loadSFX("res/audio/sfx/Ghost_end.wav");
   SFX[Hourglass_start_sfx_ID] = loadSFX("res/audio/sfx/Hourglass_start.wav");
   SFX[Hourglass_end_sfx_ID] = loadSFX("res/audio/sfx/Hourglass_end.wav");
+  SFX[Flash_sfx_ID] = loadSFX("res/audio/sfx/Flash.wav");
+  SFX[Heal_sfx_ID] = loadSFX("res/audio/sfx/Heal.wav");
+  SFX[Voltaic_Cyclosword_sfx_ID] = loadSFX("res/audio/sfx/Voltaic_Cyclosword.wav");
+  SFX[UsingItem_start_sfx_ID] = loadSFX("res/audio/sfx/UsingItem_start.wav");
 
   Mix_VolumeChunk(SFX[Click_sfx_ID], 80);
   Mix_VolumeChunk(SFX[Count_down_sfx_ID], 60);
@@ -320,8 +341,11 @@ void Game::loadMedia() {
   Mix_VolumeChunk(SFX[R_hit_sfx_ID], 60);
   Mix_VolumeChunk(SFX[Ghost_start_sfx_ID], 50);
   Mix_VolumeChunk(SFX[Ghost_end_sfx_ID], 100);
-  Mix_VolumeChunk(SFX[Ghost_start_sfx_ID], 60);
-  Mix_VolumeChunk(SFX[Ghost_end_sfx_ID], 100);
+  Mix_VolumeChunk(SFX[Hourglass_start_sfx_ID], 100);
+  Mix_VolumeChunk(SFX[Hourglass_end_sfx_ID], 100);
+  Mix_VolumeChunk(SFX[Flash_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Heal_sfx_ID], 60);
+  Mix_VolumeChunk(SFX[Voltaic_Cyclosword_sfx_ID], 100);
 
   MUSIC[GameEnd_music_ID] = loadMusic("res/audio/music/winSound.wav");
 
@@ -380,9 +404,11 @@ void Game::loadMedia() {
   player_skill_Hud[1][skillGhost_ID].setX(player_skill_Hud[1][skillQ_ID].getX() - player_skill_Hud[1][skillGhost_ID].getWidth() - 30);
   player_skill_Hud[1][skillGhost_ID].setY(120 - player_skill_Hud[1][skillGhost_ID].getHeight());
 
-  player_skill_Hud[1][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
-  player_skill_Hud[1][skillHourglass_ID].setX(player_skill_Hud[1][skillGhost_ID].getX() - player_skill_Hud[1][skillHourglass_ID].getWidth() - 30);
-  player_skill_Hud[1][skillHourglass_ID].setY(120 - player_skill_Hud[1][skillHourglass_ID].getHeight());
+  for (int id = skillHourglass_ID; id < skill_ID_Total; id++) {
+    player_skill_Hud[1][id].init(skill_Hud[id], 96, 96, 1, 1);
+    player_skill_Hud[1][id].setX(player_skill_Hud[1][skillGhost_ID].getX() - player_skill_Hud[1][id].getWidth() - 30);
+    player_skill_Hud[1][id].setY(120 - player_skill_Hud[1][id].getHeight());
+  }
 
   ///player2's initialization
   player[2].init(GameTexture[ezrealTexture], 54 * 3, 69 * 3, 8, 8);
@@ -425,9 +451,11 @@ void Game::loadMedia() {
   player_skill_Hud[2][skillGhost_ID].setX(player_skill_Hud[2][skillR_ID].getX() + player_skill_Hud[2][skillR_ID].getWidth() + 30);
   player_skill_Hud[2][skillGhost_ID].setY(SCREEN_HEIGHT - 120);
 
-  player_skill_Hud[2][skillHourglass_ID].init(skill_Hud[skillHourglass_ID], 96, 96, 1, 1);
-  player_skill_Hud[2][skillHourglass_ID].setX(player_skill_Hud[2][skillGhost_ID].getX() + player_skill_Hud[2][skillGhost_ID].getWidth() + 30);
-  player_skill_Hud[2][skillHourglass_ID].setY(SCREEN_HEIGHT - 120);
+  for (int id = skillHourglass_ID; id < skill_ID_Total; id++) {
+    player_skill_Hud[2][id].init(skill_Hud[id], 96, 96, 1, 1);
+    player_skill_Hud[2][id].setX(player_skill_Hud[2][skillGhost_ID].getX() + player_skill_Hud[2][skillGhost_ID].getWidth() + 30);
+    player_skill_Hud[2][id].setY(SCREEN_HEIGHT - 120);
+  }
 }
 
 void Game::closeMedia() {
@@ -743,8 +771,8 @@ void Game::render_Skill_Hud_And_Cooldown() {
     renderCenter(player_health_texture, player_health_Hud[2][HealthBar_Hud_ID].getX() + player_health_Hud[2][HealthBar_Hud_ID].getWidth() / 2, player_health_Hud[2][HealthBar_Hud_ID].getY() + player_health_Hud[2][HealthBar_Hud_ID].getHeight() / 2);
     SDL_DestroyTexture(player_health_texture);
   }
-  for (int id = 1; id <= 2; id++)
-    for (int skill_id = 0; skill_id < skill_ID_Total; skill_id++) {
+  for (int id = 1; id <= 2; id++) {
+    for (int skill_id = 0; skill_id <= skillGhost_ID; skill_id++) {
       if (skill_id > skillR_ID && gameMode != Special_Mode)
         continue;
       
@@ -763,6 +791,14 @@ void Game::render_Skill_Hud_And_Cooldown() {
                         black);
       }
     }
+  }
+  if (gameMode == Special_Mode) {
+    for (int id = 1; id <= 2; id++) {
+      if (player[id].getItemID() != ItemStartID) {
+        render(player_skill_Hud[id][player[id].getItemID()]);
+      }
+    }
+  }
 }
 
 void Game::PlaySkillSFX(int skill_ID) {
@@ -790,6 +826,14 @@ void Game::PlaySkillSFX(int skill_ID) {
     }
     case (skillHourglass_ID): {
       Mix_PlayChannel(-1, SFX[Hourglass_start_sfx_ID], 0);
+      break;
+    }
+    case (skillFlash_ID): {
+      Mix_PlayChannel(-1, SFX[Flash_sfx_ID], 0);
+      break;
+    }
+    case (skillHeal_ID): {
+      Mix_PlayChannel(-1, SFX[Heal_sfx_ID], 0);
       break;
     }
   }
@@ -831,6 +875,14 @@ void Game::PlaySFX(int sfx_ID) {
     }
     case (Hourglass_end_sfx_ID): {
       Mix_PlayChannel(-1, SFX[Hourglass_end_sfx_ID], 0);
+      break;
+    }
+    case (Voltaic_Cyclosword_sfx_ID): {
+      Mix_PlayChannel(-1, SFX[Voltaic_Cyclosword_sfx_ID], 0);
+      break;
+    }
+    case (UsingItem_start_sfx_ID): {
+      Mix_PlayChannel(-1, SFX[UsingItem_start_sfx_ID], 0);
       break;
     }
   }
@@ -1054,19 +1106,19 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
 
   double bestScore = HeuristicEvaluation(tmp_player, tmp_arrow, tmp_bullets);
   if (isMaximizing)
-    Alpha = max(Alpha, bestScore);
+    Alpha = Max(Alpha, bestScore);
   else
-    Beta = min(Beta, bestScore);
+    Beta = Min(Beta, bestScore);
 
   if (Beta <= Alpha)
     return bestScore;
 
   if (tmp_player[player_id].getCastTimeCooldown() > 0) {
     if (isMaximizing) {
-      bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+      bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
     }
     else {
-      bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+      bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
     }
     return bestScore;
   }
@@ -1075,12 +1127,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
     switch (move_type) {
       case (Do_Nothing): {
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         if (Beta <= Alpha)
           return bestScore;
@@ -1092,12 +1144,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         SDL_RendererFlip lastFlip = tmp_player[player_id].getFlip();
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setX(lastX); tmp_player[player_id].setY(lastY);
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
@@ -1112,12 +1164,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         SDL_RendererFlip lastFlip = tmp_player[player_id].getFlip();
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setX(lastX); tmp_player[player_id].setY(lastY);
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
@@ -1138,12 +1190,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillQ_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillQ_ID], skillQ_ID);
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillQ_ID);
@@ -1164,12 +1216,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillW_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillW_ID], skillW_ID);
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillW_ID);
@@ -1206,12 +1258,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         SDL_RendererFlip lastFlip = tmp_player[player_id].getFlip();
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillE_ID);
@@ -1249,12 +1301,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         setArrowToPlayer(player_id, tmp_player[player_id], tmp_arrow[player_id]);
         SDL_RendererFlip lastFlip = tmp_player[player_id].getFlip();
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillE_ID);
@@ -1281,12 +1333,12 @@ double Game::Minimax(int depth, bool isMaximizing, double Alpha, double Beta, ve
         tmp_player[player_id].setCastTimeCooldown(skill_castTime[skillR_ID]);
         tmp_player[player_id].setSkillCooldown(skill_cooldown[skillR_ID], skillR_ID);
         if (isMaximizing) {
-          bestScore = max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Alpha = max(Alpha, bestScore);
+          bestScore = Max(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Alpha = Max(Alpha, bestScore);
         }
         else {
-          bestScore = min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
-          Beta = min(Beta, bestScore);
+          bestScore = Min(bestScore, Minimax(depth - 1, isMaximizing ^ 1, Alpha, Beta, tmp_player, tmp_arrow, tmp_bullets));
+          Beta = Min(Beta, bestScore);
         }
         tmp_player[player_id].setCastTimeCooldown(0);
         tmp_player[player_id].setSkillCooldown(0, skillR_ID);
@@ -1480,6 +1532,21 @@ void Game::ProcessingAIMove(int player_id) {
     }
   }
 
+  if (gameMode == Special_Mode) {
+    if (player[player_id].getSkillCooldown(skillGhost_ID) == 0) {
+      ProcessingSkill(player_id, skillGhost_ID);
+    }
+    if (UsingItemTime > 0) {
+      if (player[player_id].getItemID() == skillHeal_ID 
+        && (player[player_id].getHealth() < PlayerStartHealth || UsingItemTime == 1)) {
+        ProcessingSkill(player_id, player[player_id].getItemID());
+      }
+      if (player[player_id].getItemID() == skillMystery_Box_ID) {
+        generateItem(player_id);
+      }
+    }
+  }
+
   switch (bestMove) {
     case (Do_Nothing): {
       player[player_id].setCurrentFrame(0);
@@ -1520,11 +1587,28 @@ void Game::ProcessingAIMove(int player_id) {
 
 void Game::ProcessingSkill(int player_id, int skill_ID) {
   if (player[player_id].getCastTimeCooldown() > 0) {
-    if (skill_ID != skillHourglass_ID)
-      return;
+    switch (skill_ID) {
+      case (skillHourglass_ID): case (skillHeal_ID):
+      {
+        ///Processing
+        break;
+      }
+      default: {
+        ///Do nothing
+        return;
+      }
+    }
+  }
+  else {
+    switch (skill_ID) {
+      case (skillVoltaic_Cyclosword_ID): case (skillMystery_Box_ID):
+      {
+        return;
+      }
+    }
   }
   
-  if (skill_ID < 0)
+  if (skill_ID == ItemStartID)
     return;
 
   if (player[player_id].getSkillCooldown(skill_ID) != 0)
@@ -1534,6 +1618,8 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
   player[player_id].setSkillCooldown(skill_cooldown[skill_ID], skill_ID);
   if (skill_ID > skillR_ID) {
     player[player_id].setEffectTime(skill_effectTime[skill_ID], skill_ID);
+    if (skill_ID > skillGhost_ID)
+      player[player_id].resetItemID();
   }
   PlaySkillSFX(skill_ID);
 
@@ -1570,8 +1656,22 @@ void Game::ProcessingSkill(int player_id, int skill_ID) {
       player[player_id].resetSummonerSpellID();
       break;
     }
-    case (skillHourglass_ID): {
-      player[player_id].resetItemID();
+    case (skillFlash_ID): {
+      if (player[player_id].getFlip() == SDL_FLIP_NONE) {
+        player[player_id].setX(player[player_id].getX() + PlayerFlashtVelocity);
+        if (player[player_id].getX() > PlayerScreenRightBoundary) player[player_id].setX(PlayerScreenRightBoundary);
+      }
+      else {
+        player[player_id].setX(player[player_id].getX() - PlayerFlashtVelocity);
+        if (player[player_id].getX() < PlayerScreenLeftBoundary) player[player_id].setX(PlayerScreenLeftBoundary);
+      }
+      break;
+    }
+    case (skillHeal_ID): {
+      int health = player[player_id].getHealth() + HealHealth;
+      if (health > PlayerStartHealth)
+        health = PlayerStartHealth;
+      player[player_id].setHealth(health);
       break;
     }
   }
@@ -1634,6 +1734,29 @@ void Game::handleEvents() {
   }
 }
 
+int Game::randInt(int l, int r) {
+  return l + rnd() % (r - l + 1);
+}
+
+void Game::generateItem(int player_id) {
+  int randomItemID;
+  while (1) {
+    randomItemID = randInt(skillGhost_ID + 1, skill_ID_Total - 1);
+    if (randomItemID == player[player_id].getLastItemId())
+      continue;
+    if (randomItemID == skillMystery_Box_ID)
+      continue;
+    else if (randomItemID == skillHeal_ID) {
+      if (player[1].getHealth() <= HealthThreshold && player[2].getHealth() <= HealthThreshold)
+        break;
+    }
+    else
+      break;
+  }
+  player[player_id].setItemId(randomItemID);
+  player[player_id].setLastItemId(randomItemID);
+}
+
 void Game::update() {
   ///Function keys
   if (new_key[KEY_PRESS_F11] && old_key[KEY_PRESS_F11] == 0) {
@@ -1653,12 +1776,13 @@ void Game::update() {
     }
   }
 
+  ///Player
   if (gameState == GamePlay && gameDelayTime == 0) {
     ///player1
     if (player[1].isDead() == 0) {
       player[1].updatePlayerEffects();
       player[1].updateCooldown();
-      if (gameMode == Special_Mode) {
+      if (gameMode == Special_Mode && UsingItemTime > 0) {
         if (player[1].getItemID() == skillHourglass_ID) {
           if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
               ProcessingSkill(1, player[1].getItemID());
@@ -1668,8 +1792,10 @@ void Game::update() {
       else {
         if (player[1].getCastTimeCooldown() == 0) {
           if (gameMode == Special_Mode) {
-            if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
-              ProcessingSkill(1, player[1].getItemID());
+            if (UsingItemTime > 0) {
+              if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
+                ProcessingSkill(1, player[1].getItemID());
+            }
 
             if (new_key[KEY_PRESS_8] && old_key[KEY_PRESS_8] == 0)
               ProcessingSkill(1, player[1].getSummonerSpellID());
@@ -1713,7 +1839,7 @@ void Game::update() {
     if (player[2].isDead() == 0) {
       player[2].updatePlayerEffects();
       player[2].updateCooldown();
-      if (gameMode == Special_Mode) {
+      if (gameMode == Special_Mode && UsingItemTime > 0) {
         if (player[2].getItemID() == skillHourglass_ID) {
           if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
               ProcessingSkill(2, player[2].getItemID());
@@ -1721,8 +1847,10 @@ void Game::update() {
       }
       if (player[2].getCastTimeCooldown() == 0) {
         if (gameMode == Special_Mode) {
-          if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
-            ProcessingSkill(2, player[2].getItemID());
+          if (UsingItemTime > 0) {
+            if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
+              ProcessingSkill(2, player[2].getItemID());
+          }
 
           if (new_key[KEY_PRESS_4] && old_key[KEY_PRESS_4] == 0)
             ProcessingSkill(2, player[2].getSummonerSpellID());
@@ -1760,6 +1888,44 @@ void Game::update() {
 
     if (player[2].getCastTimeCooldown() > 0 && player[2].getEffectTime(skillHourglass_ID) == 0)
       player[2].setCurrentFrame(0);
+  }
+
+  ///Game event
+  if (gameState == GamePlay && gameMode == Special_Mode && gameDelayTime == 0) {
+    if (UsingItemTime > 0) {
+      UsingItemTime--;
+      if (player[1].getItemID() == skillMystery_Box_ID) {
+        if (new_key[KEY_PRESS_9] && old_key[KEY_PRESS_9] == 0)
+          generateItem(1);
+      }
+      if (player[2].getItemID() == skillMystery_Box_ID) {
+        if (new_key[KEY_PRESS_5] && old_key[KEY_PRESS_5] == 0)
+          generateItem(2);
+      }
+      if (player[1].getItemID() == ItemStartID && player[2].getItemID() == ItemStartID)
+        UsingItemTime = 0;
+    }
+    else {
+      player[1].resetItemID();
+      player[2].resetItemID();
+      if (TimeBeforeRandomItem > 0) {
+        TimeBeforeRandomItem--;
+      }
+      else {
+        UsingItemTime = UsingItemTime_Const;
+        TimeBeforeRandomItem = TimeBeforeRandomItem_Const;
+        if (gameItemMode == Gacha_Item_Mode) {
+          player[1].setItemId(skillMystery_Box_ID);
+          player[2].setItemId(skillMystery_Box_ID);
+        }
+        else {
+          generateItem(1);
+          player[2].setItemId(player[1].getItemID());
+          player[2].setLastItemId(player[1].getItemID());
+        }
+        PlaySFX(UsingItem_start_sfx_ID);
+      }
+    }
   }
 
   ///reset
@@ -1862,29 +2028,35 @@ void Game::render_Bullet() {
         switch (bullet.getSkillId()) {
           case (skillQ_ID): {
             PlaySFX(Q_hit_sfx_ID);
-            Enemy.setHealth(-(skill_damage[skillQ_ID]));
-            if (Enemy.getVulnerable() > 0) {
-              Enemy.setHealth(-(skill_damage[skillW_ID]));
-              Enemy.setVulnerable(0);
-              PlaySFX(W_hit_crashed_sfx_ID);
+            if (player[id].getItemID() == skillVoltaic_Cyclosword_ID) {
+              PlaySFX(Voltaic_Cyclosword_sfx_ID);
+              Enemy.setEffectTime(skill_effectTime[player[id].getItemID()], player[id].getItemID());
             }
+            int damge = skill_damage[skillQ_ID];
+            if (Enemy.getVulnerable() > 0) {
+              PlaySFX(W_hit_crashed_sfx_ID);
+              damge += skill_damage[skillW_ID];
+              Enemy.setVulnerable(0);
+            }
+            Enemy.setHealth(Enemy.getHealth() - damge);
             break;
           }
           case (skillW_ID): {
-            Enemy.setVulnerable(vulnerableTime);
             PlaySFX(W_hit_sfx_ID);
+            Enemy.setVulnerable(vulnerableTime);
             break;
           }
           case (skillR_ID): {
             if (Enemy.getDamagedDelay() == 0) {
               PlaySFX(R_hit_sfx_ID);
+              int damage = skill_damage[skillR_ID];
               Enemy.setDamagedDelay(5 * FPS);
-              Enemy.setHealth(-(skill_damage[skillR_ID]));
               if (Enemy.getVulnerable() > 0) {
-                Enemy.setHealth(-(skill_damage[skillW_ID]));
-                Enemy.setVulnerable(0);
                 PlaySFX(W_hit_crashed_sfx_ID);
+                damage += skill_damage[skillW_ID];
+                Enemy.setVulnerable(0);
               }
+              Enemy.setHealth(Enemy.getHealth() - damage);
             }
             break;
           }
@@ -1965,6 +2137,7 @@ void Game::render_MainMenu() {
     PlaySFX(Click_sfx_ID);
     player[1].setType(Bot);
     player[2].setType(Human);
+    gameVSType = VSAI_Type;
     gameState = SelectAIMode;
   }
   button[VSAI_Button].setX(SCREEN_WIDTH / 2 - button[VSAI_Button].getWidth() / 2);
@@ -1975,6 +2148,7 @@ void Game::render_MainMenu() {
     PlaySFX(Click_sfx_ID);
     player[1].setType(Human);
     player[2].setType(Human);
+    gameVSType = VSPlayer_Type;
     gameState = SelectMode;
   }
   button[VSPlayer_Button].setX(SCREEN_WIDTH / 2 - button[VSPlayer_Button].getWidth() / 2);
@@ -2054,7 +2228,7 @@ void Game::render_SelectMode() {
     PlaySFX(Click_sfx_ID);
     resetGame();
     gameMode = Special_Mode;
-    gameState = GamePlay;
+    gameState = SelectItemMode;
   }
   button[Special_Button].setX(SCREEN_WIDTH / 2 - button[Special_Button].getWidth() / 2);
   button[Special_Button].setY(button[Classic_Button].getY() + button[Classic_Button].getHeight() + 10);
@@ -2062,10 +2236,45 @@ void Game::render_SelectMode() {
 
   if (button[Back_Button].isClicked(MouseX, MouseY, mouseClicked)) {
     PlaySFX(Click_sfx_ID);
-    gameState = SelectAIMode;
+    if (gameVSType == VSAI_Type)
+      gameState = SelectAIMode;
+    else if (gameVSType == VSPlayer_Type)
+      gameState = MainMenu;
   }
   button[Back_Button].setX(SCREEN_WIDTH / 2 - button[Back_Button].getWidth() / 2);
   button[Back_Button].setY(button[Special_Button].getY() + button[Special_Button].getHeight() + 10);
+  render(button[Back_Button]);
+}
+
+void Game::render_SelectItemMode() {
+  render(Background[SelectItemMode], 0, 0);
+
+  if (button[Gacha_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    resetGame();
+    gameItemMode = Gacha_Item_Mode;
+    gameState = GamePlay;
+  }
+  button[Gacha_Button].setX(SCREEN_WIDTH / 2 - button[Gacha_Button].getWidth() / 2);
+  button[Gacha_Button].setY(SCREEN_HEIGHT / 2 - button[Gacha_Button].getHeight() - 100);
+  render(button[Gacha_Button]);
+
+  if (button[All_Random_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    resetGame();
+    gameItemMode = All_Random_Item_Mode;
+    gameState = GamePlay;
+  }
+  button[All_Random_Button].setX(SCREEN_WIDTH / 2 - button[All_Random_Button].getWidth() / 2);
+  button[All_Random_Button].setY(button[Gacha_Button].getY() + button[Gacha_Button].getHeight() + 10);
+  render(button[All_Random_Button]);
+
+  if (button[Back_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    PlaySFX(Click_sfx_ID);
+    gameState = SelectMode;
+  }
+  button[Back_Button].setX(SCREEN_WIDTH / 2 - button[Back_Button].getWidth() / 2);
+  button[Back_Button].setY(button[All_Random_Button].getY() + button[All_Random_Button].getHeight() + 10);
   render(button[Back_Button]);
 }
 
@@ -2250,6 +2459,9 @@ void Game::render_Game() {
   }
   else if (gameState == SelectMode) {
     render_SelectMode();
+  }
+  else if (gameState == SelectItemMode) {
+    render_SelectItemMode();
   }
   else if (gameState == GamePlay) {
     render_GamePlay();

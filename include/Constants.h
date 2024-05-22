@@ -18,6 +18,12 @@ enum GameMode {
   GameMode_Total
 };
 
+enum ItemMode {
+  Gacha_Item_Mode,
+  All_Random_Item_Mode,
+  ItemMode_Total
+};
+
 ///Utilites
 enum TimeConvertType {
   Skill_TimeConvertType,
@@ -35,6 +41,7 @@ enum ButtonName {
   Normal_Button, Hard_Button, Impossible_Button,
   Back_Button, Next_Button,
   Classic_Button, Special_Button,
+  Gacha_Button, All_Random_Button,
   Button_Total
 };
 
@@ -53,6 +60,10 @@ enum sfx_ID {
   R_sfx_ID, R_hit_sfx_ID,
   Ghost_start_sfx_ID, Ghost_end_sfx_ID,
   Hourglass_start_sfx_ID, Hourglass_end_sfx_ID,
+  Flash_sfx_ID,
+  Heal_sfx_ID,
+  Voltaic_Cyclosword_sfx_ID,
+  UsingItem_start_sfx_ID,
   sfx_ID_Total
 };
 
@@ -73,48 +84,88 @@ const int vulnerableTime = 2 * FPS;
 const int PlayerStartHealth = 30;
 const int PlayerVelocity = 18;
 const int PlayerTeleportVelocity = 540;
+const int PlayerFlashtVelocity = 400;
 
 const int PlayerBonusVelocity = 6;
+const int HealBonusVelocity = 3;
+const int Voltaic_Cyclosword_Velocity = -9;
+const int HealHealth = 2;
+const int HealthThreshold = 6;
+
+const int UsingItemTime_Start = 0 * FPS;
+const int UsingItemTime_Const = 10 * FPS;
+const int TimeBeforeRandomItem_Start = 1 * FPS;
+const int TimeBeforeRandomItem_Const = 10 * FPS;
 
 enum skill_ID {
   skillQ_ID, skillW_ID, skillE_ID, skillR_ID,
   skillGhost_ID,
   skillHourglass_ID,
+  skillFlash_ID,
+  skillHeal_ID,
+  skillVoltaic_Cyclosword_ID,
+  // skillThe_Golden_Spatula_ID,
+  skillMystery_Box_ID,
   skill_ID_Total
 };
 
 const int skill_cooldown_start[skill_ID_Total] = {
   1 * FPS, 3 * FPS, 3 * FPS, 15 * FPS,
   10 * FPS,
-  30 * FPS,
+  0 * FPS,
+  0 * FPS,
+  0 * FPS,
+  0 * FPS,
+  // 0 * FPS,
+  0 * FPS,
 };
 
 const int skill_cooldown[skill_ID_Total] = {
   3 * FPS, 6 * FPS, 10 * FPS, 30 * FPS,
   30 * FPS,
-  50 * FPS
+  0 * FPS,
+  0 * FPS,
+  0 * FPS,
+  0 * FPS,
+  // 0 * FPS
+  0 * FPS,
 };
 
 const int skill_castTime[skill_ID_Total] = {
   FPS / 4, FPS / 4, FPS / 2, FPS,
-  0,
-  2 * FPS
+  0 * FPS,
+  2 * FPS,
+  0 * FPS,
+  0 * FPS,
+  0 * FPS,
+  // 0 * FPS,
+  0 * FPS,
 };
 
 const int skill_damage[skill_ID_Total] = {
   2, 2, 0, 6,
   0,
-  0
+  0,
+  0,
+  0,
+  0,
+  // 0
+  0,
 };
 
 const int skill_effectTime[skill_ID_Total] = {
   0, 0, 0, 0,
   5 * FPS,
-  2 * FPS
+  2 * FPS,
+  0 * FPS,
+  1 * FPS,
+  1 * FPS + FPS / 2,
+  // UsingItemTime_Const
+  0 * FPS,
 };
 
 const int SummonerSpellStartID = skillGhost_ID;
-const int ItemStartID = skillHourglass_ID;
+const int ItemStartID = -INT_INF;
 
 /// AI
 enum AIGameMode {
@@ -122,6 +173,12 @@ enum AIGameMode {
   AIGameMode_Hard,
   AIGameMode_Impossible,
   AIGameMode_Total,
+};
+
+enum GameVSType {
+  VSAI_Type,
+  VSPlayer_Type,
+  GameVSType_Total
 };
 
 enum Player_Type {

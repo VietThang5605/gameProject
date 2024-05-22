@@ -25,14 +25,15 @@ void Player::reset(int Player_Type) {
     player_effect_time[id] = 0;
   SummonerSpellID = SummonerSpellStartID;
   ItemID = ItemStartID;
+  lastItemId = ItemStartID;
 }
 
 void Player::setType(int Player_Type) {
   type = Player_Type;
 }
 
-void Player::setHealth(int delta) {
-  health += delta;
+void Player::setHealth(int value) {
+  health = value;
 }
 
 void Player::setSkillCooldown(int time, int skill_ID) {
@@ -61,6 +62,14 @@ void Player::resetSummonerSpellID() {
 
 void Player::resetItemID() {
   ItemID = ItemStartID;
+}
+
+void Player::setItemId(int value) {
+  ItemID = value;
+}
+
+void Player::setLastItemId(int value) {
+  lastItemId = value;
 }
 
 void Player::setEffectTime(int time, int skill_ID) {
@@ -103,6 +112,10 @@ int Player::getItemID() {
   return ItemID;
 }
 
+int Player::getLastItemId() {
+  return lastItemId;
+}
+
 int Player::getEffectTime(int skill_ID) {
   return player_effect_time[skill_ID];
 }
@@ -136,11 +149,19 @@ void Player::updatePlayerEffects() {
     player_effect_time[id]--;
     switch (id) {
       case (skillGhost_ID): {
-        bonusVelocity = PlayerBonusVelocity;
+        bonusVelocity += PlayerBonusVelocity;
         break;
       }
       case (skillHourglass_ID): {
         invulnerable = true;
+        break;
+      }
+      case (skillHeal_ID): {
+        bonusVelocity += HealBonusVelocity;
+        break;
+      }
+      case (skillVoltaic_Cyclosword_ID): {
+        bonusVelocity += Voltaic_Cyclosword_Velocity;
         break;
       }
     }

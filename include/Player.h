@@ -24,6 +24,8 @@ public:
   void setDamagedDelay(int value);
   void resetSummonerSpellID();
   void resetItemID();
+  void setItemId(int value);
+  void setLastItemId(int value);
   void setEffectTime(int time, int skill_ID);
 
   int getType();
@@ -35,6 +37,7 @@ public:
   int getDamagedDelay();
   int getSummonerSpellID();
   int getItemID();
+  int getLastItemId();
   int getEffectTime(int skill_ID);
   bool isInvulnerable();
 
@@ -59,4 +62,5 @@ private:
   int ItemID;
   int bonusVelocity;
   bool invulnerable;
+  int lastItemId;
 };

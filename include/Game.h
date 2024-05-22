@@ -9,6 +9,8 @@
 #include <vector>
 #include <math.h>
 #include <string.h>
+#include <random>
+#include <chrono>
 
 #include "Entity.h"
 #include "Constants.h"
@@ -19,8 +21,7 @@
 #include "Polygon.h"
 #include "Button.h"
 
-using std::string;
-using std::vector;
+using namespace std;
 
 struct Game {
 public:
@@ -72,6 +73,8 @@ public:
   void ProcessingSkill(int player_id, int skill_ID);
 
   void handleEvents();
+  int randInt(int l, int r);
+  void generateItem(int player_id);
   void update();
 
   void render_GameBackground();
@@ -83,6 +86,7 @@ public:
   void render_MainMenu();
   void render_SelectAIMode();
   void render_SelectMode();
+  void render_SelectItemMode();
   void render_GamePlay();
   void render_GamePause();
   void render_YouWin();
@@ -104,6 +108,10 @@ private:
   int gameDelayTime;
   int gameEndDelayTime;
   int gameTimer;
+  int gameVSType;
   int gameAIMode;
   int gameMode;
+  int gameItemMode;
+  int UsingItemTime;
+  int TimeBeforeRandomItem;
 };

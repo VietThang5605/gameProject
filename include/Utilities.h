@@ -18,14 +18,14 @@ string IntToString(int x);
 
 string TimeToString(int Timer, int ConvertType);
 
-template<class T> T max(T a, T b) {
+template<class T> T Max(T a, T b) {
   if (a > b) {
     return a;
   }
   return b;
 }
 
-template<class T> T min(T a, T b) {
+template<class T> T Min(T a, T b) {
   if (a < b) {
     return a;
   }
