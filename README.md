@@ -5,6 +5,8 @@
 <img width="1440" alt="MainMenu" src="https://github.com/VietThang5605/gameProject/assets/67374734/35462a99-5ce2-4c55-9174-c448c407804a">
 <img width="400" alt="GamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/4fb36802-6d16-4798-8f44-50ca1a7c52ff">
 <img width="400" alt="GamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/639da24b-d5d0-46eb-9147-09caa1ce4005">
+<img width="400" alt="GamePlay3" src="https://github.com/VietThang5605/gameProject/assets/67374734/753c29e8-863f-48d7-b416-650114b447d0">
+<img width="400" alt="GamePlay4" src="https://github.com/VietThang5605/gameProject/assets/67374734/98fbe048-5494-4754-ac76-a10a0e53980a">
 <img width="400" alt="VideoGamePlay1" src="https://github.com/VietThang5605/gameProject/assets/67374734/e5583968-4e11-4e8d-b0d1-f20dd3f1bae8">
 <img width="400" alt="VideoGamePlay2" src="https://github.com/VietThang5605/gameProject/assets/67374734/46d5223b-7dfa-4521-b407-02a38c1b8339">
 
@@ -24,6 +26,7 @@
   - Có thể kéo thả để tùy chỉnh kích thước cửa sổ.
   - Tạo Menu và các phím chức năng.
   - Sử dụng các kiến thức về toán học để điều chỉnh vận tốc và hướng đi của các kỹ năng.
+  - Xử lý các channels của mixer để tạm dừng hiệu ứng âm thanh của các kỹ năng khi pause game và tiếp tục phát khi hết tín hiệu thời gian chờ.
 
   ### Các kỹ thuật nổi bật:
   - Lập trình hướng đối tượng
