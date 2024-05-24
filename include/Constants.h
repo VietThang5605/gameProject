@@ -53,7 +53,7 @@ enum music_ID {
 
 enum sfx_ID {
   Click_sfx_ID,
-  Count_down_sfx_ID, Count_down_start_sfx_id,
+  Count_down_sfx_ID, Count_down_start_sfx_ID,
   Q1_sfx_ID, Q2_sfx_ID, Q_hit_sfx_ID,
   W_sfx_ID, W_hit_sfx_ID, W_hit_crashed_sfx_ID,
   E_sfx_ID,
@@ -65,6 +65,12 @@ enum sfx_ID {
   Voltaic_Cyclosword_sfx_ID,
   UsingItem_start_sfx_ID,
   sfx_ID_Total
+};
+
+enum sfx_channel {
+  Click_sfx_Channel = 22,
+  Count_down_sfx_Channel = 23,
+  Count_down_start_sfx_Channel = 23
 };
 
 ///PlayerArrow

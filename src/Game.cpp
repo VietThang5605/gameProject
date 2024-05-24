@@ -162,8 +162,9 @@ void Game::initSDL() {
   if (TTF_Init() != 0)
     logError("Failed to initialize SDL_ttf.", TTF_GetError());
 
-  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) != 0)
+  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) != 0)
     logError("Failed to initialize SDL_mixer.", Mix_GetError());
+  Mix_AllocateChannels(24);
 }
 
 void Game::loadMedia() {
@@ -308,7 +309,7 @@ void Game::loadMedia() {
   ///Sounds
   SFX[Click_sfx_ID] = loadSFX("res/audio/sfx/Click.wav");
   SFX[Count_down_sfx_ID] = loadSFX("res/audio/sfx/Count_down.wav");
-  SFX[Count_down_start_sfx_id] = loadSFX("res/audio/sfx/Count_down_start.wav");
+  SFX[Count_down_start_sfx_ID] = loadSFX("res/audio/sfx/Count_down_start.wav");
   SFX[Q1_sfx_ID] = loadSFX("res/audio/sfx/Q1.wav");
   SFX[Q2_sfx_ID] = loadSFX("res/audio/sfx/Q2.wav");
   SFX[Q_hit_sfx_ID] = loadSFX("res/audio/sfx/Q_hit.wav");
@@ -328,8 +329,8 @@ void Game::loadMedia() {
   SFX[UsingItem_start_sfx_ID] = loadSFX("res/audio/sfx/UsingItem_start.wav");
 
   Mix_VolumeChunk(SFX[Click_sfx_ID], 80);
-  Mix_VolumeChunk(SFX[Count_down_sfx_ID], 60);
-  Mix_VolumeChunk(SFX[Count_down_start_sfx_id], 60);
+  Mix_VolumeChunk(SFX[Count_down_sfx_ID], 50);
+  Mix_VolumeChunk(SFX[Count_down_start_sfx_ID], 50);
   Mix_VolumeChunk(SFX[Q1_sfx_ID], 60);
   Mix_VolumeChunk(SFX[Q2_sfx_ID], 60);
   Mix_VolumeChunk(SFX[W_sfx_ID], 60);
@@ -846,11 +847,11 @@ void Game::PlaySFX(int sfx_ID) {
       break;
     }
     case (Count_down_sfx_ID): {
-      Mix_PlayChannel(-1, SFX[Count_down_sfx_ID], 0);
+      Mix_PlayChannel(Count_down_sfx_Channel, SFX[Count_down_sfx_ID], 0);
       break;
     }
-    case (Count_down_start_sfx_id): {
-      Mix_PlayChannel(-1, SFX[Count_down_start_sfx_id], 0);
+    case (Count_down_start_sfx_ID): {
+      Mix_PlayChannel(Count_down_start_sfx_Channel, SFX[Count_down_start_sfx_ID], 0);
       break;
     }
     case (Q_hit_sfx_ID): {
@@ -1758,6 +1759,8 @@ void Game::generateItem(int player_id) {
 }
 
 void Game::update() {
+  // Mix_PauseAudio(0);
+
   ///Function keys
   if (new_key[KEY_PRESS_F11] && old_key[KEY_PRESS_F11] == 0) {
     if (fullscreen == false) {
@@ -1828,6 +1831,11 @@ void Game::update() {
             player[1].moveRight();
           else if (old_key[KEY_PRESS_RIGHT])
             player[1].setCurrentFrame(0);
+          
+          if (player[1].getEffectTime(skillHourglass_ID) == 0) {
+            if (new_key[KEY_PRESS_LEFT] == 0 && new_key[KEY_PRESS_RIGHT] == 0)
+              player[1].setCurrentFrame(0);
+          }
         }
       }
     }
@@ -1883,6 +1891,11 @@ void Game::update() {
           player[2].moveRight();
         else if (old_key[KEY_PRESS_D])
           player[2].setCurrentFrame(0);
+        
+        if (player[2].getEffectTime(skillHourglass_ID) == 0) {
+            if (new_key[KEY_PRESS_A] == 0 && new_key[KEY_PRESS_D] == 0)
+              player[2].setCurrentFrame(0);
+          }
       }
     }
 
@@ -1961,19 +1974,22 @@ void Game::render_Player() {
       Entity effect = skillW_effect;
       effect.setX(player[1].getX() + player[1].getWidth() / 2 - effect.getWidth() / 2);
       effect.setY(player[1].getY() + player[1].getHeight() - effect.getHeight() / 2);
+      if (player[1].isShowing())
       render(effect);
     }
     if (player[1].isInvulnerable())
       player[1].setTexture(GameTexture[ezrealHourglassTexture]);
     else
       player[1].setTexture(GameTexture[ezrealTexture]);
-    render(player[1]);
+    if (player[1].isShowing())
+      render(player[1]);
 
     if (gameDelayTime == 0) {
       player_Arrow[1].setX(player[1].getX() + player[1].getWidth() / 2 - player_Arrow[1].getWidth() / 2);
       player_Arrow[1].setY(player[1].getY() + player[1].getHeight() + ArrowDistanceToPlayer);
       player_Arrow[1].setRotPoint(player_Arrow[1].getX() + player_Arrow[1].getWidth() / 2, player_Arrow[1].getY());
-      render(player_Arrow[1]);
+      if (player[1].isShowing())
+        render(player_Arrow[1]);
       player_Arrow[1].moveAngle();
     }
   }
@@ -1983,19 +1999,22 @@ void Game::render_Player() {
       Entity effect = skillW_effect;
       effect.setX(player[2].getX() + player[2].getWidth() / 2 - effect.getWidth() / 2);
       effect.setY(player[2].getY() + player[2].getHeight() - effect.getHeight() / 2);
-      render(effect);
+      if (player[2].isShowing())
+        render(effect);
     }
     if (player[2].isInvulnerable())
       player[2].setTexture(GameTexture[ezrealHourglassTexture]);
     else
       player[2].setTexture(GameTexture[ezrealTexture]);
-    render(player[2]);
+    if (player[2].isShowing())
+      render(player[2]);
 
     if (gameDelayTime == 0) {
       player_Arrow[2].setX(player[2].getX() + player[2].getWidth() / 2 - player_Arrow[2].getWidth() / 2);
       player_Arrow[2].setY(player[2].getY() - player_Arrow[2].getHeight() - ArrowDistanceToPlayer);
       player_Arrow[2].setRotPoint(player_Arrow[2].getX() + player_Arrow[2].getWidth() / 2, player_Arrow[2].getY() + player_Arrow[2].getHeight());
-      render(player_Arrow[2]);
+      if (player[2].isShowing())
+        render(player_Arrow[2]);
       player_Arrow[2].moveAngle();
     }
   }
@@ -2282,6 +2301,7 @@ void Game::render_GamePlay() {
   if (gameTimer == 0 || player[1].isDead() || player[2].isDead()) {
     if (gameEndDelayTime > 0) gameEndDelayTime--;
     else {
+      Mix_Resume(-1);
       PlayMusic(GameEnd_music_ID);
       if ((player[1].isDead() && player[2].isDead()) || (player[1].getHealth() == player[2].getHealth())) {
         gameState = GameDraw;
@@ -2309,32 +2329,43 @@ void Game::render_GamePlay() {
     renderTextCenter(SCREEN_WIDTH / 2, 50, text, Font[font32], black);
     if (gameDelayTime == 0 && gameTimer > 0) gameTimer--;
   }
+  if (gameDelayTime > 0)
+    Mix_Pause(-1);
+  else
+    Mix_Resume(-1);
+  Mix_Resume(Click_sfx_Channel);
   if (2 * FPS < gameDelayTime && gameDelayTime <= 3 * FPS) {
+    Mix_Resume(Count_down_sfx_Channel);
     if (gameDelayTime == 3 * FPS)
       PlaySFX(Count_down_sfx_ID);
     renderCenter(GameAnimation[count_down1], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
   }
   if (1 * FPS < gameDelayTime && gameDelayTime <= 2 * FPS) {
+    Mix_Resume(Count_down_sfx_Channel);
     if (gameDelayTime == 2 * FPS)
       PlaySFX(Count_down_sfx_ID);
     renderCenter(GameAnimation[count_down2], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
   }
   if (0 * FPS < gameDelayTime && gameDelayTime <= 1 * FPS) {
+    Mix_Resume(Count_down_sfx_Channel);
     if (gameDelayTime == 1 * FPS)
       PlaySFX(Count_down_sfx_ID);
     renderCenter(GameAnimation[count_down3], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
   }
   if (gameDelayTime == 1) {
-    PlaySFX(Count_down_start_sfx_id);
+    Mix_Resume(Count_down_start_sfx_Channel);
+    PlaySFX(Count_down_start_sfx_ID);
   }
   if (gameDelayTime > 0) gameDelayTime--;
 }
 
 void Game::render_GamePause() {
+  Mix_Pause(-1);
   render(Background[GamePause], 0, 0);
 
   if (button[Continue_Button].isClicked(MouseX, MouseY, mouseClicked)) {
-    PlaySFX(Click_sfx_ID);
+    Mix_Resume(Click_sfx_Channel);
+    PlaySFX(Click_sfx_ID); ///error
     resetGameDelayTime(3 * FPS);
     gameState = GamePlay;
   }
@@ -2343,6 +2374,8 @@ void Game::render_GamePause() {
   render(button[Continue_Button]);
 
   if (button[Restart_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    Mix_HaltChannel(-1);
+    Mix_Resume(-1);
     PlaySFX(Click_sfx_ID);
     resetGame();
     gameState = GamePlay;
@@ -2352,6 +2385,8 @@ void Game::render_GamePause() {
   render(button[Restart_Button]);
 
   if (button[BackToMenu_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    Mix_HaltChannel(-1);
+    Mix_Resume(-1);
     PlaySFX(Click_sfx_ID);
     gameState = MainMenu;
   }
@@ -2360,6 +2395,8 @@ void Game::render_GamePause() {
   render(button[BackToMenu_Button]);
 
   if (button[Exit_Button].isClicked(MouseX, MouseY, mouseClicked)) {
+    Mix_HaltChannel(-1);
+    Mix_Resume(-1);
     PlaySFX(Click_sfx_ID);
     gameRunning = false;
   }

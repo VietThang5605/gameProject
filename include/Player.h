@@ -40,6 +40,7 @@ public:
   int getLastItemId();
   int getEffectTime(int skill_ID);
   bool isInvulnerable();
+  bool isShowing();
 
   bool isDead();
   void updateCooldown();
@@ -63,4 +64,5 @@ private:
   int bonusVelocity;
   bool invulnerable;
   int lastItemId;
+  bool showing;
 };

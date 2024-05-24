@@ -26,6 +26,8 @@ void Player::reset(int Player_Type) {
   SummonerSpellID = SummonerSpellStartID;
   ItemID = ItemStartID;
   lastItemId = ItemStartID;
+  invulnerable = false;
+  showing = true;
 }
 
 void Player::setType(int Player_Type) {
@@ -122,6 +124,10 @@ int Player::getEffectTime(int skill_ID) {
 
 bool Player::isInvulnerable() {
   return invulnerable;
+}
+
+bool Player::isShowing() {
+  return showing;
 }
 
 bool Player::isDead() {
