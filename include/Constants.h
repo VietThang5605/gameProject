@@ -97,7 +97,6 @@ const int HealBonusVelocity = 3;
 const int Voltaic_Cyclosword_Velocity = -9;
 const int HealHealth = 2;
 const int HealthThreshold = 6;
-const int FlashShootDistance = 15;
 
 const int UsingItemTime_Start = 0 * FPS;
 const int UsingItemTime_Const = 10 * FPS;

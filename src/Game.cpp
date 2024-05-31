@@ -1393,7 +1393,7 @@ void Game::ProcessingAIMove(int player_id) {
           if (tmp_player[Bot].getX() > PlayerScreenRightBoundary)
             tmp_player[Bot].setX(PlayerScreenRightBoundary);
           setArrowToPlayer(Bot, tmp_player[Bot], tmp_arrow[Bot]);
-          if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[Bot]) < FlashShootDistance)
+          if (CalculateArrowAndBulletAccuracy(Bot, tmp_player, tmp_arrow[Bot]) < Distance_To_Shoot[skillQ_ID][gameAIMode])
             ProcessingSkill(player_id, skillFlash_ID);
           tmp_player[Bot] = player[player_id];
           tmp_arrow[Bot] = player_Arrow[player_id];
@@ -1577,9 +1577,6 @@ void Game::ProcessingAIMove(int player_id) {
         && (tmp_player[Bot].getHealth() < PlayerStartHealth || UsingItemTime == 1)) {
         ProcessingSkill(player_id, tmp_player[Bot].getItemID());
       }
-      if (tmp_player[Bot].getItemID() == skillMystery_Box_ID) {
-        generateItem(player_id);
-      }
       if (tmp_player[Bot].getItemID() == skillHourglass_ID && tmp_player[Bot].getSkillCooldown(skillE_ID) > 0) {
         bool getDamaged = 0;
         for (Bullet bul : tmp_bullets[Human]) {
@@ -1591,8 +1588,13 @@ void Game::ProcessingAIMove(int player_id) {
             break;
           }
         }
-        if (getDamaged)
+        if (getDamaged) {
           ProcessingSkill(player_id, skillHourglass_ID);
+          return;
+        }
+      }
+      if (tmp_player[Bot].getItemID() == skillMystery_Box_ID) {
+        generateItem(player_id);
       }
     }
   }
