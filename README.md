@@ -72,3 +72,18 @@
   ### Images
   - [Ezreal (by serklaz)](https://www.deviantart.com/serklaz/art/Ezreal-League-of-Legends-Pixel-art-PixeLoL-548352903)
   - [Background tilesets (by Cup Nooble)](https://cupnooble.itch.io/sprout-lands-asset-pack)
+
+## Compiling
+  ### Window
+  After downloading the project, execute the following command in the project's root directory:
+  ```
+  g++ src/*.cpp -I include -I include/SDL2 -L lib -Wall -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf -lSDL2_mixer -o main
+  ```
+  The compiled ``main.exe`` is located in the project's root, executing ``./main`` command to run it.
+
+  ### Web
+  Install [emscripten](https://emscripten.org/docs/getting_started/downloads.html) and execute the following command in the project's root directory:
+  ```
+  emcc src/Bullet.cpp src/Button.cpp src/Entity.cpp src/Utilities.cpp src/Game.cpp src/main.cpp src/Maths.cpp src/Player.cpp src/PlayerArrow.cpp src/Polygon.cpp -I include -I include/SDL2 -O2 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS="[""png""]" -s WASM=1 -s TOTAL_MEMORY=1GB -s USE_SDL_TTF=2 -s USE_SDL_MIXER=2 --preload-file res -o web/index.html
+  ```
+  The compiled ``.js``, ``.wasm``, ``.data``, and ``.html`` files are located in ``./web`` folder.
